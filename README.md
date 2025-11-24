@@ -70,6 +70,6 @@ Flutter Logout Request → Django Logout API → Session Destroyed → Redirect 
 ---
 
 Link Figma : 
-
+https://www.figma.com/design/caLbHnsOKBKhNPs934xZJg/Untitled?node-id=0-1&t=Xhjl9p4pkmHMP3MC-1
 ---
 
