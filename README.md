@@ -1,16 +1,75 @@
-# all_ahraga
+# 🏀 All-Ahraga — Kelompok 4 PBP E
 
-A new Flutter project.
+## Nama-nama Anggota Kelompok
+- **Amadio Juno Trisanto**  
+- **Felicia Evangeline Mubarun**  
+- **Ahsan Parvez**  
+- **Muhammad Razka Faltasyah**
+- **Mafaza Ananda Rahman**
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## Deskripsi Aplikasi
 
-A few resources to get you started if this is your first Flutter project:
+All-ahraga adalah aplikasi web berbasis Django yang menyediakan layanan serba ada untuk kebutuhan olahraga. Mulai dari booking lapangan, sewa alat olahraga, hingga pesan sesi coaching/pelatihan olahraga.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Aplikasi ini dibuat untuk mempermudah masyarakat dalam mengakses layanan olahraga tanpa perlu berpindah-pindah platform. Pengguna dapat mencari lapangan olahraga di sekitar mereka, menyewa peralatan yang dibutuhkan, atau memesan pelatih profesional hanya dalam satu website.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Dengan All-ahraga, semua kebutuhan olahraga dapat terpenuhi secara praktis, efisien, dan terintegrasi dalam satu tempat.
+
+---
+
+## Daftar Modul yang Akan Diimplementasikan
+
+1. **Modul Autentikasi Pengguna**  
+   - Register, login, dan logout (untuk user dan admin).
+
+2. **Modul Coaching**  
+   - Daftar pelatih berdasarkan olahraga dan rating.  
+   - Pemesanan sesi latihan dengan jadwal fleksibel.
+
+3. **Modul Manajemen Lapangan (Admin/Pengelola)**  
+   - CRUD data lapangan, harga, dan jadwal ketersediaan.
+
+4. **Modul Manajemen Pelatih (Coach)**  
+   - CRUD profil pelatih, jadwal, dan tarif.
+
+5. **Modul Review & Rating**  
+   - Pengguna dapat memberikan ulasan terhadap lapangan dan pelatih.
+
+6. **Modul Pembayaran (Simulasi 50:50)**  
+   - Simulasi pembayaran seperti *Bayar di Tempat* atau *Transfer Manual*.
+
+---
+
+## Role atau Peran Pengguna
+
+| Role | Deskripsi |
+|------|------------|
+| **Visitor** | Dapat melihat daftar lapangan, alat, dan pelatih, tetapi belum bisa melakukan booking. |
+| **Customer** | Pengguna yang mencari, memesan, dan membayar lapangan atau coaching. Dapat mengakses dashboard pribadi untuk riwayat dan ulasan. |
+| **Coach** | Pelatih terverifikasi yang menawarkan sesi privat/grup. Dapat mengelola profil, jadwal, dan rating. |
+| **Venue Owner** | Pemilik lapangan yang mengelola listing, ketersediaan jadwal, dan laporan pendapatan. |
+| **Admin** | Tim internal yang mengelola platform, melakukan verifikasi user/venue, moderasi konten, dan memantau laporan global. |
+
+---
+
+## Alur pengintegrasian dengan web service
+1. Authentication Process
+User Input → Flutter → Django Login API → Session Created → Access Granted
+
+2. Data Fetching Process
+Flutter Request → Django JSON API → Database Query → JSON Response → Flutter Display
+
+3. Data Creation Process
+Flutter Form Input → Django Create API → Database Insert → Success Response → UI Update
+
+4. Logout Process
+Flutter Logout Request → Django Logout API → Session Destroyed → Redirect to Login
+
+---
+
+Link Figma : 
+
+---
+
