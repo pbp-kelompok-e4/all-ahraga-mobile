@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:all_ahraga/screens/menu.dart';
 import 'package:all_ahraga/screens/booking/my_bookings.dart';
 import 'package:all_ahraga/screens/booking/booking_history.dart';
+import 'package:all_ahraga/screens/coach/coach_list.dart';
+import 'package:all_ahraga/screens/coach/coach_revenue.dart';
+import 'package:all_ahraga/screens/coach/coach_schedule.dart';
+import 'package:all_ahraga/screens/coach/coach_profile.dart';
 
 class LeftDrawer extends StatelessWidget {
   const LeftDrawer({super.key});
@@ -22,11 +26,7 @@ class LeftDrawer extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
-                  Icons.sports_soccer,
-                  size: 48,
-                  color: Colors.white,
-                ),
+                const Icon(Icons.sports_soccer, size: 48, color: Colors.white),
                 const SizedBox(height: 12),
                 const Text(
                   "ALL-AHRAGA",
@@ -50,7 +50,7 @@ class LeftDrawer extends StatelessWidget {
               ],
             ),
           ),
-          
+
           // Home
           ListTile(
             leading: const Icon(Icons.home_outlined),
@@ -58,13 +58,11 @@ class LeftDrawer extends StatelessWidget {
             onTap: () {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const MyHomePage(),
-                ),
+                MaterialPageRoute(builder: (context) => const MyHomePage()),
               );
             },
           ),
-          
+
           const Divider(),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -78,7 +76,7 @@ class LeftDrawer extends StatelessWidget {
               ),
             ),
           ),
-          
+
           // My Bookings
           ListTile(
             leading: const Icon(Icons.assignment, color: Color(0xFFEA580C)),
@@ -87,13 +85,11 @@ class LeftDrawer extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const MyBookingsPage(),
-                ),
+                MaterialPageRoute(builder: (context) => const MyBookingsPage()),
               );
             },
           ),
-          
+
           // Booking History
           ListTile(
             leading: const Icon(Icons.history, color: Color(0xFF0D9488)),
@@ -108,7 +104,100 @@ class LeftDrawer extends StatelessWidget {
               );
             },
           ),
-          
+
+          // Coach
+          // const Divider(),
+          // Padding(
+          //   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          //   child: Text(
+          //     'COACH',
+          //     style: TextStyle(
+          //       fontSize: 12,
+          //       fontWeight: FontWeight.bold,
+          //       color: Colors.grey.shade600,
+          //       letterSpacing: 1,
+          //     ),
+          //   ),
+          // ),
+
+          // // Daftar Pelatih
+          // ListTile(
+          //   leading: const Icon(
+          //     Icons.groups_outlined,
+          //     color: Color(0xFF0D9488),
+          //   ),
+          //   title: const Text("Daftar Pelatih"),
+          //   onTap: () {
+          //     Navigator.push(
+          //       context,
+          //       MaterialPageRoute(builder: (context) => const CoachListPage()),
+          //     );
+          //   },
+          // ),
+
+          // // Laporan Pendapatan
+          // ListTile(
+          //   leading: const Icon(
+          //     Icons.monetization_on_outlined,
+          //     color: Color(0xFF0D9488),
+          //   ),
+          //   title: const Text("Laporan"),
+          //   subtitle: const Text("Pendapatan Pelatih"),
+          //   onTap: () {
+          //     Navigator.push(
+          //       context,
+          //       MaterialPageRoute(
+          //         builder: (context) => const CoachRevenuePage(),
+          //       ),
+          //     );
+          //   },
+          // ),
+
+          // // Jadwal Kamu
+          // ListTile(
+          //   leading: const Icon(
+          //     Icons.calendar_month_outlined,
+          //     color: Color(0xFF0D9488),
+          //   ),
+          //   title: const Text("Jadwal Kamu"),
+          //   onTap: () {
+          //     Navigator.push(
+          //       context,
+          //       MaterialPageRoute(
+          //         builder: (context) => const CoachSchedulePage(),
+          //       ),
+          //     );
+          //   },
+          // ),
+
+          // // Profile Kamu
+          // ListTile(
+          //   leading: const Icon(Icons.person_outline, color: Color(0xFF0D9488)),
+          //   title: const Text("Profile Kamu"),
+          //   onTap: () {
+          //     Navigator.push(
+          //       context,
+          //       MaterialPageRoute(
+          //         builder: (context) => const CoachProfilePage(),
+          //       ),
+          //     );
+          //   },
+          // ),
+
+          // const Divider(),
+          // Padding(
+          //   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          //   child: Text(
+          //     'LAINNYA',
+          //     style: TextStyle(
+          //       fontSize: 12,
+          //       fontWeight: FontWeight.bold,
+          //       color: Colors.grey.shade600,
+          //       letterSpacing: 1,
+          //     ),
+          //   ),
+          // ),
+
           const Divider(),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -122,9 +211,9 @@ class LeftDrawer extends StatelessWidget {
               ),
             ),
           ),
-          
+
           //TODO: Venue
-          //TODO: Coach
+
         ],
       ),
     );
