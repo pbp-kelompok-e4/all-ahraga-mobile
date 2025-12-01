@@ -1,8 +1,8 @@
-import 'package:all_ahraga/main.dart';
 import 'package:all_ahraga/screens/register.dart';
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
+import 'package:all_ahraga/screens/menu.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -254,10 +254,6 @@ class _LoginPageState extends State<LoginPage> {
                               String username = _usernameController.text;
                               String password = _passwordController.text;
 
-                              // Check credentials
-                              // Change the URL and don't forget to add trailing slash (/) at the end of URL!
-                              // To connect Android emulator with Django on localhost, use URL http://10.0.2.2/
-                              // If you using chrome,  use URL http://localhost:8000
                               final response = await request
                                   .login("http://localhost:8000/auth/login/", {
                                 'username': username,
