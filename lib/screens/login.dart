@@ -1,29 +1,8 @@
-import 'package:all_ahraga/main.dart';
 import 'package:all_ahraga/screens/register.dart';
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
-
-void main() {
-  runApp(const LoginApp());
-}
-
-class LoginApp extends StatelessWidget {
-  const LoginApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Login',
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSwatch(primarySwatch: Colors.blue)
-          .copyWith(secondary: Colors.blueAccent[400]),
-      ),
-      home: const LoginPage(),
-    );
-  }
-}
+import 'package:all_ahraga/screens/menu.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -41,17 +20,17 @@ class _LoginPageState extends State<LoginPage> {
     final request = context.watch<CookieRequest>();
 
     return Scaffold(
-        appBar: AppBar(
-            title: const Text('Login'),
-        ),
-        body: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Card(
-                elevation: 8,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.0),
-                ),
+      appBar: AppBar(
+        title: const Text('Login'),
+      ),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Card(
+            elevation: 8,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.0),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(20.0),
               child: Column(
@@ -97,10 +76,6 @@ class _LoginPageState extends State<LoginPage> {
                       String username = _usernameController.text;
                       String password = _passwordController.text;
 
-                      // Check credentials
-                      // Change the URL and don't forget to add trailing slash (/) at the end of URL!
-                      // To connect Android emulator with Django on localhost, use URL http://10.0.2.2/
-                      // If you using chrome,  use URL http://localhost:8000
                       final response = await request
                           .login("http://localhost:8000/auth/login/", {
                         'username': username,
@@ -114,14 +89,15 @@ class _LoginPageState extends State<LoginPage> {
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => MyHomePage(title: 'All-ahraga')),
+                              builder: (context) => const MyHomePage(),
+                            ),
                           );
                           ScaffoldMessenger.of(context)
                             ..hideCurrentSnackBar()
                             ..showSnackBar(
                               SnackBar(
-                                  content:
-                                      Text("$message Welcome, $uname.")),
+                                content: Text("$message Welcome, $uname."),
+                              ),
                             );
                         }
                       } else {
@@ -146,7 +122,7 @@ class _LoginPageState extends State<LoginPage> {
                     },
                     style: ElevatedButton.styleFrom(
                       foregroundColor: Colors.white,
-                      minimumSize: Size(double.infinity, 50),
+                      minimumSize: const Size(double.infinity, 50),
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       padding: const EdgeInsets.symmetric(vertical: 16.0),
                     ),
