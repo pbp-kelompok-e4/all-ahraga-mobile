@@ -16,16 +16,16 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
   String _searchQuery = '';
 
   Future<List<BookingListEntry>> fetchMyBookings(CookieRequest request) async {
-    final response = await request.get('${ApiConstants.baseUrl}/my-bookings/json/');
+  final response = await request.get(ApiConstants.myBookings);
 
-    List<BookingListEntry> bookings = [];
-    for (var d in response) {
-      if (d != null) {
-        bookings.add(BookingListEntry.fromJson(d));
-      }
+  List<BookingListEntry> bookings = [];
+  for (var d in response) {
+    if (d != null) {
+      bookings.add(BookingListEntry.fromJson(d));
     }
-    return bookings;
   }
+  return bookings;
+}
 
   @override
   void dispose() {
