@@ -18,12 +18,15 @@ class MyApp extends StatelessWidget {
         return request;
       },
       child: MaterialApp(
-      title: 'All-ahraga',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSwatch(primarySwatch: Colors.blue)
-        .copyWith(secondary: Colors.blueAccent[400]),
-      ),
-      home: const LoginPage()
+        title: 'All-ahraga',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSwatch(
+            primarySwatch: Colors.teal,
+          ).copyWith(
+            secondary: Colors.tealAccent[400],
+          ),
+        ),
+        home: const LoginPage(),
       ),
     );
   }
