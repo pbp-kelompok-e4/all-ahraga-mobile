@@ -279,9 +279,7 @@ class _LoginPageState extends State<LoginPage> {
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) =>
-                                          const MyHomePage(
-                                        title: 'All-ahraga',
-                                      ),
+                                          const MyHomePage(),
                                     ),
                                   );
 
