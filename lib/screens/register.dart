@@ -131,7 +131,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
                         // Role Dropdown
                         DropdownButtonFormField<String>(
-                          initialValue: _selectedRoleType,
+                          value: _selectedRoleType,
                           decoration: _buildDropdownDecoration(),
                           items: const [
                             DropdownMenuItem(
