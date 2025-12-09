@@ -7,4 +7,11 @@ class ApiConstants {
   static String bookingForm(int venueId) => '$baseUrl/api/booking/$venueId/form/';
   static String createBooking(int venueId) => '$baseUrl/api/booking/$venueId/create/';
   static String scheduledCoaches(int scheduleId) => '$baseUrl/api/schedule/$scheduleId/coaches/';
+
+  // Venue endpoints
+  static const String venueDashboard = '$baseUrl/api/venue/dashboard/';
+  static const String venueAdd = '$baseUrl/api/venue/add/';
+  static const String venueRevenue = '$baseUrl/api/venue/revenue/';
+  static String venueManage(int venueId) => '$baseUrl/api/venue/$venueId/manage/';
+  static String venueDelete(int venueId) => '$baseUrl/api/venue/$venueId/delete/';
 }
