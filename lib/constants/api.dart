@@ -7,6 +7,7 @@ class ApiConstants {
   static String bookingForm(int venueId) => '$baseUrl/api/booking/$venueId/form/';
   static String createBooking(int venueId) => '$baseUrl/api/booking/$venueId/create/';
   static String scheduledCoaches(int scheduleId) => '$baseUrl/api/schedule/$scheduleId/coaches/';
+<<<<<<< Updated upstream
 
   // Venue endpoints
   static const String venueDashboard = '$baseUrl/api/venue/dashboard/';
@@ -14,4 +15,9 @@ class ApiConstants {
   static const String venueRevenue = '$baseUrl/api/venue/revenue/';
   static String venueManage(int venueId) => '$baseUrl/api/venue/$venueId/manage/';
   static String venueDelete(int venueId) => '$baseUrl/api/venue/$venueId/delete/';
+=======
+  static String cancelBooking(int bookingId) => '$baseUrl/api/booking/$bookingId/cancel/';
+  static String updateBooking(int bookingId) => '$baseUrl/api/booking/$bookingId/update/';
+  static String bookingDetail(int bookingId) => '$baseUrl/api/booking/$bookingId/detail/';
+>>>>>>> Stashed changes
 }
