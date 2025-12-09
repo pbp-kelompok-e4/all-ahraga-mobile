@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:all_ahraga/constants/api.dart';
+import 'package:all_ahraga/screens/venue/venue_manage_schedule.dart'; // Sesuaikan path folder kamu
 
 class VenueManagePage extends StatefulWidget {
   final int venueId;
@@ -15,14 +16,14 @@ class VenueManagePage extends StatefulWidget {
 
 class _VenueManagePageState extends State<VenueManagePage> {
   final _formKey = GlobalKey<FormState>();
-  
+
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
 
   List<dynamic> _locationsList = [];
   List<dynamic> _categoriesList = [];
-  
+
   int? _selectedLocationId;
   int? _selectedCategoryId;
   String? _selectedPaymentOption;
@@ -56,10 +57,10 @@ class _VenueManagePageState extends State<VenueManagePage> {
           _nameController.text = venue['name'] ?? '';
           _descController.text = venue['description'] ?? '';
           _priceController.text = venue['price_per_hour'].toString();
-          
+
           _locationsList = response['locations'] ?? [];
           _categoriesList = response['categories'] ?? [];
-          
+
           _selectedLocationId = venue['location_id'];
           _selectedCategoryId = venue['sport_category_id'];
           _selectedPaymentOption = venue['payment_options'];
@@ -69,8 +70,10 @@ class _VenueManagePageState extends State<VenueManagePage> {
         });
       } else {
         if (mounted) {
-           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Gagal memuat data: ${response['message']}")),
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Gagal memuat data: ${response['message']}"),
+            ),
           );
           setState(() => _isLoading = false);
         }
@@ -79,17 +82,19 @@ class _VenueManagePageState extends State<VenueManagePage> {
       print("Error fetching manage data: $e");
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: $e")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Error: $e")));
       }
     }
   }
 
   Future<void> _saveVenue() async {
     if (!_formKey.currentState!.validate()) return;
-    
-    if (_selectedLocationId == null || _selectedCategoryId == null || _selectedPaymentOption == null) {
+
+    if (_selectedLocationId == null ||
+        _selectedCategoryId == null ||
+        _selectedPaymentOption == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Mohon lengkapi pilihan dropdown.")),
       );
@@ -103,7 +108,7 @@ class _VenueManagePageState extends State<VenueManagePage> {
       final response = await request.postJson(
         url,
         jsonEncode({
-          'action': 'edit_venue', 
+          'action': 'edit_venue',
           'name': _nameController.text,
           'description': _descController.text,
           'price_per_hour': double.tryParse(_priceController.text) ?? 0,
@@ -125,16 +130,16 @@ class _VenueManagePageState extends State<VenueManagePage> {
           if (response['errors'] != null) {
             errorMessage += "\n${response['errors']}";
           }
-          ScaffoldMessenger.of(context).showSnackBar(
-             SnackBar(content: Text(errorMessage)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(errorMessage)));
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: $e")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Error: $e")));
       }
     }
   }
@@ -146,15 +151,12 @@ class _VenueManagePageState extends State<VenueManagePage> {
     try {
       final response = await request.postJson(
         url,
-        jsonEncode({
-          'action': 'delete_equipment',
-          'equipment_id': id,
-        }),
+        jsonEncode({'action': 'delete_equipment', 'equipment_id': id}),
       );
 
       if (response['success'] == true) {
         setState(() {
-          _equipments = response['equipments']; 
+          _equipments = response['equipments'];
         });
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -168,10 +170,16 @@ class _VenueManagePageState extends State<VenueManagePage> {
   }
 
   void _showEquipmentDialog({Map<String, dynamic>? equipment}) {
-    final nameController = TextEditingController(text: equipment?['name'] ?? '');
-    final stockController = TextEditingController(text: equipment != null ? equipment['stock'].toString() : '');
-    final priceController = TextEditingController(text: equipment != null ? equipment['price'].toString() : '');
-    
+    final nameController = TextEditingController(
+      text: equipment?['name'] ?? '',
+    );
+    final stockController = TextEditingController(
+      text: equipment != null ? equipment['stock'].toString() : '',
+    );
+    final priceController = TextEditingController(
+      text: equipment != null ? equipment['price'].toString() : '',
+    );
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -196,7 +204,10 @@ class _VenueManagePageState extends State<VenueManagePage> {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Batal")),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Batal"),
+          ),
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
@@ -215,10 +226,16 @@ class _VenueManagePageState extends State<VenueManagePage> {
     );
   }
 
-  Future<void> _submitEquipment({int? id, required String name, required String stock, required String price, required bool isEdit}) async {
+  Future<void> _submitEquipment({
+    int? id,
+    required String name,
+    required String stock,
+    required String price,
+    required bool isEdit,
+  }) async {
     final request = context.read<CookieRequest>();
     final url = ApiConstants.venueManage(widget.venueId);
-    
+
     Map<String, dynamic> data = {
       'action': isEdit ? 'edit_equipment' : 'add_equipment',
       'name': name,
@@ -236,14 +253,14 @@ class _VenueManagePageState extends State<VenueManagePage> {
           _equipments = response['equipments'];
         });
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-             SnackBar(content: Text(response['message'])),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(response['message'])));
         }
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-             SnackBar(content: Text("Gagal: ${response['message']}")),
+            SnackBar(content: Text("Gagal: ${response['message']}")),
           );
         }
       }
@@ -256,7 +273,10 @@ class _VenueManagePageState extends State<VenueManagePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Kelola Venue", style: TextStyle(color: Colors.white)),
+        title: const Text(
+          "Kelola Venue",
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: const Color(0xFF0D9488),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -267,7 +287,10 @@ class _VenueManagePageState extends State<VenueManagePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("Detail Venue", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  const Text(
+                    "Detail Venue",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 10),
                   Form(
                     key: _formKey,
@@ -275,53 +298,77 @@ class _VenueManagePageState extends State<VenueManagePage> {
                       children: [
                         TextFormField(
                           controller: _nameController,
-                          decoration: const InputDecoration(labelText: "Nama Venue", border: OutlineInputBorder()),
+                          decoration: const InputDecoration(
+                            labelText: "Nama Venue",
+                            border: OutlineInputBorder(),
+                          ),
                           validator: (v) => v!.isEmpty ? "Harus diisi" : null,
                         ),
                         const SizedBox(height: 10),
                         TextFormField(
                           controller: _descController,
-                          decoration: const InputDecoration(labelText: "Deskripsi", border: OutlineInputBorder()),
+                          decoration: const InputDecoration(
+                            labelText: "Deskripsi",
+                            border: OutlineInputBorder(),
+                          ),
                           maxLines: 3,
                         ),
                         const SizedBox(height: 10),
                         TextFormField(
                           controller: _priceController,
-                          decoration: const InputDecoration(labelText: "Harga per Jam", border: OutlineInputBorder()),
+                          decoration: const InputDecoration(
+                            labelText: "Harga per Jam",
+                            border: OutlineInputBorder(),
+                          ),
                           keyboardType: TextInputType.number,
                         ),
                         const SizedBox(height: 10),
 
                         DropdownButtonFormField<int>(
-                          decoration: const InputDecoration(labelText: "Lokasi / Area", border: OutlineInputBorder()),
+                          decoration: const InputDecoration(
+                            labelText: "Lokasi / Area",
+                            border: OutlineInputBorder(),
+                          ),
                           value: _selectedLocationId,
-                          items: _locationsList.map<DropdownMenuItem<int>>((item) {
+                          items: _locationsList.map<DropdownMenuItem<int>>((
+                            item,
+                          ) {
                             return DropdownMenuItem<int>(
                               value: item['id'],
                               child: Text(item['name']),
                             );
                           }).toList(),
-                          onChanged: (val) => setState(() => _selectedLocationId = val),
+                          onChanged: (val) =>
+                              setState(() => _selectedLocationId = val),
                           validator: (v) => v == null ? "Pilih lokasi" : null,
                         ),
                         const SizedBox(height: 10),
 
                         DropdownButtonFormField<int>(
-                          decoration: const InputDecoration(labelText: "Kategori Olahraga", border: OutlineInputBorder()),
+                          decoration: const InputDecoration(
+                            labelText: "Kategori Olahraga",
+                            border: OutlineInputBorder(),
+                          ),
                           value: _selectedCategoryId,
-                          items: _categoriesList.map<DropdownMenuItem<int>>((item) {
+                          items: _categoriesList.map<DropdownMenuItem<int>>((
+                            item,
+                          ) {
                             return DropdownMenuItem<int>(
                               value: item['id'],
                               child: Text(item['name']),
                             );
                           }).toList(),
-                          onChanged: (val) => setState(() => _selectedCategoryId = val),
+                          onChanged: (val) =>
+                              setState(() => _selectedCategoryId = val),
                           validator: (v) => v == null ? "Pilih kategori" : null,
                         ),
                         const SizedBox(height: 10),
 
                         DropdownButtonFormField<String>(
-                          decoration: const InputDecoration(labelText: "Opsi Pembayaran", border: OutlineInputBorder()),
+                          decoration: const InputDecoration(
+                            labelText: "Opsi Pembayaran",
+                            border: OutlineInputBorder(),
+                          ),
                           value: _selectedPaymentOption,
                           items: _paymentOptionsList.map((item) {
                             return DropdownMenuItem<String>(
@@ -329,8 +376,10 @@ class _VenueManagePageState extends State<VenueManagePage> {
                               child: Text(item['label']!),
                             );
                           }).toList(),
-                          onChanged: (val) => setState(() => _selectedPaymentOption = val),
-                          validator: (v) => v == null ? "Pilih opsi pembayaran" : null,
+                          onChanged: (val) =>
+                              setState(() => _selectedPaymentOption = val),
+                          validator: (v) =>
+                              v == null ? "Pilih opsi pembayaran" : null,
                         ),
 
                         const SizedBox(height: 16),
@@ -338,58 +387,116 @@ class _VenueManagePageState extends State<VenueManagePage> {
                           width: double.infinity,
                           child: ElevatedButton(
                             onPressed: _saveVenue,
-                            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0D9488), foregroundColor: Colors.white),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF0D9488),
+                              foregroundColor: Colors.white,
+                            ),
                             child: const Text("Simpan Perubahan Venue"),
                           ),
                         ),
                       ],
                     ),
                   ),
+                  // === MULAI TAMBAHAN TOMBOL JADWAL ===
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => VenueManageSchedulePage(
+                              venueId: widget.venueId,
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.calendar_month),
+                      label: const Text("Kelola Jadwal & Slot"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors
+                            .orange
+                            .shade800, // Warna oranye agar beda dengan tombol simpan
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
 
+                  // === AKHIR TAMBAHAN TOMBOL JADWAL ===
                   const Divider(height: 40, thickness: 2),
 
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text("Daftar Equipment", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                      const Text(
+                        "Daftar Equipment",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       IconButton(
                         onPressed: () => _showEquipmentDialog(),
-                        icon: const Icon(Icons.add_circle, color: Color(0xFF0D9488), size: 32),
-                      )
+                        icon: const Icon(
+                          Icons.add_circle,
+                          color: Color(0xFF0D9488),
+                          size: 32,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 10),
-                  
-                  _equipments.isEmpty 
-                  ? const Text("Belum ada equipment.", style: TextStyle(fontStyle: FontStyle.italic))
-                  : ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: _equipments.length,
-                      itemBuilder: (context, index) {
-                        final eq = _equipments[index];
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          child: ListTile(
-                            title: Text(eq['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
-                            subtitle: Text("Stok: ${eq['stock']} | Harga: ${eq['price']}"),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: const Icon(Icons.edit, color: Colors.blue),
-                                  onPressed: () => _showEquipmentDialog(equipment: eq),
+
+                  _equipments.isEmpty
+                      ? const Text(
+                          "Belum ada equipment.",
+                          style: TextStyle(fontStyle: FontStyle.italic),
+                        )
+                      : ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: _equipments.length,
+                          itemBuilder: (context, index) {
+                            final eq = _equipments[index];
+                            return Card(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              child: ListTile(
+                                title: Text(
+                                  eq['name'],
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                                IconButton(
-                                  icon: const Icon(Icons.delete, color: Colors.red),
-                                  onPressed: () => _deleteEquipment(eq['id']),
+                                subtitle: Text(
+                                  "Stok: ${eq['stock']} | Harga: ${eq['price']}",
                                 ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.edit,
+                                        color: Colors.blue,
+                                      ),
+                                      onPressed: () =>
+                                          _showEquipmentDialog(equipment: eq),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.delete,
+                                        color: Colors.red,
+                                      ),
+                                      onPressed: () =>
+                                          _deleteEquipment(eq['id']),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                 ],
               ),
             ),
