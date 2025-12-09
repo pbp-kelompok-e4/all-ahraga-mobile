@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:all_ahraga/screens/menu.dart';
+import 'package:all_ahraga/screens/venue_menu.dart'; // <--- TAMBAHKAN INI
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -261,11 +262,12 @@ class _LoginPageState extends State<LoginPage> {
                               });
 
                               if (request.loggedIn) {
-                                // Ambil data tambahan dari backend (role dan redirect)
                                 String message = response['message'] ??
                                     'Login successful!';
                                 String uname =
                                     response['username'] ?? username;
+                                
+                                // Ambil role_type dari response backend
                                 String? roleType = response['role_type'];
 
                                 if (context.mounted) {
@@ -273,15 +275,26 @@ class _LoginPageState extends State<LoginPage> {
                                     _errorMessage = null;
                                   });
 
-                                  // TODO: kalo nanti udah punya halaman beda per role,
-                                  // sementara tetap arahin ke MyHomePage.
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const MyHomePage(),
-                                    ),
-                                  );
+                                  // --- LOGIKA ROUTING ---
+                                  if (roleType == 'VENUE_OWNER') {
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const VenueHomePage(),
+                                      ),
+                                    );
+                                  } else {
+                                    // Default untuk Customer (dan role lain sementara)
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const MyHomePage(),
+                                      ),
+                                    );
+                                  }
+                                  // ---------------------
 
                                   ScaffoldMessenger.of(context)
                                     ..hideCurrentSnackBar()
