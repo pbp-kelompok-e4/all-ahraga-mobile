@@ -6,6 +6,7 @@ import 'package:all_ahraga/screens/coach/coach_list.dart';
 import 'package:all_ahraga/screens/coach/coach_revenue.dart';
 import 'package:all_ahraga/screens/coach/coach_schedule.dart';
 import 'package:all_ahraga/screens/coach/coach_profile.dart';
+import 'package:all_ahraga/screens/venue_menu.dart';
 
 class LeftDrawer extends StatelessWidget {
   const LeftDrawer({super.key});
@@ -213,7 +214,37 @@ class LeftDrawer extends StatelessWidget {
           ),
 
           //TODO: Venue
+          // ... (kode sebelumnya)
 
+          const Divider(),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Text(
+              'VENUE OWNER',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade600,
+                letterSpacing: 1,
+              ),
+            ),
+          ),
+          
+          ListTile(
+            leading: const Icon(Icons.dashboard_outlined, color: Color(0xFF0D9488)),
+            title: const Text("Venue Dashboard"),
+            onTap: () {
+              // Tutup drawer dulu
+              Navigator.pop(context); 
+              // Arahkan ke dashboard venue
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const VenueHomePage(), // Atau langsung ke VenueDashboardPage()
+                ),
+              );
+            },
+          ),
         ],
       ),
     );

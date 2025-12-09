@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:all_ahraga/models/booking_list_entry.dart';
+import 'package:all_ahraga/screens/booking/update_booking.dart';
 import 'package:all_ahraga/constants/api.dart';
 
 class MyBookingsPage extends StatefulWidget {
@@ -392,9 +393,15 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                       label: 'Edit',
                       color: const Color(0xFF2563EB),
                       onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Edit Booking #${booking.pk}')),
-                        );
+                        Navigator.push(
+                          context, 
+                          MaterialPageRoute(
+                            builder: (context) => UpdateBookingPage(
+                              bookingId: booking.pk, 
+                              venueScheduleId: booking.fields.venueSchedule,
+                              ),
+                            ),
+                          ).then((_) => setState(() {}));
                       },
                     ),
                     _buildActionButton(
@@ -470,20 +477,38 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
           ),
           ElevatedButton(
             onPressed: () async {
-              Navigator.pop(context);
-              // TODO: Implement delete API call
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Booking #${booking.pk} dibatalkan'),
-                  backgroundColor: Colors.red,
-                ),
-              );
+              Navigator.pop(context);    
+              try {
+                final response = await request.post(
+                  ApiConstants.cancelBooking(booking.pk),
+                  {},
+                );
+                
+                if (response['success'] == true) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Booking #${booking.pk} berhasil dibatalkan'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(response['message'] ?? 'Gagal membatalkan booking'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Error: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
               setState(() {});
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
             child: const Text('Ya, Batalkan'),
           ),
         ],
