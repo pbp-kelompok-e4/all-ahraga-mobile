@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:all_ahraga/constants/api.dart';
+import 'package:http/http.dart' as http;
 
 class UpdateBookingPage extends StatefulWidget {
   final int bookingId;
@@ -90,14 +91,17 @@ class _UpdateBookingPageState extends State<UpdateBookingPage> {
           }
           _currentSchedule = foundSchedule;
 
-          // Filter jadwal yang tersedia di HARI YANG SAMA
           List<Map<String, dynamic>> filteredSchedules = [];
           if (_currentSchedule != null) {
             final bookingDate = _currentSchedule!['date'];
             for (var s in allSchedules) {
-              if (s['date'] == bookingDate && 
-                  (s['is_available'] == true || s['id'] == currentScheduleId)) {
-                filteredSchedules.add(s);
+              if (s['date'] == bookingDate) {
+                 bool isAvailable = s['is_booked'] == false; 
+                 bool isMySchedule = s['id'] == currentScheduleId;
+                 
+                 if (isAvailable || isMySchedule) {
+                    filteredSchedules.add(s);
+                 }
               }
             }
           }
@@ -183,41 +187,64 @@ class _UpdateBookingPageState extends State<UpdateBookingPage> {
     }
   }
 
-  Future<void> _submitUpdate() async {
+  Future<void> _updateBooking() async {
     if (_selectedScheduleId == null) {
-      _showSnackBar('Pilih jadwal terlebih dahulu!', isError: true);
+      _showSnackBar('Pilih jadwal terlebih dahulu', isError: true);
       return;
     }
 
     setState(() => _isSubmitting = true);
 
-    final request = context.read<CookieRequest>();
-
     try {
-      final response = await request.postJson(
-        ApiConstants.updateBooking(widget.bookingId),
-        jsonEncode({
-          'schedule_id': _selectedScheduleId,
-          'coach_schedule_id': _selectedCoachScheduleId,
-          'equipment': _selectedEquipmentIds.toList(),
-          'quantities': _equipmentQuantities.map((k, v) => MapEntry(k.toString(), v)),
-          'payment_method': _paymentMethod,
-        }),
+      final request = context.read<CookieRequest>();
+      final data = {
+        'schedule_id': _selectedScheduleId,
+        'coach_schedule_id': _selectedCoachScheduleId,
+        'equipment': _selectedEquipmentIds.toList(),
+        'quantities': _equipmentQuantities.map((k, v) => MapEntry(k.toString(), v)),
+        'payment_method': _paymentMethod,
+      };
+
+      String csrfTokenValue = request.cookies['csrftoken']?.toString() ?? "";
+      String cookieHeader = request.cookies.entries
+          .map((e) => '${e.key}=${e.value}')
+          .join('; ');
+
+      final response = await http.put(
+        Uri.parse(ApiConstants.updateBooking(widget.bookingId)),
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfTokenValue,
+          'Cookie': cookieHeader,
+        },
+        body: jsonEncode(data),
       );
 
-      if (context.mounted) {
-        if (response['success'] == true) {
-          _showSuccessDialog();
-        } else {
-          _showSnackBar(response['message'] ?? 'Gagal mengupdate booking', isError: true);
-        }
+      if (!context.mounted) return;
+
+      dynamic responseData;
+      try {
+        responseData = jsonDecode(response.body);
+      } catch (e) {
+        throw Exception("Gagal memproses respon server (Status: ${response.statusCode})");
+      }
+
+      if (response.statusCode == 200 && responseData['success'] == true) {
+        _showSuccessDialog();
+      } else {
+        _showSnackBar(
+          responseData['message'] ?? 'Gagal mengupdate booking. Kode: ${response.statusCode}',
+          isError: true,
+        );
       }
     } catch (e) {
       if (context.mounted) {
         _showSnackBar('Error: $e', isError: true);
       }
     } finally {
-      setState(() => _isSubmitting = false);
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
     }
   }
 
@@ -705,7 +732,7 @@ class _UpdateBookingPageState extends State<UpdateBookingPage> {
             const SizedBox(width: 16),
             Expanded(
               child: ElevatedButton(
-                onPressed: _isSubmitting ? null : _submitUpdate,
+                onPressed: _isSubmitting ? null : _updateBooking,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF2563EB),
                   foregroundColor: Colors.white,
