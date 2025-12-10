@@ -108,13 +108,6 @@ class _MyHomePageState extends State<MyHomePage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'Venue Tersedia',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 12,
@@ -123,14 +116,6 @@ class _MyHomePageState extends State<MyHomePage> {
                           decoration: BoxDecoration(
                             color: const Color(0xFF0D9488).withOpacity(0.1),
                             borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            '${_venues.length} venue',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF0D9488),
-                              fontWeight: FontWeight.w600,
-                            ),
                           ),
                         ),
                       ],
@@ -164,7 +149,7 @@ class _MyHomePageState extends State<MyHomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Temukan Venue Olahraga 🏟️',
+            'Temukan Lapangan Olahraga 🏟️',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -173,7 +158,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Pilih venue favorit dan booking sekarang!',
+            'Cari dan booking lapangan favorit Anda dengan mudah',
             style: TextStyle(
               fontSize: 14,
               color: Colors.white.withOpacity(0.9),
@@ -201,7 +186,7 @@ class _MyHomePageState extends State<MyHomePage> {
               },
               onSubmitted: (_) => _fetchVenues(),
               decoration: InputDecoration(
-                hintText: 'Cari venue, lokasi, atau olahraga...',
+                hintText: 'Cari lapangan berdasarkan nama...',
                 hintStyle: TextStyle(color: Colors.grey.shade400),
                 prefixIcon: const Icon(
                   Icons.search,
