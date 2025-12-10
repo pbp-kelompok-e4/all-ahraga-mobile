@@ -81,7 +81,35 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
   List<dynamic> get _filteredSchedules {
     final dateStr =
         '${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}';
-    return _schedules.where((s) => s['date'] == dateStr).toList();
+    final dateNow = DateTime.now();
+    final isToday = _selectedDate.year == dateNow.year && 
+         _selectedDate.month == dateNow.month &&
+         _selectedDate.day == dateNow.day;
+
+    return _schedules.where((s) {
+      if (s['date'] != dateStr) return false;
+      
+      if (isToday) {
+        try {
+          final timeParts = s['start_time'].toString().split(':');
+          final int startHour = int.parse(timeParts[0]);
+          final int startMinute = int.parse(timeParts[1]);
+          final scheduleTime = DateTime(
+            dateNow.year,
+            dateNow.month,
+            dateNow.day,
+            startHour,
+            startMinute,
+          );
+
+          return scheduleTime.isAfter(dateNow);
+        } catch (e) {
+          return true;
+        }
+      }
+
+      return true;
+    }).toList();
   }
 
   Future<void> _fetchAvailableCoaches(int scheduleId) async {
@@ -207,7 +235,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.pop(context); // Close dialog
+                    Navigator.pop(context); 
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
@@ -232,8 +260,8 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
               const SizedBox(height: 8),
               TextButton(
                 onPressed: () {
-                  Navigator.pop(context); // Close dialog
-                  Navigator.pop(context, true); // Back to home with refresh
+                  Navigator.pop(context); 
+                  Navigator.pop(context, true); 
                 },
                 child: const Text('Kembali ke Home'),
               ),

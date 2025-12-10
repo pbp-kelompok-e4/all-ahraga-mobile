@@ -44,8 +44,8 @@ class Fields {
   String? coachName;
   String totalPrice;
   DateTime bookingTime;
-  String paymentMethod; // TAMBAHKAN INI
-  List<EquipmentItem> equipments; // TAMBAHKAN INI
+  String paymentMethod;
+  List<EquipmentItem> equipments; 
 
   Fields({
     required this.venueSchedule,
@@ -59,8 +59,8 @@ class Fields {
     this.coachName,
     required this.totalPrice,
     required this.bookingTime,
-    required this.paymentMethod, // TAMBAHKAN INI
-    required this.equipments, // TAMBAHKAN INI
+    required this.paymentMethod, 
+    required this.equipments, 
   });
 
   factory Fields.fromJson(Map<String, dynamic> json) => Fields(
@@ -75,8 +75,8 @@ class Fields {
         coachName: _parseCoachName(json["coach_name"]),
         totalPrice: json["total_price"]?.toString() ?? "0",
         bookingTime: _parseDateTime(json["booking_time"]),
-        paymentMethod: json["payment_method"]?.toString() ?? "CASH", // TAMBAHKAN INI
-        equipments: json["equipments"] != null // TAMBAHKAN INI
+        paymentMethod: json["payment_method"]?.toString() ?? "CASH",
+        equipments: json["equipments"] != null
             ? List<EquipmentItem>.from(
                 json["equipments"].map((x) => EquipmentItem.fromJson(x)))
             : [],

@@ -258,7 +258,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                         "${booking.fields.startTime} - ${booking.fields.endTime}",
                       ),
 
-                      // COACH (Optional)
+                      // COACH
                       if (booking.fields.coachName != null) ...[
                         const SizedBox(height: 12),
                         _buildInfoItem(
@@ -268,7 +268,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                         ),
                       ],
 
-                      // EQUIPMENT (jika ada)
+                      // EQUIPMENT
                       if (booking.fields.equipments.isNotEmpty) ...[
                         const SizedBox(height: 12),
                         _buildEquipmentItem(booking.fields.equipments),
