@@ -71,7 +71,6 @@ class _UpdateBookingPageState extends State<UpdateBookingPage> {
         );
 
         if (formResponse['success'] == true) {
-          // Safely cast lists
           final allSchedules = (formResponse['schedules'] as List?)
               ?.map((e) => Map<String, dynamic>.from(e as Map))
               .toList() ?? [];
@@ -80,7 +79,6 @@ class _UpdateBookingPageState extends State<UpdateBookingPage> {
               ?.map((e) => Map<String, dynamic>.from(e as Map))
               .toList() ?? [];
 
-          // Cari jadwal booking saat ini
           final currentScheduleId = _bookingDetail?['schedule_id'];
           Map<String, dynamic>? foundSchedule;
           for (var s in allSchedules) {
@@ -115,7 +113,6 @@ class _UpdateBookingPageState extends State<UpdateBookingPage> {
             _selectedCoachScheduleId = _bookingDetail?['coach_schedule_id'];
             _paymentMethod = _bookingDetail?['payment_method'] ?? 'CASH';
             
-            // Pre-fill equipment
             final existingEquipments = _bookingDetail?['equipments'] as List? ?? [];
             for (var eq in existingEquipments) {
               if (eq is Map) {

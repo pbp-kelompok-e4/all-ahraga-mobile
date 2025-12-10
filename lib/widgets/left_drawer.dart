@@ -7,12 +7,24 @@ import 'package:all_ahraga/screens/coach/coach_revenue.dart';
 import 'package:all_ahraga/screens/coach/coach_schedule.dart';
 import 'package:all_ahraga/screens/coach/coach_profile.dart';
 import 'package:all_ahraga/screens/venue_menu.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
 
 class LeftDrawer extends StatelessWidget {
   const LeftDrawer({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final request = context.watch<CookieRequest>();
+    String userRole = 'CUSTOMER';
+    if (request.jsonData.isNotEmpty && request.jsonData.containsKey('role_type')) {
+      userRole = request.jsonData['role_type']; 
+    }
+
+    bool isVenueOwner = userRole == 'VENUE_OWNER';
+    bool isCoach = userRole == 'COACH';
+    bool showBookingMenu = !isCoach && !isVenueOwner;
+
     return Drawer(
       child: ListView(
         children: [
@@ -65,46 +77,46 @@ class LeftDrawer extends StatelessWidget {
           ),
 
           const Divider(),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text(
-              'BOOKING',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade600,
-                letterSpacing: 1,
+          if (showBookingMenu) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                'BOOKING',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey.shade600,
+                  letterSpacing: 1,
+                ),
               ),
             ),
-          ),
 
-          // My Bookings
-          ListTile(
-            leading: const Icon(Icons.assignment, color: Color(0xFFEA580C)),
-            title: const Text("My Bookings"),
-            subtitle: const Text("Booking yang menunggu pembayaran"),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const MyBookingsPage()),
-              );
-            },
-          ),
+            // My Bookings
+            ListTile(
+              leading: const Icon(Icons.assignment, color: Color(0xFFEA580C)),
+              title: const Text("Bookingan Saya"),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const MyBookingsPage()),
+                );
+              },
+            ),
 
-          // Booking History
-          ListTile(
-            leading: const Icon(Icons.history, color: Color(0xFF0D9488)),
-            title: const Text("Booking History"),
-            subtitle: const Text("Riwayat booking selesai"),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const BookingHistoryPage(),
-                ),
-              );
-            },
-          ),
+            // Booking History
+            ListTile(
+              leading: const Icon(Icons.history, color: Color(0xFF0D9488)),
+              title: const Text("Riwayat Booking"),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const BookingHistoryPage(),
+                  ),
+                );
+              },
+            ),
+          ],
 
           // Coach
           // const Divider(),
@@ -198,24 +210,7 @@ class LeftDrawer extends StatelessWidget {
           //     ),
           //   ),
           // ),
-
-          const Divider(),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text(
-              'LAINNYA',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade600,
-                letterSpacing: 1,
-              ),
-            ),
-          ),
-
-          //TODO: Venue
-          // ... (kode sebelumnya)
-
+          if (isVenueOwner) ...[
           const Divider(),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -229,7 +224,6 @@ class LeftDrawer extends StatelessWidget {
               ),
             ),
           ),
-          
           ListTile(
             leading: const Icon(Icons.dashboard_outlined, color: Color(0xFF0D9488)),
             title: const Text("Venue Dashboard"),
@@ -244,7 +238,8 @@ class LeftDrawer extends StatelessWidget {
                 ),
               );
             },
-          ),
+          ), 
+          ]     
         ],
       ),
     );
