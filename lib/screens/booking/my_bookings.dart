@@ -71,7 +71,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
       appBar: AppBar(
         title: const Text('Bookingan Saya',
             style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: const Color(0xFFEA580C),
+        backgroundColor: const Color(0xFF0D9488),
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -199,245 +199,258 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
         ],
         border: Border.all(color: Colors.grey.shade200),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Orange left border
-          Container(
-            width: 5,
-            decoration: const BoxDecoration(
-              color: Color(0xFFEA580C),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(12),
-                bottomLeft: Radius.circular(12),
-              ),
-            ),
-          ),
-          // Content
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // HEADER KARTU
-                Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Booking #${booking.pk}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade500,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        booking.fields.venueName,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFFEA580C),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // TANGGAL
-                      _buildInfoItem(
-                        Icons.calendar_today_outlined,
-                        "Tanggal",
-                        formatDate(booking.fields.date),
-                      ),
-                      const SizedBox(height: 12),
-
-                      // WAKTU
-                      _buildInfoItem(
-                        Icons.access_time,
-                        "Waktu",
-                        "${booking.fields.startTime} - ${booking.fields.endTime}",
-                      ),
-
-                      // COACH
-                      if (booking.fields.coachName != null) ...[
-                        const SizedBox(height: 12),
-                        _buildInfoItem(
-                          Icons.person_outline,
-                          "Coach",
-                          booking.fields.coachName!,
-                        ),
-                      ],
-
-                      // EQUIPMENT
-                      if (booking.fields.equipments.isNotEmpty) ...[
-                        const SizedBox(height: 12),
-                        _buildEquipmentItem(booking.fields.equipments),
-                      ],
-                    ],
-                  ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Column(
+          children: [
+            Container(
+              decoration: const BoxDecoration(
+                border: Border(
+                  left: BorderSide(color: Color(0xFFEA580C), width: 5),  
                 ),
-
-                // SECTION BIAYA, METODE & STATUS
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFF7ED),
-                    border: Border(
-                      top: BorderSide(color: Colors.orange.shade100),
+              ),
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Booking #${booking.pk}',
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade500, fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    booking.fields.venueName,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFFEA580C), 
                     ),
                   ),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          // Total Biaya
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'TOTAL BIAYA',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.orange.shade800,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  formatCurrency(booking.fields.totalPrice),
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF7C2D12),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                  const SizedBox(height: 20),
 
-                          // Metode Pembayaran
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'METODE PEMBAYARAN',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.grey.shade600,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  _formatPaymentMethod(
-                                      booking.fields.paymentMethod),
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          // Status
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: Colors.orange.shade100,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.orange.shade300),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.circle,
-                                    size: 8, color: Colors.orange.shade700),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'PENDING',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.orange.shade800,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                  _buildInfoItem(
+                    Icons.calendar_today_outlined,
+                    "Tanggal",
+                    formatDate(booking.fields.date),
                   ),
-                ),
+                  const SizedBox(height: 12),
+                  _buildInfoItem(
+                    Icons.access_time,
+                    "Waktu",
+                    "${booking.fields.startTime} - ${booking.fields.endTime}",
+                  ),
+                  
+                  if (booking.fields.coachName != null && booking.fields.coachName != "-" && booking.fields.coachName != "null") ...[
+                    const SizedBox(height: 12),
+                    _buildInfoItem(
+                      Icons.person_outline,
+                      "Coach",
+                      booking.fields.coachName!,
+                    ),
+                  ],
 
-                // ACTION BUTTONS
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      // Tombol Edit
-                      Expanded(
-                        child: _buildButton(
-                          label: 'Edit Booking',
-                          icon: Icons.edit_outlined,
-                          color: const Color(0xFF2563EB),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => UpdateBookingPage(
-                                  bookingId: booking.pk,
-                                  venueScheduleId: booking.fields.venueSchedule,
+                  if (booking.fields.equipments.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    _buildEquipmentItem(booking.fields.equipments),
+                  ],
+                ],
+              ),
+            ),
+
+            const Divider(height: 1, thickness: 1),
+
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      flex: 4, 
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF7ED), 
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'TOTAL BIAYA',
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFFEA580C), 
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                formatCurrency(booking.fields.totalPrice),
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF7C2D12), 
                                 ),
                               ),
-                            ).then((_) => setState(() {}));
-                          },
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(width: 8),
+                    ),
 
-                      // Tombol Bayar
-                      Expanded(
-                        child: _buildButton(
-                          label: 'Bayar Sekarang',
-                          icon: Icons.payment,
-                          color: const Color(0xFF16A34A),
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content:
-                                      Text("Fitur bayar akan segera hadir")),
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 8),
+                    const SizedBox(width: 8),
 
-                      // Tombol Cancel
-                      Expanded(
-                        child: _buildButton(
-                          label: 'Cancel Booking',
-                          icon: Icons.close,
-                          color: const Color(0xFFDC2626),
-                          onPressed: () =>
-                              _showCancelDialog(context, booking, request),
+                    Expanded(
+                      flex: 3,
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50, 
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'METODE PEMBAYARAN',
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              booking.fields.paymentMethod.toUpperCase(),
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+
+                    const SizedBox(width: 8),
+
+                    Expanded(
+                      flex: 4,
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF7ED), 
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'STATUS PEMBAYARAN',
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFEDD5),  
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 6, height: 6,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFFEA580C), 
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  const Flexible(
+                                    child: Text(
+                                      'MENUNGGU PEMBAYARAN',
+                                      style: TextStyle(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF9A3412), 
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-        ],
+
+            // ACTION BUTTONS
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _buildButton(
+                      label: 'Edit Booking',
+                      icon: Icons.edit_outlined,
+                      color: const Color(0xFF2563EB),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => UpdateBookingPage(
+                              bookingId: booking.pk,
+                              venueScheduleId: booking.fields.venueSchedule,
+                            ),
+                          ),
+                        ).then((_) => setState(() {}));
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildButton(
+                      label: 'Bayar Sekarang',
+                      icon: Icons.payment,
+                      color: const Color(0xFF16A34A),
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Fitur bayar akan segera hadir")),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildButton(
+                      label: 'Cancel Booking',
+                      icon: Icons.close,
+                      color: const Color(0xFFDC2626),
+                      onPressed: () => _showCancelDialog(context, booking, request),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
