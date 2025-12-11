@@ -45,6 +45,7 @@ class Fields {
   String totalPrice;
   DateTime bookingTime;
   String paymentMethod;
+  bool isPaid;  // TAMBAHKAN
   List<EquipmentItem> equipments; 
 
   Fields({
@@ -60,6 +61,7 @@ class Fields {
     required this.totalPrice,
     required this.bookingTime,
     required this.paymentMethod, 
+    this.isPaid = false, 
     required this.equipments, 
   });
 
@@ -76,6 +78,7 @@ class Fields {
         totalPrice: json["total_price"]?.toString() ?? "0",
         bookingTime: _parseDateTime(json["booking_time"]),
         paymentMethod: json["payment_method"]?.toString() ?? "CASH",
+        isPaid: json["is_paid"] ?? false,  
         equipments: json["equipments"] != null
             ? List<EquipmentItem>.from(
                 json["equipments"].map((x) => EquipmentItem.fromJson(x)))
@@ -122,7 +125,8 @@ class Fields {
         "coach_name": coachName ?? "-",
         "total_price": totalPrice,
         "booking_time": bookingTime.toIso8601String(),
-        "payment_method": paymentMethod, 
+        "payment_method": paymentMethod,
+        "is_paid": isPaid,  
         "equipments": equipments.map((x) => x.toJson()).toList(), 
       };
 }

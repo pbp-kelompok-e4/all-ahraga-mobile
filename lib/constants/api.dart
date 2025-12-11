@@ -16,6 +16,8 @@ class ApiConstants {
       '$baseUrl/api/booking/$bookingId/update/';
   static String bookingDetail(int bookingId) =>
       '$baseUrl/api/booking/$bookingId/detail/';
+  static String confirmPayment(int bookingId) =>
+      '$baseUrl/customer/payment/$bookingId/';
 
   // Venue endpoints
   static const String venueDashboard = '$baseUrl/api/venue/dashboard/';
