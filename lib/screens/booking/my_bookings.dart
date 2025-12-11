@@ -424,7 +424,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                       // Tombol Cancel
                       Expanded(
                         child: _buildButton(
-                          label: 'Cancel',
+                          label: 'Cancel Booking',
                           icon: Icons.close,
                           color: const Color(0xFFDC2626),
                           onPressed: () =>
@@ -572,13 +572,13 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Batalkan Booking?'),
+        title: const Text('Konfirmasi pembatalan?'),
         content:
-            Text('Apakah Anda yakin ingin membatalkan Booking #${booking.pk}?'),
+            Text('Apakah Anda yakin ingin membatalkan Booking Anda?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Tidak', style: TextStyle(color: Colors.grey)),
+            child: const Text('Tidak, Kembali', style: TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
