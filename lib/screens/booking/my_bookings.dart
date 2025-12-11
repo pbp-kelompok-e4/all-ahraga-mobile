@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:all_ahraga/screens/booking/customer_payment.dart';
 
 class MyBookingsPage extends StatefulWidget {
   const MyBookingsPage({super.key});
@@ -146,6 +147,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                   }
 
                   final filteredBookings = snapshot.data!.where((booking) {
+                    if (booking.fields.isPaid) return false;
                     if (_searchQuery.isEmpty) return true;
                     final matchId =
                         booking.pk.toString().contains(_searchQuery);
@@ -240,7 +242,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                     "${booking.fields.startTime} - ${booking.fields.endTime}",
                   ),
                   
-                  if (booking.fields.coachName != null && booking.fields.coachName != "-" && booking.fields.coachName != "null") ...[
+                  if (booking.fields.coachName != null && booking.fields.coachName != "-" && booking.fields.coachName!.isNotEmpty) ...[
                     const SizedBox(height: 12),
                     _buildInfoItem(
                       Icons.person_outline,
@@ -430,10 +432,24 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                       label: 'Bayar Sekarang',
                       icon: Icons.payment,
                       color: const Color(0xFF16A34A),
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Fitur bayar akan segera hadir")),
-                        );
+                      onPressed: () async {
+                        // Cek metode pembayaran
+                        if (booking.fields.paymentMethod.toUpperCase() == 'CASH') {
+                          // Jika CASH, langsung konfirmasi pembayaran
+                          _confirmCashPayment(booking.pk, request);
+                        } else {
+                          // Jika TRANSFER, ke halaman customer payment
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CustomerPaymentPage(
+                                bookingId: booking.pk,
+                                paymentMethod: booking.fields.paymentMethod,
+                                totalPrice: booking.fields.totalPrice,
+                              ),
+                            ),
+                          ).then((_) => setState(() {}));
+                        }
                       },
                     ),
                   ),
@@ -650,4 +666,61 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
       ),
     );
   }
+
+  Future<void> _confirmCashPayment(int bookingId, CookieRequest request) async {
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(color: Color(0xFF0D9488)),
+      ),
+    );
+
+    try {
+      final response = await request.postJson(
+        ApiConstants.confirmPayment(bookingId),
+        jsonEncode({}),
+      );
+
+      if (!mounted) return;
+      
+      // Close loading dialog
+      Navigator.pop(context);
+
+      if (response['success'] == true) {
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(response['message'] ?? 'Pembayaran berhasil dikonfirmasi!'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+        
+        // Refresh list
+        setState(() {});
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(response['message'] ?? 'Gagal mengkonfirmasi pembayaran'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      
+      // Close loading dialog
+      Navigator.pop(context);
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 }
+
