@@ -1,75 +1,111 @@
-// models/coach_entry.dart
+// To parse this JSON data, do
+//
+//     final coachEntry = coachEntryFromJson(jsonString);
 
 import 'dart:convert';
 
-List<CoachEntry> coachEntryFromJson(String str) => List<CoachEntry>.from(json.decode(str).map((x) => CoachEntry.fromJson(x)));
+CoachEntry coachEntryFromJson(String str) => CoachEntry.fromJson(json.decode(str));
 
-String coachEntryToJson(List<CoachEntry> data) => json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
+String coachEntryToJson(CoachEntry data) => json.encode(data.toJson());
 
 class CoachEntry {
-    String model;
-    int pk;
-    Fields fields;
+    int? id;
+    String? userId;
+    String? username;
+    String? firstName;
+    String? lastName;
+    String? email;
+    int? age;
+    String? experienceDesc;
+    double? ratePerHour;
+    String? mainSportTrained;
+    int? mainSportTrainedId;
+    List<String>? serviceAreas;
+    List<int>? serviceAreaIds;
+    bool? isVerified;
+    String? profilePicture;
+    DateTime? createdAt;
+    DateTime? updatedAt;
 
     CoachEntry({
-        required this.model,
-        required this.pk,
-        required this.fields,
+        this.id,
+        this.userId,
+        this.username,
+        this.firstName,
+        this.lastName,
+        this.email,
+        this.age,
+        this.experienceDesc,
+        this.ratePerHour,
+        this.mainSportTrained,
+        this.mainSportTrainedId,
+        this.serviceAreas,
+        this.serviceAreaIds,
+        this.isVerified,
+        this.profilePicture,
+        this.createdAt,
+        this.updatedAt,
     });
 
     factory CoachEntry.fromJson(Map<String, dynamic> json) => CoachEntry(
-        model: json["model"],
-        pk: json["pk"],
-        fields: Fields.fromJson(json["fields"]),
-    );
-
-    Map<String, dynamic> toJson() => {
-        "model": model,
-        "pk": pk,
-        "fields": fields.toJson(),
-    };
-}
-
-class Fields {
-    int user;
-    int? age;
-    String experienceDesc;
-    String ratePerHour; // DecimalField di Django seringkali jadi String di JSON serializer bawaan
-    String? profilePicture;
-    int mainSportTrained; // Ini akan menerima ID (integer)
-    List<int> serviceAreas; // ManyToMany field menjadi List of integers
-    bool isVerified;
-
-    Fields({
-        required this.user,
-        required this.age,
-        required this.experienceDesc,
-        required this.ratePerHour,
-        required this.profilePicture,
-        required this.mainSportTrained,
-        required this.serviceAreas,
-        required this.isVerified,
-    });
-
-    factory Fields.fromJson(Map<String, dynamic> json) => Fields(
-        user: json["user"],
+        id: json["id"],
+        userId: json["user_id"],
+        username: json["username"],
+        firstName: json["first_name"],
+        lastName: json["last_name"],
+        email: json["email"],
         age: json["age"],
-        experienceDesc: json["experience_desc"] ?? "",
-        ratePerHour: json["rate_per_hour"],
-        profilePicture: json["profile_picture"],
+        experienceDesc: json["experience_desc"],
+        ratePerHour: json["rate_per_hour"]?.toDouble(),
         mainSportTrained: json["main_sport_trained"],
-        serviceAreas: List<int>.from(json["service_areas"].map((x) => x)),
+        mainSportTrainedId: json["main_sport_trained_id"],
+        serviceAreas: json["service_areas"] == null 
+            ? [] 
+            : List<String>.from(json["service_areas"].map((x) => x)),
+        serviceAreaIds: json["service_area_ids"] == null
+            ? []
+            : List<int>.from(json["service_area_ids"].map((x) => x)),
         isVerified: json["is_verified"],
+        profilePicture: json["profile_picture"],
+        createdAt: json["created_at"] == null 
+            ? null 
+            : DateTime.parse(json["created_at"]),
+        updatedAt: json["updated_at"] == null 
+            ? null 
+            : DateTime.parse(json["updated_at"]),
     );
 
     Map<String, dynamic> toJson() => {
-        "user": user,
+        "id": id,
+        "user_id": userId,
+        "username": username,
+        "first_name": firstName,
+        "last_name": lastName,
+        "email": email,
         "age": age,
         "experience_desc": experienceDesc,
         "rate_per_hour": ratePerHour,
-        "profile_picture": profilePicture,
         "main_sport_trained": mainSportTrained,
-        "service_areas": List<dynamic>.from(serviceAreas.map((x) => x)),
+        "main_sport_trained_id": mainSportTrainedId,
+        "service_areas": serviceAreas == null 
+            ? [] 
+            : List<dynamic>.from(serviceAreas!.map((x) => x)),
+        "service_area_ids": serviceAreaIds == null
+            ? []
+            : List<dynamic>.from(serviceAreaIds!.map((x) => x)),
         "is_verified": isVerified,
+        "profile_picture": profilePicture,
+        "created_at": createdAt?.toIso8601String(),
+        "updated_at": updatedAt?.toIso8601String(),
     };
+
+    // Helper getter untuk nama lengkap
+    String get fullName => '${firstName ?? ''} ${lastName ?? ''}'.trim();
+    
+    // Helper getter untuk cek apakah profile complete
+    bool get isProfileComplete => 
+        age != null && 
+        experienceDesc != null && 
+        ratePerHour != null && 
+        mainSportTrained != null;
 }
