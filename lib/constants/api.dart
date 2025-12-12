@@ -31,4 +31,9 @@ class ApiConstants {
       '$baseUrl/dashboard/venue/$venueId/schedules/manage/';
   static String venueDeleteSchedule(int venueId) =>
       '$baseUrl/venue/$venueId/schedules/delete/';
+
+  // Coach endpoints
+  static const String coachSchedule = '$baseUrl/coach/schedule/'; 
+  static const String coachScheduleDelete = '$baseUrl/coach/schedule/delete/';
+
 }

@@ -4,7 +4,7 @@ import 'package:all_ahraga/screens/booking/my_bookings.dart';
 import 'package:all_ahraga/screens/booking/booking_history.dart';
 import 'package:all_ahraga/screens/coach/coach_list.dart';
 import 'package:all_ahraga/screens/coach/coach_revenue.dart';
-import 'package:all_ahraga/screens/coach/coach_schedule.dart';
+import 'package:all_ahraga/screens/coach/coach_manage_schedule.dart';
 import 'package:all_ahraga/screens/coach/coach_profile.dart';
 import 'package:all_ahraga/screens/venue_menu.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
