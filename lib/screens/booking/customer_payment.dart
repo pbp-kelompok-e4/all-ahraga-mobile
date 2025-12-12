@@ -55,8 +55,7 @@ class _CustomerPaymentPageState extends State<CustomerPaymentPage> {
       setState(() => _isProcessing = false);
 
       if (response['success'] == true) {
-        // Kembali ke My Bookings dengan success message
-        Navigator.of(context).pop(true); // Close payment page
+        Navigator.of(context).pop(true); 
         
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -119,7 +118,7 @@ class _CustomerPaymentPageState extends State<CustomerPaymentPage> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.of(context).pop(); // Close dialog
+                    Navigator.of(context).pop(); 
                     Navigator.of(context).pop(true);
                   },
                   style: ElevatedButton.styleFrom(
@@ -381,7 +380,7 @@ class _CustomerPaymentPageState extends State<CustomerPaymentPage> {
                 const SizedBox(height: 12),
                 OutlinedButton(
                   onPressed: () {
-                    Navigator.of(context).pop(); // Kembali ke My Bookings
+                    Navigator.of(context).pop(); 
                   },
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.grey.shade700,

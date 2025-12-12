@@ -89,6 +89,8 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
 
     return _schedules.where((s) {
       if (s['date'] != dateStr) return false;
+
+      if (s['is_booked'] == true) return false;
       
       if (isToday) {
         try {
@@ -168,15 +170,12 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
 
         if (context.mounted) {
           if (response['success'] == true) {
-            // Langsung ke My Bookings dengan success message
-            Navigator.of(context).pushAndRemoveUntil(
+            Navigator.of(context).pushReplacement(
               MaterialPageRoute(
                 builder: (context) => const MyBookingsPage(),
               ),
-              (route) => false,
             );
             
-            // Show success snackbar
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Booking berhasil dibuat!'),
@@ -289,11 +288,14 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
   }
 
   double _calculateTotal() {
-    double total = (_venue?['price_per_hour'] ?? 0).toDouble();
+    double total = 0;
+
+    if (_selectedScheduleId != null) {
+      total += (_venue?['price_per_hour'] ?? 0).toDouble();
+    }
 
     for (var eqId in _selectedEquipmentIds) {
-      final eq =
-          _equipments.firstWhere((e) => e['id'] == eqId, orElse: () => null);
+      final eq = _equipments.firstWhere((e) => e['id'] == eqId, orElse: () => null);
       if (eq != null) {
         int qty = _equipmentQuantities[eqId] ?? 1;
         total += (eq['rental_price'] ?? 0).toDouble() * qty;

@@ -138,10 +138,47 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                   }
 
                   if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Center(
+                    return Center(
                       child: Padding(
-                        padding: EdgeInsets.all(32),
-                        child: Text("Belum ada booking yang dibuat."),
+                        padding: const EdgeInsets.all(40),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFEDD5), 
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.check_circle_outline, 
+                                size: 48,
+                                color: Color(0xFFEA580C), 
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            
+                            const Text(
+                              "Tidak ada booking yang menunggu pembayaran",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            
+                            const Text(
+                              "Semua booking Anda sudah lunas! 👍",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   }
@@ -433,12 +470,9 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                       icon: Icons.payment,
                       color: const Color(0xFF16A34A),
                       onPressed: () async {
-                        // Cek metode pembayaran
                         if (booking.fields.paymentMethod.toUpperCase() == 'CASH') {
-                          // Jika CASH, langsung konfirmasi pembayaran
                           _confirmCashPayment(booking.pk, request);
                         } else {
-                          // Jika TRANSFER, ke halaman customer payment
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -668,7 +702,6 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
   }
 
   Future<void> _confirmCashPayment(int bookingId, CookieRequest request) async {
-    // Show loading dialog
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -685,11 +718,9 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
 
       if (!mounted) return;
       
-      // Close loading dialog
       Navigator.pop(context);
 
       if (response['success'] == true) {
-        // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(response['message'] ?? 'Pembayaran berhasil dikonfirmasi!'),
@@ -711,7 +742,6 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
     } catch (e) {
       if (!mounted) return;
       
-      // Close loading dialog
       Navigator.pop(context);
       
       ScaffoldMessenger.of(context).showSnackBar(

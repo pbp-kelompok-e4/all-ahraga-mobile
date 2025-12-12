@@ -228,13 +228,11 @@ class LeftDrawer extends StatelessWidget {
             leading: const Icon(Icons.dashboard_outlined, color: Color(0xFF0D9488)),
             title: const Text("Venue Dashboard"),
             onTap: () {
-              // Tutup drawer dulu
               Navigator.pop(context); 
-              // Arahkan ke dashboard venue
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const VenueHomePage(), // Atau langsung ke VenueDashboardPage()
+                  builder: (context) => const VenueHomePage(), 
                 ),
               );
             },
