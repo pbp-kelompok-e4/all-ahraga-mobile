@@ -4,6 +4,7 @@ import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:all_ahraga/screens/booking/my_bookings.dart';
 import 'package:all_ahraga/constants/api.dart';
+import 'package:all_ahraga/screens/booking/customer_payment.dart';
 
 class CreateBookingPage extends StatefulWidget {
   final int venueId;
@@ -81,7 +82,35 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
   List<dynamic> get _filteredSchedules {
     final dateStr =
         '${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}';
-    return _schedules.where((s) => s['date'] == dateStr).toList();
+    final dateNow = DateTime.now();
+    final isToday = _selectedDate.year == dateNow.year && 
+         _selectedDate.month == dateNow.month &&
+         _selectedDate.day == dateNow.day;
+
+    return _schedules.where((s) {
+      if (s['date'] != dateStr) return false;
+      
+      if (isToday) {
+        try {
+          final timeParts = s['start_time'].toString().split(':');
+          final int startHour = int.parse(timeParts[0]);
+          final int startMinute = int.parse(timeParts[1]);
+          final scheduleTime = DateTime(
+            dateNow.year,
+            dateNow.month,
+            dateNow.day,
+            startHour,
+            startMinute,
+          );
+
+          return scheduleTime.isAfter(dateNow);
+        } catch (e) {
+          return true;
+        }
+      }
+
+      return true;
+    }).toList();
   }
 
   Future<void> _fetchAvailableCoaches(int scheduleId) async {
@@ -115,44 +144,59 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
     }
   }
 
-  Future<void> _submitBooking() async {
-    if (_selectedScheduleId == null) {
-      _showSnackBar('Pilih jadwal terlebih dahulu!', isError: true);
-      return;
-    }
+    Future<void> _submitBooking() async {
+      if (_selectedScheduleId == null) {
+        _showSnackBar('Pilih jadwal terlebih dahulu!', isError: true);
+        return;
+      }
 
-    setState(() => _isSubmitting = true);
+      setState(() => _isSubmitting = true);
 
-    final request = context.read<CookieRequest>();
+      final request = context.read<CookieRequest>();
 
-    try {
-    final response = await request.postJson(
-      ApiConstants.createBooking(widget.venueId),  
-      jsonEncode({
-        'schedule_id': _selectedScheduleId,
-        'coach_schedule_id': _selectedCoachScheduleId,
-        'equipment': _selectedEquipmentIds.toList(),
-        'quantities': _equipmentQuantities.map((k, v) => MapEntry(k.toString(), v)),
-        'payment_method': _paymentMethod,
-      }),
-    );
+      try {
+        final response = await request.postJson(
+          ApiConstants.createBooking(widget.venueId),  
+          jsonEncode({
+            'schedule_id': _selectedScheduleId,
+            'coach_schedule_id': _selectedCoachScheduleId,
+            'equipment': _selectedEquipmentIds.toList(),
+            'quantities': _equipmentQuantities.map((k, v) => MapEntry(k.toString(), v)),
+            'payment_method': _paymentMethod,
+          }),
+        );
 
-      if (context.mounted) {
-        if (response['success'] == true) {
-          _showSuccessDialog();
-        } else {
-          _showSnackBar(
-              response['message'] ?? 'Gagal membuat booking', isError: true);
+        if (context.mounted) {
+          if (response['success'] == true) {
+            // Langsung ke My Bookings dengan success message
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder: (context) => const MyBookingsPage(),
+              ),
+              (route) => false,
+            );
+            
+            // Show success snackbar
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Booking berhasil dibuat!'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 3),
+              ),
+            );
+          } else {
+            _showSnackBar(
+                response['message'] ?? 'Gagal membuat booking', isError: true);
+          }
         }
+      } catch (e) {
+        if (context.mounted) {
+          _showSnackBar('Error: $e', isError: true);
+        }
+      } finally {
+        setState(() => _isSubmitting = false);
       }
-    } catch (e) {
-      if (context.mounted) {
-        _showSnackBar('Error: $e', isError: true);
-      }
-    } finally {
-      setState(() => _isSubmitting = false);
     }
-  }
 
   void _showSnackBar(String message, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -207,7 +251,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.pop(context); // Close dialog
+                    Navigator.pop(context); 
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
@@ -232,8 +276,8 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
               const SizedBox(height: 8),
               TextButton(
                 onPressed: () {
-                  Navigator.pop(context); // Close dialog
-                  Navigator.pop(context, true); // Back to home with refresh
+                  Navigator.pop(context); 
+                  Navigator.pop(context, true); 
                 },
                 child: const Text('Kembali ke Home'),
               ),
