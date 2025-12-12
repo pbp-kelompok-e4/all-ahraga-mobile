@@ -107,7 +107,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
             ),
 
             // List Booking History
-            FutureBuilder(
+            FutureBuilder<List<BookingListEntry>>(
               future: fetchBookingHistory(request),
               builder: (context, AsyncSnapshot<List<BookingListEntry>> snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -128,11 +128,46 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
                 }
 
                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const SliverToBoxAdapter(
-                    child: Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(32),
-                        child: Text("Belum ada riwayat booking selesai."),
+                  return SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(40),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[200],
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.assignment,
+                              size: 48,
+                              color: Colors.grey,
+                            ),
+                          ),
+
+                          const SizedBox(height: 24),
+                          const Text(
+                            "Anda belum memiliki riwayat booking",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+
+                          const SizedBox(height: 8),
+                          const Text(
+                            "Mulai booking venue dan coach favorit Anda sekarang!",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   );

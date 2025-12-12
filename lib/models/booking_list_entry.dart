@@ -45,7 +45,7 @@ class Fields {
   String totalPrice;
   DateTime bookingTime;
   String paymentMethod;
-  bool isPaid;  // TAMBAHKAN
+  bool isPaid;  
   List<EquipmentItem> equipments; 
 
   Fields({
