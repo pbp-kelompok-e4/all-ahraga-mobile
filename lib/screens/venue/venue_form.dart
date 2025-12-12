@@ -1,5 +1,8 @@
 import 'dart:convert';
+import 'dart:io'; // Tetap butuh untuk Android/iOS
+import 'package:flutter/foundation.dart'; // Untuk cek kIsWeb
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart'; 
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:all_ahraga/constants/api.dart';
@@ -18,14 +21,11 @@ class _VenueFormPageState extends State<VenueFormPage> {
   final TextEditingController _descController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
 
-  // Variabel untuk Dropdown Data dari Server
   List<dynamic> _locations = [];
   List<dynamic> _categories = [];
   
-  // Variabel State Pilihan User - UBAH KE INT
   int? _selectedLocation;
   int? _selectedCategory;
-  
   String? _selectedPaymentOption = 'TRANSFER'; 
   
   final List<Map<String, String>> _paymentOptionsList = [
@@ -34,6 +34,10 @@ class _VenueFormPageState extends State<VenueFormPage> {
   ];
 
   bool _isLoading = true;
+  
+  // PERBAIKAN 1: Gunakan XFile, bukan File
+  XFile? _imageFile; 
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -45,16 +49,13 @@ class _VenueFormPageState extends State<VenueFormPage> {
 
   Future<void> _fetchDropdownData() async {
     final request = context.read<CookieRequest>();
-    // PERBAIKAN: Gunakan endpoint venue-add yang sudah include master data
     final url = ApiConstants.venueAdd;
-
     try {
       final response = await request.get(url);
-      
       if (response['success'] == true) {
         setState(() {
           _locations = response['locations'] ?? [];
-          _categories = response['sports'] ?? []; // Sesuaikan dengan key dari backend
+          _categories = response['sports'] ?? [];
           _isLoading = false;
         });
       } else {
@@ -72,14 +73,36 @@ class _VenueFormPageState extends State<VenueFormPage> {
     }
   }
 
+  Future<void> _pickImage() async {
+    final XFile? pickedFile = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 50, 
+      maxWidth: 800,
+    );
+
+    if (pickedFile != null) {
+      setState(() {
+        // PERBAIKAN 2: Simpan langsung sebagai XFile
+        _imageFile = pickedFile;
+      });
+    }
+  }
+
   Future<void> _submitVenue() async {
     if (!_formKey.currentState!.validate()) return;
     
     if (_selectedLocation == null || _selectedCategory == null || _selectedPaymentOption == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Mohon lengkapi semua pilihan (Lokasi, Kategori, Pembayaran)")),
+        const SnackBar(content: Text("Mohon lengkapi semua pilihan")),
       );
       return;
+    }
+
+    // PERBAIKAN 3: Baca bytes langsung dari XFile (Aman untuk Web & Mobile)
+    String? base64Image;
+    if (_imageFile != null) {
+      final bytes = await _imageFile!.readAsBytes();
+      base64Image = "data:image/jpeg;base64,${base64Encode(bytes)}";
     }
 
     final request = context.read<CookieRequest>();
@@ -92,9 +115,10 @@ class _VenueFormPageState extends State<VenueFormPage> {
           'name': _nameController.text,
           'description': _descController.text,
           'price_per_hour': int.tryParse(_priceController.text) ?? 0,
-          'location': _selectedLocation, // SUDAH INT
-          'sport_category': _selectedCategory, // SUDAH INT
-          'payment_options': _selectedPaymentOption, 
+          'location': _selectedLocation,
+          'sport_category': _selectedCategory,
+          'payment_options': _selectedPaymentOption,
+          'image': base64Image,
         }),
       );
 
@@ -107,16 +131,8 @@ class _VenueFormPageState extends State<VenueFormPage> {
         }
       } else {
         if (mounted) {
-          String errMessage = response['message'] ?? "Gagal menyimpan";
-          if (response['errors'] != null) {
-             errMessage += ": ${response['errors'].toString()}";
-          }
-          
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(errMessage),
-              backgroundColor: Colors.red,
-            )
+            SnackBar(content: Text("Gagal: ${response['message']}")),
           );
         }
       }
@@ -144,104 +160,101 @@ class _VenueFormPageState extends State<VenueFormPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // --- PERBAIKAN 4: TAMPILAN GAMBAR (WEB SAFE) ---
+                    Center(
+                      child: GestureDetector(
+                        onTap: _pickImage,
+                        child: Container(
+                          width: double.infinity,
+                          height: 200,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey),
+                          ),
+                          child: _imageFile != null
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: kIsWeb
+                                      // Jika Web: Pakai Network Image (Blob URL dari path)
+                                      ? Image.network(
+                                          _imageFile!.path,
+                                          fit: BoxFit.cover,
+                                        )
+                                      // Jika Mobile: Pakai File Image
+                                      : Image.file(
+                                          File(_imageFile!.path),
+                                          fit: BoxFit.cover,
+                                        ),
+                                )
+                              : const Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.add_a_photo, size: 50, color: Colors.grey),
+                                    SizedBox(height: 8),
+                                    Text("Tap untuk tambah foto", style: TextStyle(color: Colors.grey)),
+                                  ],
+                                ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // ---------------------------------------------
+
                     TextFormField(
                       controller: _nameController,
-                      decoration: const InputDecoration(
-                        labelText: "Nama Venue",
-                        border: OutlineInputBorder(),
-                        hintText: "Contoh: Lapangan Futsal A",
-                      ),
-                      validator: (value) => value!.isEmpty ? "Nama tidak boleh kosong" : null,
+                      decoration: const InputDecoration(labelText: "Nama Venue", border: OutlineInputBorder()),
+                      validator: (value) => value!.isEmpty ? "Wajib diisi" : null,
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _descController,
-                      decoration: const InputDecoration(
-                        labelText: "Deskripsi",
-                        border: OutlineInputBorder(),
-                        hintText: "Jelaskan fasilitas venue...",
-                      ),
+                      decoration: const InputDecoration(labelText: "Deskripsi", border: OutlineInputBorder()),
                       maxLines: 3,
-                      validator: (value) => value!.isEmpty ? "Deskripsi tidak boleh kosong" : null,
+                      validator: (value) => value!.isEmpty ? "Wajib diisi" : null,
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _priceController,
-                      decoration: const InputDecoration(
-                        labelText: "Harga per Jam (Rp)",
-                        border: OutlineInputBorder(),
-                        prefixText: "Rp ",
-                      ),
+                      decoration: const InputDecoration(labelText: "Harga per Jam (Rp)", border: OutlineInputBorder()),
                       keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) return "Harga harus diisi";
-                        if (int.tryParse(value) == null) return "Harus berupa angka";
-                        return null;
-                      },
+                      validator: (value) => value!.isEmpty ? "Wajib diisi" : null,
                     ),
                     const SizedBox(height: 16),
                     
-                    // Dropdown Location - PERBAIKAN: VALUE INT
                     DropdownButtonFormField<int>(
-                      decoration: const InputDecoration(
-                        labelText: "Lokasi / Area",
-                        border: OutlineInputBorder(),
-                      ),
-                      initialValue: _selectedLocation,
+                      decoration: const InputDecoration(labelText: "Lokasi / Area", border: OutlineInputBorder()),
+                      value: _selectedLocation,
                       items: _locations.map<DropdownMenuItem<int>>((item) {
-                        return DropdownMenuItem<int>(
-                          value: item['id'], // Langsung int
-                          child: Text(item['name']),
-                        );
+                        return DropdownMenuItem<int>(value: item['id'], child: Text(item['name']));
                       }).toList(),
-                      onChanged: (int? val) {
-                        setState(() => _selectedLocation = val);
-                      },
+                      onChanged: (val) => setState(() => _selectedLocation = val),
                       validator: (val) => val == null ? "Pilih lokasi" : null,
                     ),
                     const SizedBox(height: 16),
 
-                    // Dropdown Category - PERBAIKAN: VALUE INT
                     DropdownButtonFormField<int>(
-                      decoration: const InputDecoration(
-                        labelText: "Kategori Olahraga",
-                        border: OutlineInputBorder(),
-                      ),
-                      initialValue: _selectedCategory,
+                      decoration: const InputDecoration(labelText: "Kategori Olahraga", border: OutlineInputBorder()),
+                      value: _selectedCategory,
                       items: _categories.map<DropdownMenuItem<int>>((item) {
-                        return DropdownMenuItem<int>(
-                          value: item['id'], // Langsung int
-                          child: Text(item['name']),
-                        );
+                        return DropdownMenuItem<int>(value: item['id'], child: Text(item['name']));
                       }).toList(),
-                      onChanged: (int? val) {
-                        setState(() => _selectedCategory = val);
-                      },
+                      onChanged: (val) => setState(() => _selectedCategory = val),
                       validator: (val) => val == null ? "Pilih kategori" : null,
                     ),
                     const SizedBox(height: 16),
 
-                    // Dropdown Payment Options
                     DropdownButtonFormField<String>(
-                      decoration: const InputDecoration(
-                        labelText: "Opsi Pembayaran",
-                        border: OutlineInputBorder(),
-                      ),
-                      initialValue: _selectedPaymentOption,
+                      decoration: const InputDecoration(labelText: "Opsi Pembayaran", border: OutlineInputBorder()),
+                      value: _selectedPaymentOption,
                       items: _paymentOptionsList.map((item) {
-                        return DropdownMenuItem<String>(
-                          value: item['value'],
-                          child: Text(item['label']!),
-                        );
+                        return DropdownMenuItem<String>(value: item['value'], child: Text(item['label']!));
                       }).toList(),
-                      onChanged: (String? val) {
-                        setState(() => _selectedPaymentOption = val);
-                      },
-                      validator: (val) => val == null ? "Pilih opsi pembayaran" : null,
+                      onChanged: (val) => setState(() => _selectedPaymentOption = val),
+                      validator: (val) => val == null ? "Pilih opsi" : null,
                     ),
 
                     const SizedBox(height: 24),
-
                     SizedBox(
                       width: double.infinity,
                       height: 50,
@@ -250,7 +263,6 @@ class _VenueFormPageState extends State<VenueFormPage> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF0D9488),
                           foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
                         child: const Text("Simpan Venue", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                       ),

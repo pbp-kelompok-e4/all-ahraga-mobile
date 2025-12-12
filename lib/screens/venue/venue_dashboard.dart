@@ -373,6 +373,8 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
                       snapshot.data!.length,
                       (index) {
                         final venue = snapshot.data![index];
+                        // Ambil URL gambar (pastikan backend mengirim 'image_url')
+                        final String? imageUrl = venue['image_url'];
                         return Container(
                           margin: const EdgeInsets.only(bottom: 16),
                           decoration: BoxDecoration(
@@ -390,7 +392,27 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
                             borderRadius: BorderRadius.circular(16),
                             child: Column(
                               children: [
-                                // Header with gradient
+                                // --- GAMBAR VENUE ---
+                                Container(
+                                  height: 150,
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[200],
+                                    image: (imageUrl != null && imageUrl.isNotEmpty)
+                                        ? DecorationImage(
+                                            image: NetworkImage(imageUrl.startsWith('http')
+                                                ? imageUrl
+                                                : "http://10.0.2.2:8000$imageUrl"),
+                                            fit: BoxFit.cover,
+                                          )
+                                        : null,
+                                  ),
+                                  child: (imageUrl == null || imageUrl.isEmpty)
+                                      ? const Icon(Icons.stadium, size: 60, color: Colors.grey)
+                                      : null,
+                                ),
+
+                                // Header with gradient (diletakkan di bawah gambar)
                                 Container(
                                   padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
