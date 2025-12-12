@@ -5,7 +5,7 @@ import 'package:all_ahraga/widgets/left_drawer.dart';
 import 'package:all_ahraga/screens/coach/coach_profile.dart';
 import 'package:all_ahraga/screens/coach/coach_list.dart';
 import 'package:all_ahraga/screens/coach/coach_revenue.dart';
-import 'package:all_ahraga/screens/coach/coach_schedule.dart';
+import 'package:all_ahraga/screens/coach/coach_manage_schedule.dart';
 
 class CoachHomePage extends StatefulWidget {
   const CoachHomePage({super.key});
