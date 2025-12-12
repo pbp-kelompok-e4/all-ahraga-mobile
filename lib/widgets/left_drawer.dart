@@ -119,19 +119,19 @@ class LeftDrawer extends StatelessWidget {
           ],
 
           // Coach
-          // const Divider(),
-          // Padding(
-          //   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          //   child: Text(
-          //     'COACH',
-          //     style: TextStyle(
-          //       fontSize: 12,
-          //       fontWeight: FontWeight.bold,
-          //       color: Colors.grey.shade600,
-          //       letterSpacing: 1,
-          //     ),
-          //   ),
-          // ),
+          const Divider(),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Text(
+              'COACH',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade600,
+                letterSpacing: 1,
+              ),
+            ),
+          ),
 
           // // Daftar Pelatih
           // ListTile(
@@ -184,18 +184,18 @@ class LeftDrawer extends StatelessWidget {
           // ),
 
           // // Profile Kamu
-          // ListTile(
-          //   leading: const Icon(Icons.person_outline, color: Color(0xFF0D9488)),
-          //   title: const Text("Profile Kamu"),
-          //   onTap: () {
-          //     Navigator.push(
-          //       context,
-          //       MaterialPageRoute(
-          //         builder: (context) => const CoachProfilePage(),
-          //       ),
-          //     );
-          //   },
-          // ),
+          ListTile(
+            leading: const Icon(Icons.person_outline, color: Color(0xFF0D9488)),
+            title: const Text("Profile Kamu"),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const CoachProfilePage(),
+                ),
+              );
+            },
+          ),
 
           // const Divider(),
           // Padding(
