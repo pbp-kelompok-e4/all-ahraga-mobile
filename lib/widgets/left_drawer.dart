@@ -119,97 +119,103 @@ class LeftDrawer extends StatelessWidget {
           ],
 
           // Coach
-          const Divider(),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text(
-              'COACH',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade600,
-                letterSpacing: 1,
+          if (isCoach) ...[
+            const Divider(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                'COACH',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey.shade600,
+                  letterSpacing: 1,
+                ),
               ),
             ),
-          ),
+          ],
 
-          // // Daftar Pelatih
-          // ListTile(
-          //   leading: const Icon(
-          //     Icons.groups_outlined,
-          //     color: Color(0xFF0D9488),
-          //   ),
-          //   title: const Text("Daftar Pelatih"),
-          //   onTap: () {
-          //     Navigator.push(
-          //       context,
-          //       MaterialPageRoute(builder: (context) => const CoachListPage()),
-          //     );
-          //   },
-          // ),
+          if (isCoach) ...[
+            // Daftar Pelatih
+            ListTile(
+              leading: const Icon(
+                Icons.groups_outlined,
+                color: Color(0xFF0D9488),
+              ),
+              title: const Text("Daftar Pelatih"),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const CoachListPage()),
+                );
+              },
+            ),
 
-          // // Laporan Pendapatan
-          // ListTile(
-          //   leading: const Icon(
-          //     Icons.monetization_on_outlined,
-          //     color: Color(0xFF0D9488),
-          //   ),
-          //   title: const Text("Laporan"),
-          //   subtitle: const Text("Pendapatan Pelatih"),
-          //   onTap: () {
-          //     Navigator.push(
-          //       context,
-          //       MaterialPageRoute(
-          //         builder: (context) => const CoachRevenuePage(),
-          //       ),
-          //     );
-          //   },
-          // ),
+            // Laporan Pendapatan
+            ListTile(
+              leading: const Icon(
+                Icons.monetization_on_outlined,
+                color: Color(0xFF0D9488),
+              ),
+              title: const Text("Pendapatan"),
+              subtitle: const Text("Laporan Pelatih"),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CoachRevenuePage(),
+                  ),
+                );
+              },
+            ),
 
-          // // Jadwal Kamu
-          // ListTile(
-          //   leading: const Icon(
-          //     Icons.calendar_month_outlined,
-          //     color: Color(0xFF0D9488),
-          //   ),
-          //   title: const Text("Jadwal Kamu"),
-          //   onTap: () {
-          //     Navigator.push(
-          //       context,
-          //       MaterialPageRoute(
-          //         builder: (context) => const CoachSchedulePage(),
-          //       ),
-          //     );
-          //   },
-          // ),
+            // Jadwal Saya
+            ListTile(
+              leading: const Icon(
+                Icons.calendar_month_outlined,
+                color: Color(0xFF0D9488),
+              ),
+              title: const Text("Jadwal Saya"),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CoachSchedulePage(),
+                  ),
+                );
+              },
+            ),
 
-          // // Profile Kamu
-          ListTile(
-            leading: const Icon(Icons.person_outline, color: Color(0xFF0D9488)),
-            title: const Text("Profile Kamu"),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const CoachProfilePage(),
-                ),
-              );
-            },
-          ),
-
-          // const Divider(),
-          // Padding(
-          //   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          //   child: Text(
-          //     'LAINNYA',
-          //     style: TextStyle(
-          //       fontSize: 12,
-          //       fontWeight: FontWeight.bold,
-          //       color: Colors.grey.shade600,
-          //       letterSpacing: 1,
-          //     ),
-          //   ),
-          // ),
+            // Profil Saya
+            ListTile(
+              leading: const Icon(Icons.person_outline, color: Color(0xFF0D9488)),
+              title: const Text("Profil Saya"),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CoachProfilePage(),
+                  ),
+                );
+              },
+            ),
+          ] else if (!isCoach)
+            ListTile(
+              leading: const Icon(Icons.person_outline, color: Color(0xFF0D9488)),
+              title: const Text("Profile Kamu"),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CoachProfilePage(),
+                  ),
+                );
+              },
+            ),
           if (isVenueOwner) ...[
           const Divider(),
           Padding(

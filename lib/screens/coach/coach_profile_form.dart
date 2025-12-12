@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -8,16 +9,13 @@ import 'dart:convert';
 import '/models/coach_entry.dart';
 import '/models/sport_category.dart';
 import '/models/location_area.dart';
-import 'package:http/browser_client.dart'; // Tambahkan ini (khusus web)
-import 'package:flutter/foundation.dart' show kIsWeb; // Untuk cek apakah ini Web
+import 'package:http/browser_client.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class CoachProfileFormPage extends StatefulWidget {
   final CoachEntry? existingProfile;
-  
-  const CoachProfileFormPage({
-    super.key,
-    this.existingProfile,
-  });
+
+  const CoachProfileFormPage({super.key, this.existingProfile});
 
   @override
   State<CoachProfileFormPage> createState() => _CoachProfileFormPageState();
@@ -28,19 +26,19 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
   final TextEditingController _ageController = TextEditingController();
   final TextEditingController _rateController = TextEditingController();
   final TextEditingController _experienceController = TextEditingController();
-  
+
   bool _isLoading = false;
-  File? _imageFile;
+  dynamic _imageFile; // Changed from File? to dynamic to handle both web and mobile
   final ImagePicker _picker = ImagePicker();
-  
+
   // Dropdown data
   List<SportCategory> _sportCategories = [];
   List<LocationArea> _locationAreas = [];
-  
+
   // Selected values
   int? _selectedSportId;
   List<int> _selectedAreaIds = [];
-  
+
   bool _isLoadingData = true;
   String? _errorMessage;
 
@@ -69,13 +67,13 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
     });
 
     final request = context.read<CookieRequest>();
-    
+
     try {
       // Load sport categories
       final sportResponse = await request.get(
-        'http://localhost:8000/api/sport-categories/', // Ganti dengan URL Anda
+        'http://localhost:8000/api/sport-categories/',
       );
-      
+
       if (sportResponse['success'] == true) {
         setState(() {
           _sportCategories = (sportResponse['categories'] as List)
@@ -83,12 +81,12 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
               .toList();
         });
       }
-      
+
       // Load location areas
       final areaResponse = await request.get(
-        'http://localhost:8000/api/location-areas/', // Ganti dengan URL Anda
+        'http://localhost:8000/api/location-areas/',
       );
-      
+
       if (areaResponse['success'] == true) {
         setState(() {
           _locationAreas = (areaResponse['areas'] as List)
@@ -96,11 +94,10 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
               .toList();
         });
       }
-      
+
       setState(() {
         _isLoadingData = false;
       });
-      
     } catch (e) {
       setState(() {
         _errorMessage = 'Gagal memuat data: $e';
@@ -117,11 +114,20 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
         maxHeight: 1024,
         imageQuality: 85,
       );
-      
+
       if (pickedFile != null) {
-        setState(() {
-          _imageFile = File(pickedFile.path);
-        });
+        if (kIsWeb) {
+          // For web, store bytes
+          final bytes = await pickedFile.readAsBytes();
+          setState(() {
+            _imageFile = bytes;
+          });
+        } else {
+          // For mobile, store File
+          setState(() {
+            _imageFile = File(pickedFile.path);
+          });
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -168,9 +174,9 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
       final request = context.read<CookieRequest>();
       
       // Prepare multipart request
-      var uri = Uri.parse('http://localhost:8000/coach/profile/save/'); // Ganti dengan URL Anda
+      var uri = Uri.parse('http://localhost:8000/coach/profile/save/');
       var multipartRequest = http.MultipartRequest('POST', uri);
-      
+
       // Add cookies from CookieRequest
       final cookies = request.cookies;
       if (cookies.isNotEmpty) {
@@ -178,24 +184,36 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
             .map((e) => '${e.key}=${e.value}')
             .join('; ');
       }
-      
+
       // Add form fields
       multipartRequest.fields['age'] = _ageController.text;
       multipartRequest.fields['rate_per_hour'] = _rateController.text;
       multipartRequest.fields['main_sport_trained_id'] = _selectedSportId.toString();
       multipartRequest.fields['experience_desc'] = _experienceController.text;
       multipartRequest.fields['service_area_ids'] = jsonEncode(_selectedAreaIds);
-      
+
       // Add image if selected
       if (_imageFile != null) {
-        multipartRequest.files.add(
-          await http.MultipartFile.fromPath(
-            'profile_picture',
-            _imageFile!.path,
-          ),
-        );
+        if (kIsWeb && _imageFile is Uint8List) {
+          // For web: Uint8List
+          multipartRequest.files.add(
+            http.MultipartFile.fromBytes(
+              'profile_picture',
+              _imageFile,
+              filename: 'profile_${DateTime.now().millisecondsSinceEpoch}.jpg',
+            ),
+          );
+        } else if (!kIsWeb && _imageFile is File) {
+          // For mobile: File
+          multipartRequest.files.add(
+            await http.MultipartFile.fromPath(
+              'profile_picture',
+              _imageFile.path,
+            ),
+          );
+        }
       }
-      
+
       // Send request
       http.StreamedResponse streamedResponse;
 
@@ -203,26 +221,19 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
         final client = BrowserClient()..withCredentials = true;
         streamedResponse = await client.send(multipartRequest);
       } else {
-        final request = context.read<CookieRequest>(); 
-        final cookies = request.cookies;
-        if (cookies.isNotEmpty) {
-           multipartRequest.headers['cookie'] = cookies.entries
-              .map((e) => '${e.key}=${e.value}')
-              .join('; ');
-        }
         streamedResponse = await multipartRequest.send();
       }
 
       final response = await http.Response.fromStream(streamedResponse);
-      // --- SELESAI KODE BARU ---
-
       final responseData = jsonDecode(response.body);
-      
+
       if (mounted) {
         if (responseData['success'] == true) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(responseData['message'] ?? 'Profil berhasil disimpan'),
+              content: Text(
+                responseData['message'] ?? 'Profil berhasil disimpan',
+              ),
               backgroundColor: Colors.green,
             ),
           );
@@ -230,7 +241,9 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(responseData['message'] ?? 'Gagal menyimpan profil'),
+              content: Text(
+                responseData['message'] ?? 'Gagal menyimpan profil',
+              ),
               backgroundColor: Colors.red,
             ),
           );
@@ -266,11 +279,13 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.existingProfile == null 
-            ? 'Lengkapi Profil' 
-            : 'Edit Profil'),
-        backgroundColor: Colors.blue,
+        title: Text(
+          widget.existingProfile == null ? 'Lengkapi Profil' : 'Edit Profil',
+          style: const TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.teal, // Changed to teal color
         foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: _isLoadingData
           ? const Center(child: CircularProgressIndicator())
@@ -324,17 +339,16 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
                       decoration: BoxDecoration(
                         color: Colors.grey.shade200,
                         shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.blue,
-                          width: 2,
-                        ),
+                        border: Border.all(color: Colors.teal, width: 2),
                       ),
                       child: _imageFile != null
                           ? ClipOval(
-                              child: Image.file(
-                                _imageFile!,
-                                fit: BoxFit.cover,
-                              ),
+                              child: kIsWeb
+                                  ? Image.memory(
+                                      _imageFile as Uint8List,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Image.file(_imageFile as File, fit: BoxFit.cover),
                             )
                           : widget.existingProfile?.profilePicture != null
                               ? ClipOval(
@@ -354,9 +368,12 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
                   TextButton.icon(
                     onPressed: _pickImage,
                     icon: const Icon(Icons.upload),
-                    label: Text(_imageFile != null || widget.existingProfile?.profilePicture != null
-                        ? 'Ganti Foto'
-                        : 'Pilih Foto Profil'),
+                    label: Text(
+                      _imageFile != null ||
+                              widget.existingProfile?.profilePicture != null
+                          ? 'Ganti Foto'
+                          : 'Pilih Foto Profil',
+                    ),
                   ),
                 ],
               ),
@@ -447,10 +464,7 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
             // Service Areas Multi-select
             const Text(
               'Area Layanan',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 8),
             Container(
@@ -483,10 +497,7 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
                 padding: const EdgeInsets.only(left: 12, top: 8),
                 child: Text(
                   'Pilih minimal satu area layanan',
-                  style: TextStyle(
-                    color: Colors.red.shade700,
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: Colors.red.shade700, fontSize: 12),
                 ),
               ),
             const SizedBox(height: 16),
@@ -536,7 +547,7 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
                   child: ElevatedButton(
                     onPressed: _isLoading ? null : _submitForm,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
+                      backgroundColor: Colors.teal, // Changed to teal
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
@@ -549,7 +560,9 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
                             width: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
                           )
                         : const Text('Simpan Profil'),

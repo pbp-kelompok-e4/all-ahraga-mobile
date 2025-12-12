@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:all_ahraga/screens/menu.dart';
-import 'package:all_ahraga/screens/venue_menu.dart'; // <--- TAMBAHKAN INI
+import 'package:all_ahraga/screens/venue_menu.dart';
+import 'package:all_ahraga/screens/coach_menu.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -284,8 +285,16 @@ class _LoginPageState extends State<LoginPage> {
                                             const VenueHomePage(),
                                       ),
                                     );
+                                  } else if (roleType == 'COACH') {
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const CoachHomePage(),
+                                      ),
+                                    );
                                   } else {
-                                    // Default untuk Customer (dan role lain sementara)
+                                    // Default untuk Customer
                                     Navigator.pushReplacement(
                                       context,
                                       MaterialPageRoute(
