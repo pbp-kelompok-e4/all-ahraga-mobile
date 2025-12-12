@@ -128,10 +128,22 @@ class _CoachProfilePageState extends State<CoachProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Profil Pelatih'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
+        backgroundColor: const Color(0xFF0D9488),
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'Profil Pelatih',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -162,6 +174,10 @@ class _CoachProfilePageState extends State<CoachProfilePage> {
               onPressed: _loadCoachProfile,
               icon: const Icon(Icons.refresh),
               label: const Text('Coba Lagi'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0D9488),
+                foregroundColor: Colors.white,
+              ),
             ),
           ],
         ),
@@ -172,101 +188,134 @@ class _CoachProfilePageState extends State<CoachProfilePage> {
   Widget _buildEmptyState() {
     final userName = _userData?['first_name'] ?? _userData?['username'] ?? 'User';
     
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Icon besar
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.blue.shade50,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.person_outline,
-                size: 80,
-                color: Colors.blue.shade300,
-              ),
-            ),
-            const SizedBox(height: 24),
-            
-            // Nama dan username
-            Text(
-              userName,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              _userData?['username'] ?? 'ahsancoachflutter',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade600,
-              ),
-            ),
-            const SizedBox(height: 32),
-            
-            // Title
-            const Text(
-              'Profil Belum Lengkap',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-            
-            // Description
-            Text(
-              'Anda belum menambahkan detail profil pelatih. Lengkapi profil untuk mulai menerima klien.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey.shade700,
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 32),
-            
-            // Button Lengkapi Profile
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () async {
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const CoachProfileFormPage(),
-                    ),
-                  );
-                  
-                  // Reload profile jika berhasil save
-                  if (result == true) {
-                    _loadCoachProfile();
-                  }
-                },
-                icon: const Icon(Icons.edit),
-                label: const Text(
-                  'Lengkapi Profil',
-                  style: TextStyle(fontSize: 16),
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          const SizedBox(height: 32),
+          
+          // Centered Profile Box
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
                 ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              ],
+            ),
+            child: Column(
+              children: [
+                // Foto Profile dengan border
+                Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: const Color(0xFF0D9488),
+                      width: 3,
+                    ),
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0D9488).withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.person_outline,
+                      size: 80,
+                      color: Color(0xFF0D9488),
+                    ),
                   ),
                 ),
-              ),
+                const SizedBox(height: 24),
+                
+                // Nama
+                Text(
+                  userName,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                
+                // Username
+                Text(
+                  '@${_userData?['username'] ?? 'coach'}',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                
+                // Title
+                const Text(
+                  'Profil Belum Lengkap',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                
+                // Description
+                Text(
+                  'Anda belum menambahkan detail profil pelatih. Lengkapi profil untuk mulai menerima klien.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey.shade700,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                
+                // Button Lengkapi Profile
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const CoachProfileFormPage(),
+                        ),
+                      );
+                      
+                      // Reload profile jika berhasil save
+                      if (result == true) {
+                        _loadCoachProfile();
+                      }
+                    },
+                    icon: const Icon(Icons.edit),
+                    label: const Text(
+                      'Lengkapi Profil',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0D9488),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 32),
+        ],
       ),
     );
   }
@@ -278,90 +327,111 @@ class _CoachProfilePageState extends State<CoachProfilePage> {
       onRefresh: _loadCoachProfile,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Profile Header Card
-            Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+            // Centered Profile Box
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.1),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  children: [
-                    // Profile Picture
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundColor: Colors.blue.shade100,
+              child: Column(
+                children: [
+                  // Profile Picture
+                  Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: const Color(0xFF0D9488),
+                        width: 3,
+                      ),
+                    ),
+                    child: CircleAvatar(
+                      radius: 60,
+                      backgroundColor: const Color(0xFF0D9488).withOpacity(0.1),
                       backgroundImage: _coachProfile!.profilePicture != null
                           ? NetworkImage(_coachProfile!.profilePicture!)
                           : null,
                       child: _coachProfile!.profilePicture == null
-                          ? Icon(Icons.person, size: 50, color: Colors.blue.shade300)
+                          ? const Icon(
+                              Icons.person_outline,
+                              size: 60,
+                              color: Color(0xFF0D9488),
+                            )
                           : null,
                     ),
-                    const SizedBox(height: 16),
-                    
-                    // Name
-                    Text(
-                      _coachProfile!.fullName.isNotEmpty 
-                          ? _coachProfile!.fullName 
-                          : _coachProfile!.username ?? 'Coach',
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  ),
+                  const SizedBox(height: 20),
+                  
+                  // Name
+                  Text(
+                    _coachProfile!.fullName.isNotEmpty 
+                        ? _coachProfile!.fullName 
+                        : _coachProfile!.username ?? 'Coach',
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
                     ),
-                    const SizedBox(height: 4),
-                    
-                    // Username
-                    Text(
-                      '@${_coachProfile!.username ?? ''}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade600,
-                      ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  
+                  // Username
+                  Text(
+                    '@${_coachProfile!.username ?? ''}',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey.shade600,
                     ),
-                    const SizedBox(height: 8),
-                    
-                    // Verified Badge
-                    if (_coachProfile!.isVerified == true)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.green.shade50,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.green),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.verified, size: 16, color: Colors.green.shade700),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Terverifikasi',
-                              style: TextStyle(
-                                color: Colors.green.shade700,
-                                fontWeight: FontWeight.w600,
-                              ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Verified Badge
+                  if (_coachProfile!.isVerified == true)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0D9488).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFF0D9488)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.verified, size: 16, color: Color(0xFF0D9488)),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Terverifikasi',
+                            style: TextStyle(
+                              color: const Color(0xFF0D9488),
+                              fontWeight: FontWeight.w600,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                  ],
-                ),
+                    ),
+                ],
               ),
             ),
-            const SizedBox(height: 16),
             
             // Detail Information Card
             Card(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               elevation: 2,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -400,12 +470,12 @@ class _CoachProfilePageState extends State<CoachProfilePage> {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
             
             // Experience Card
             if (_coachProfile!.experienceDesc != null && 
                 _coachProfile!.experienceDesc!.isNotEmpty)
               Card(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 elevation: 2,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -417,7 +487,7 @@ class _CoachProfilePageState extends State<CoachProfilePage> {
                     children: [
                       const Row(
                         children: [
-                          Icon(Icons.description, color: Colors.blue),
+                          Icon(Icons.description, color: Color(0xFF0D9488)),
                           SizedBox(width: 8),
                           Text(
                             'Pengalaman',
@@ -440,51 +510,53 @@ class _CoachProfilePageState extends State<CoachProfilePage> {
                   ),
                 ),
               ),
-            const SizedBox(height: 24),
             
             // Action Buttons
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () async {
-                      final result = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => CoachProfileFormPage(
-                            existingProfile: _coachProfile,
+            Container(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () async {
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CoachProfileFormPage(
+                              existingProfile: _coachProfile,
+                            ),
                           ),
-                        ),
-                      );
-                      
-                      // Reload profile jika berhasil save
-                      if (result == true) {
-                        _loadCoachProfile();
-                      }
-                    },
-                    icon: const Icon(Icons.edit),
-                    label: const Text('Edit Profil'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      side: const BorderSide(color: Colors.blue),
-                      foregroundColor: Colors.blue,
+                        );
+                        
+                        // Reload profile jika berhasil save
+                        if (result == true) {
+                          _loadCoachProfile();
+                        }
+                      },
+                      icon: const Icon(Icons.edit),
+                      label: const Text('Edit Profil'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        side: const BorderSide(color: Color(0xFF0D9488)),
+                        foregroundColor: const Color(0xFF0D9488),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _deleteProfile,
-                    icon: const Icon(Icons.delete),
-                    label: const Text('Hapus'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      side: const BorderSide(color: Colors.red),
-                      foregroundColor: Colors.red,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _deleteProfile,
+                      icon: const Icon(Icons.delete),
+                      label: const Text('Hapus'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        side: const BorderSide(color: Colors.red),
+                        foregroundColor: Colors.red,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
@@ -496,7 +568,7 @@ class _CoachProfilePageState extends State<CoachProfilePage> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 20, color: Colors.blue),
+        Icon(icon, size: 20, color: const Color(0xFF0D9488)),
         const SizedBox(width: 12),
         Expanded(
           child: Column(

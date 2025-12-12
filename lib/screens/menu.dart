@@ -3,6 +3,7 @@ import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:all_ahraga/widgets/left_drawer.dart';
 import 'package:all_ahraga/screens/booking/create_booking.dart';
+import 'package:all_ahraga/screens/coach_menu.dart';
 import 'package:all_ahraga/constants/api.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -23,8 +24,29 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkUserRoleAndRoute();
       _fetchVenues();
     });
+  }
+
+  void _checkUserRoleAndRoute() {
+    final request = context.read<CookieRequest>();
+    String userRole = 'CUSTOMER';
+    if (request.jsonData.isNotEmpty && request.jsonData.containsKey('role_type')) {
+      userRole = request.jsonData['role_type'];
+    }
+    
+    // Jika user adalah Coach, redirect ke Coach Menu
+    if (userRole == 'COACH') {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const CoachHomePage()),
+          );
+        }
+      });
+    }
   }
 
   @override

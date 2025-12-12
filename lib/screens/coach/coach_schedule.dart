@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class CoachListPage extends StatefulWidget {
-  const CoachListPage({super.key});
+class CoachSchedulePage extends StatefulWidget {
+  const CoachSchedulePage({super.key});
 
   @override
-  State<CoachListPage> createState() => _CoachListPageState();
+  State<CoachSchedulePage> createState() => _CoachSchedulePageState();
 }
 
-class _CoachListPageState extends State<CoachListPage> {
+class _CoachSchedulePageState extends State<CoachSchedulePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -15,10 +15,10 @@ class _CoachListPageState extends State<CoachListPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.list, size: 80, color: Colors.grey),
+            const Icon(Icons.calendar_month, size: 80, color: Colors.grey),
             const SizedBox(height: 16),
             const Text(
-              'Daftar Coach',
+              'Jadwal Saya',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
