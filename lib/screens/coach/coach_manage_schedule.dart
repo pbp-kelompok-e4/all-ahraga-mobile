@@ -1,38 +1,34 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/cupertino.dart'; // Widget Scroll Wheel
 import 'package:provider/provider.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:intl/intl.dart';
-import 'package:intl/date_symbol_data_local.dart'; // Wajib ada
+import 'package:intl/date_symbol_data_local.dart'; // Wajib Import
 
-// Sesuaikan path ini dengan project kamu
 import 'package:all_ahraga/constants/api.dart';
-import 'package:all_ahraga/models/venue_schedule_entry.dart';
+import 'package:all_ahraga/models/coach_schedule_entry.dart';
 
-class VenueManageSchedulePage extends StatefulWidget {
-  final int venueId;
-
-  const VenueManageSchedulePage({super.key, required this.venueId});
+class CoachSchedulePage extends StatefulWidget {
+  const CoachSchedulePage({super.key});
 
   @override
-  State<VenueManageSchedulePage> createState() =>
-      _VenueManageSchedulePageState();
+  State<CoachSchedulePage> createState() => _CoachSchedulePageState();
 }
 
-class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
+class _CoachSchedulePageState extends State<CoachSchedulePage> {
   // Variabel Form
   DateTime? _selectedDate;
   TimeOfDay? _startTime;
   TimeOfDay? _endTimeGlobal;
 
   // Variabel Data
-  List<VenueSchedule> _schedules = [];
+  List<CoachSchedule> _schedules = [];
   bool _isLoading = true;
-  bool _isLocaleReady = false; // Penanda apakah bahasa sudah siap
-  String? _selectedMonthKey;
+  bool _isLocaleReady = false; // Penanda agar tidak error LocaleDataException
+  String? _selectedMonthKey; // Filter Bulan
 
-  // State Mode Hapus
+  // Mode Hapus
   bool _isSelectionMode = false;
 
   @override
@@ -42,12 +38,12 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
   }
 
   Future<void> _initData() async {
-    // 1. Load Data Bahasa Indonesia
+    // 1. Init Data Bahasa Indonesia
     await initializeDateFormatting('id_ID', null);
 
     if (!mounted) return;
 
-    // 2. Tandai bahasa siap, lalu ambil data jadwal
+    // 2. Tandai siap, baru ambil data
     setState(() {
       _isLocaleReady = true;
     });
@@ -61,8 +57,7 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
     setState(() => _isLoading = true);
 
     try {
-      final url =
-          "${ApiConstants.venueManageSchedule(widget.venueId)}?format=json";
+      final url = "${ApiConstants.coachSchedule}?format=json";
       final response = await request.get(url);
 
       if (response is Map && response['success'] == false) {
@@ -74,11 +69,11 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
         return;
       }
 
-      List<VenueSchedule> listData = [];
+      List<CoachSchedule> listData = [];
       if (response is List) {
         for (var d in response) {
           if (d != null) {
-            listData.add(VenueSchedule.fromJson(d));
+            listData.add(CoachSchedule.fromJson(d));
           }
         }
       }
@@ -88,8 +83,9 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
       setState(() {
         _schedules = listData;
         _isLoading = false;
-        _isSelectionMode = false;
+        _isSelectionMode = false; // Reset mode hapus saat refresh
 
+        // Auto-select bulan pertama
         if (_schedules.isNotEmpty && _selectedMonthKey == null) {
           _selectedMonthKey = _getMonthKey(_schedules.first.date);
         }
@@ -107,15 +103,13 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
   Future<void> _addSchedule() async {
     if (_selectedDate == null || _startTime == null || _endTimeGlobal == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Mohon lengkapi Tanggal, Jam Mulai, dan Batas Akhir."),
-        ),
+        const SnackBar(content: Text("Mohon lengkapi Tanggal & Waktu.")),
       );
       return;
     }
 
     final request = context.read<CookieRequest>();
-    // Pastikan _isLocaleReady true sebelum pakai DateFormat
+    // Format YYYY-MM-DD sesuai backend
     String dateStr = DateFormat('yyyy-MM-dd', 'id_ID').format(_selectedDate!);
     String startStr =
         '${_startTime!.hour.toString().padLeft(2, '0')}:${_startTime!.minute.toString().padLeft(2, '0')}';
@@ -126,12 +120,11 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
       'date': dateStr,
       'start_time': startStr,
       'end_time_global': endGlobalStr,
-      'is_available': true,
     };
 
     try {
       final response = await request.postJson(
-        ApiConstants.venueManageSchedule(widget.venueId),
+        ApiConstants.coachSchedule,
         jsonEncode(payload),
       );
 
@@ -143,6 +136,7 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
             content: Text(response['message'] ?? "Jadwal berhasil dibuat!"),
           ),
         );
+        // Pindah ke bulan baru
         setState(() {
           _selectedMonthKey = _getMonthKey(dateStr);
           _selectedDate = null;
@@ -163,7 +157,7 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
     }
   }
 
-  // --- 3. DELETE DATA ---
+  // --- 3. DELETE DATA (Hapus) ---
   Future<void> _deleteSchedules(List<int> ids) async {
     if (ids.isEmpty) return;
 
@@ -190,8 +184,9 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
     if (confirm != true) return;
 
     try {
+      // Gunakan POST karena backend sudah kita update untuk terima POST
       final response = await request.postJson(
-        ApiConstants.venueDeleteSchedule(widget.venueId),
+        ApiConstants.coachScheduleDelete,
         jsonEncode({'selected_schedules': ids}),
       );
 
@@ -216,7 +211,7 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
   }
 
   void _deleteBulk() {
-    List<VenueSchedule> visibleSchedules = _getVisibleSchedules();
+    List<CoachSchedule> visibleSchedules = _getVisibleSchedules();
     List<int> selectedIds = visibleSchedules
         .where((s) => s.isSelected)
         .map((s) => s.id)
@@ -231,10 +226,14 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
     _deleteSchedules(selectedIds);
   }
 
-  // --- LOGIC MODE SELEKSI ---
+  void _deleteSingle(int id) {
+    _deleteSchedules([id]);
+  }
+
   void _toggleSelectionMode() {
     setState(() {
       _isSelectionMode = !_isSelectionMode;
+      // Reset centang
       for (var s in _schedules) {
         s.isSelected = false;
       }
@@ -397,7 +396,7 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
     );
   }
 
-  // --- LOGIC GROUPING ---
+  // --- LOGIC GROUPING & FILTER ---
   String _getMonthKey(String dateIso) {
     if (dateIso.length >= 7) return dateIso.substring(0, 7);
     return dateIso;
@@ -418,16 +417,16 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
     return months.toList()..sort();
   }
 
-  List<VenueSchedule> _getVisibleSchedules() {
+  List<CoachSchedule> _getVisibleSchedules() {
     if (_selectedMonthKey == null) return [];
     return _schedules
         .where((s) => _getMonthKey(s.date) == _selectedMonthKey)
         .toList();
   }
 
-  Map<String, List<VenueSchedule>> _groupSchedulesByDate() {
-    List<VenueSchedule> visibleData = _getVisibleSchedules();
-    Map<String, List<VenueSchedule>> grouped = {};
+  Map<String, List<CoachSchedule>> _groupSchedulesByDate() {
+    List<CoachSchedule> visibleData = _getVisibleSchedules();
+    Map<String, List<CoachSchedule>> grouped = {};
     for (var s in visibleData) {
       if (!grouped.containsKey(s.date)) grouped[s.date] = [];
       grouped[s.date]!.add(s);
@@ -444,10 +443,9 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
     }
   }
 
-  // --- BUILD UI ---
   @override
   Widget build(BuildContext context) {
-    // --- CEK APAKAH LOCALE SUDAH SIAP ---
+    // --- CEK LOCALE SEBELUM RENDER ---
     if (!_isLocaleReady) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
@@ -458,28 +456,29 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
             !availableMonths.contains(_selectedMonthKey))) {
       _selectedMonthKey = availableMonths.first;
     }
+
     final groupedSchedules = _groupSchedulesByDate();
     final sortedDates = groupedSchedules.keys.toList()..sort();
-
     int selectedCount = _getVisibleSchedules()
         .where((s) => s.isSelected)
         .length;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Kelola Jadwal"),
+        title: const Text("Jadwal Coach"),
         backgroundColor: _isSelectionMode ? Colors.grey.shade800 : Colors.teal,
         foregroundColor: Colors.white,
         actions: [
+          // LOGIC TOMBOL APPBAR (Normal vs Mode Hapus)
           if (!_isSelectionMode)
-            TextButton.icon(
-              onPressed: sortedDates.isEmpty ? null : _toggleSelectionMode,
-              icon: const Icon(Icons.delete_outline, color: Colors.white),
-              label: const Text(
-                "Hapus Jadwal",
-                style: TextStyle(color: Colors.white),
-              ),
-            )
+            if (_schedules.isNotEmpty)
+              IconButton(
+                onPressed: _toggleSelectionMode,
+                icon: const Icon(Icons.delete_sweep, color: Colors.white),
+                tooltip: "Hapus Banyak",
+              )
+            else
+              const SizedBox()
           else
             Row(
               children: [
@@ -512,6 +511,7 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // FORM INPUT (Sembunyi saat mode hapus)
             if (!_isSelectionMode) ...[
               Card(
                 elevation: 2,
@@ -634,11 +634,12 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
               const SizedBox(height: 24),
             ],
 
+            // HEADER FILTER BULAN
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  _isSelectionMode ? "Pilih Jadwal" : "Daftar Slot",
+                  _isSelectionMode ? "Pilih untuk dihapus" : "Daftar Slot",
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -681,6 +682,7 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
             ),
             const SizedBox(height: 10),
 
+            // LIST JADWAL
             _isLoading
                 ? const Center(
                     child: Padding(
@@ -714,7 +716,7 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
                     itemCount: sortedDates.length,
                     itemBuilder: (context, index) {
                       String dateKey = sortedDates[index];
-                      List<VenueSchedule> slots = groupedSchedules[dateKey]!;
+                      List<CoachSchedule> slots = groupedSchedules[dateKey]!;
 
                       return Card(
                         margin: const EdgeInsets.only(bottom: 12),
@@ -810,7 +812,17 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
                                                 ),
                                               ),
                                             )
-                                          : null,
+                                          : (_isSelectionMode
+                                                ? null
+                                                : IconButton(
+                                                    icon: const Icon(
+                                                      Icons.delete_outline,
+                                                      color: Colors.red,
+                                                    ),
+                                                    onPressed: () =>
+                                                        _deleteSingle(item.id),
+                                                    tooltip: "Hapus sesi ini",
+                                                  )),
                                       onTap: _isSelectionMode && !item.isBooked
                                           ? () => setState(
                                               () => item.isSelected =
