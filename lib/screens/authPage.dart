@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:all_ahraga/screens/menu.dart' as customer;
 import 'package:all_ahraga/screens/venue_menu.dart';
 import 'package:all_ahraga/screens/coach_menu.dart';
+import 'package:all_ahraga/screens/landingPage.dart';
 
 enum AuthMode { login, register }
 enum PanelStyle { solidWhite, glass }
@@ -26,6 +27,8 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
   final _loginPassword = TextEditingController();
 
   final _regUsername = TextEditingController();
+  final _regEmail = TextEditingController();
+  final _regPhone = TextEditingController();
   final _regPassword = TextEditingController();
   final _regConfirm = TextEditingController();
 
@@ -62,6 +65,8 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
     _loginPassword.dispose();
 
     _regUsername.dispose();
+    _regEmail.dispose();
+    _regPhone.dispose();
     _regPassword.dispose();
     _regConfirm.dispose();
 
@@ -75,10 +80,32 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
     if (_mode == mode) return;
     setState(() {
       _mode = mode;
-      // reset error
       _loginError = null;
       _regError = null;
     });
+  }
+
+  void _goLanding() {
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 420),
+        pageBuilder: (_, __, ___) => const LandingPage(),
+        transitionsBuilder: (_, anim, __, child) {
+          final curved = CurvedAnimation(parent: anim, curve: Curves.easeInOutCubic);
+          return FadeTransition(
+            opacity: curved,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(-0.06, 0),
+                end: Offset.zero,
+              ).animate(curved),
+              child: child,
+            ),
+          );
+        },
+      ),
+    );
   }
 
   Future<void> _doLogin(CookieRequest request) async {
@@ -114,10 +141,7 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
           target = const customer.MyHomePage();
         }
 
-        Navigator.pushReplacement(
-          context,
-          _pageSlide(target, toLeft: true),
-        );
+        Navigator.pushReplacement(context, _pageSlide(target, toLeft: true));
 
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
@@ -146,11 +170,21 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
     if (_regLoading) return;
 
     final u = _regUsername.text.trim();
+    final email = _regEmail.text.trim();
+    final phone = _regPhone.text.trim();
     final p1 = _regPassword.text;
     final p2 = _regConfirm.text;
 
     if (_regRole == null) {
       setState(() => _regError = "Please choose a role.");
+      return;
+    }
+    if (email.isEmpty) {
+      setState(() => _regError = "Email wajib diisi.");
+      return;
+    }
+    if (phone.isEmpty) {
+      setState(() => _regError = "Nomor HP wajib diisi.");
       return;
     }
 
@@ -164,6 +198,8 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
         "http://localhost:8000/auth/register/",
         jsonEncode({
           "username": u,
+          "email": email,
+          "phone": phone,
           "password1": p1,
           "password2": p2,
           "role_type": _regRole,
@@ -175,14 +211,12 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
       if (response['status'] == "success") {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
-          ..showSnackBar(
-            const SnackBar(content: Text("Successfully registered!")),
-          );
+          ..showSnackBar(const SnackBar(content: Text("Successfully registered!")));
 
-        // balik ke login
         _switchTo(AuthMode.login);
       } else {
-        setState(() => _regError = (response['message'] ?? "Registration failed!").toString());
+        setState(() =>
+            _regError = (response['message'] ?? "Registration failed!").toString());
       }
     } catch (e) {
       if (!mounted) return;
@@ -210,7 +244,6 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
               ),
             ),
           ),
-
           SafeArea(
             child: Center(
               child: ConstrainedBox(
@@ -219,7 +252,25 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
                   padding: const EdgeInsets.all(18),
                   child: Column(
                     children: [
-                      const SizedBox(height: 6),
+                      // ===== NAVBAR =====
+                      LayoutBuilder(
+                        builder: (context, cTop) {
+                          final isNarrow = cTop.maxWidth < 860;
+                          return Padding(
+                            padding: const EdgeInsets.fromLTRB(0, 2, 0, 10),
+                            child: _AuthTopBar(
+                              isNarrow: isNarrow,
+                              activeIsLogin: _mode == AuthMode.login,
+                              onLogo: _goLanding,
+                              onGoLogin: () => _switchTo(AuthMode.login),
+                              onGoRegister: () => _switchTo(AuthMode.register),
+                              onBack: _goLanding,
+                            ),
+                          );
+                        },
+                      ),
+
+                      const SizedBox(height: 8),
 
                       // header tengah
                       Column(
@@ -253,15 +304,13 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
                         child: LayoutBuilder(
                           builder: (context, c) {
                             final isNarrow = c.maxWidth < 760;
-
-                            // jarak panel
                             const gap = 10.0;
 
-                            // Panel layout
                             final leftPanel = _Panel(
                               style: PanelStyle.solidWhite,
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 22),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 24, vertical: 22),
                                 child: _AnimatedPanelBody(
                                   slideFromLeft: true,
                                   childKey: ValueKey("left-$_mode"),
@@ -270,7 +319,8 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
                                           error: _loginError,
                                           loading: _loginLoading,
                                           obscure: _loginObscure,
-                                          onToggleObscure: () => setState(() => _loginObscure = !_loginObscure),
+                                          onToggleObscure: () => setState(
+                                              () => _loginObscure = !_loginObscure),
                                           usernameCtrl: _loginUsername,
                                           passwordCtrl: _loginPassword,
                                           onSubmit: () => _doLogin(request),
@@ -286,14 +336,16 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
                             final rightPanel = _Panel(
                               style: PanelStyle.glass,
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 22),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 24, vertical: 22),
                                 child: _AnimatedPanelBody(
                                   slideFromLeft: false,
                                   childKey: ValueKey("right-$_mode"),
                                   child: _mode == AuthMode.login
                                       ? _RightWelcomeSignUp(
                                           enabled: !_loginLoading,
-                                          onSignUp: () => _switchTo(AuthMode.register),
+                                          onSignUp: () =>
+                                              _switchTo(AuthMode.register),
                                         )
                                       : _RightRegisterForm(
                                           error: _regError,
@@ -302,9 +354,13 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
                                           onRole: (v) => setState(() => _regRole = v),
                                           obscure1: _regObscure1,
                                           obscure2: _regObscure2,
-                                          onToggle1: () => setState(() => _regObscure1 = !_regObscure1),
-                                          onToggle2: () => setState(() => _regObscure2 = !_regObscure2),
+                                          onToggle1: () => setState(
+                                              () => _regObscure1 = !_regObscure1),
+                                          onToggle2: () => setState(
+                                              () => _regObscure2 = !_regObscure2),
                                           usernameCtrl: _regUsername,
+                                          emailCtrl: _regEmail,
+                                          phoneCtrl: _regPhone,
                                           passwordCtrl: _regPassword,
                                           confirmCtrl: _regConfirm,
                                           onSubmit: () => _doRegister(request),
@@ -345,6 +401,127 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
   }
 }
 
+// ================== Top Bar ==================
+
+class _AuthTopBar extends StatelessWidget {
+  const _AuthTopBar({
+    required this.isNarrow,
+    required this.activeIsLogin,
+    required this.onLogo,
+    required this.onGoLogin,
+    required this.onGoRegister,
+    required this.onBack,
+  });
+
+  final bool isNarrow;
+  final bool activeIsLogin;
+  final VoidCallback onLogo;
+  final VoidCallback onGoLogin;
+  final VoidCallback onGoRegister;
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        InkWell(
+          onTap: onLogo,
+          borderRadius: BorderRadius.circular(10),
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+            child: Text(
+              "ALL-AHRAGA",
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.0,
+                fontSize: 16.5,
+              ),
+            ),
+          ),
+        ),
+        const Spacer(),
+        if (!isNarrow) ...[
+          _AuthTopLink(text: "Login", active: activeIsLogin, onTap: onGoLogin),
+          const SizedBox(width: 10),
+          _AuthTopLink(
+              text: "Register", active: !activeIsLogin, onTap: onGoRegister),
+          const SizedBox(width: 12),
+        ],
+        _MiniPillButton(text: "Kembali", onTap: onBack),
+      ],
+    );
+  }
+}
+
+class _AuthTopLink extends StatelessWidget {
+  const _AuthTopLink({
+    required this.text,
+    required this.active,
+    required this.onTap,
+  });
+
+  final String text;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final base = Colors.white.withValues(alpha: 0.82);
+    final activeColor = Colors.white;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        child: Text(
+          text,
+          style: TextStyle(
+            color: active ? activeColor : base,
+            fontWeight: FontWeight.w900,
+            fontSize: 12.5,
+            decoration: active ? TextDecoration.underline : TextDecoration.none,
+            decorationColor: Colors.white,
+            decorationThickness: 2,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MiniPillButton extends StatelessWidget {
+  const _MiniPillButton({required this.text, required this.onTap});
+  final String text;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 40,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.75), width: 1.3),
+          color: Colors.white.withValues(alpha: 0.06),
+        ),
+        child: const Text(
+          "Kembali",
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w900,
+            fontSize: 12.8,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 // ================== Animated content switch ==================
 class _AnimatedPanelBody extends StatelessWidget {
   const _AnimatedPanelBody({
@@ -359,11 +536,13 @@ class _AnimatedPanelBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final inFrom = slideFromLeft ? const Offset(-0.12, 0) : const Offset(0.12, 0);
+    final outTo = slideFromLeft ? const Offset(-0.12, 0) : const Offset(0.12, 0);
+
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 1000),
       switchInCurve: Curves.easeOutCubic,
       switchOutCurve: Curves.easeInCubic,
-
       layoutBuilder: (currentChild, previousChildren) {
         return Stack(
           clipBehavior: Clip.hardEdge,
@@ -373,22 +552,18 @@ class _AnimatedPanelBody extends StatelessWidget {
           ],
         );
       },
-
       transitionBuilder: (w, anim) {
-        final inFrom = slideFromLeft ? const Offset(-0.12, 0) : const Offset(0.12, 0);
+        final isOutgoing = anim.status == AnimationStatus.reverse;
+
+        final slide = isOutgoing
+            ? Tween<Offset>(begin: Offset.zero, end: outTo).animate(anim)
+            : Tween<Offset>(begin: inFrom, end: Offset.zero).animate(anim);
 
         return FadeTransition(
           opacity: anim,
-          child: SlideTransition(
-            position: Tween<Offset>(
-              begin: inFrom,
-              end: Offset.zero,
-            ).animate(anim),
-            child: w,
-          ),
+          child: SlideTransition(position: slide, child: w),
         );
       },
-
       child: KeyedSubtree(
         key: childKey,
         child: child,
@@ -441,7 +616,6 @@ class _LeftLoginForm extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 18),
-
         if (error != null) ...[
           Container(
             width: double.infinity,
@@ -462,7 +636,6 @@ class _LeftLoginForm extends StatelessWidget {
           ),
           const SizedBox(height: 14),
         ],
-
         _TextFieldSoft(
           label: "Username",
           controller: usernameCtrl,
@@ -470,7 +643,6 @@ class _LeftLoginForm extends StatelessWidget {
           icon: Icons.person_outline,
         ),
         const SizedBox(height: 12),
-
         _TextFieldSoft(
           label: "Password",
           controller: passwordCtrl,
@@ -482,9 +654,7 @@ class _LeftLoginForm extends StatelessWidget {
             icon: Icon(obscure ? Icons.visibility_off : Icons.visibility),
           ),
         ),
-
         const Spacer(),
-
         _PrimaryPillButton(
           text: loading ? "Signing In..." : "Sign In",
           enabled: !loading,
@@ -603,6 +773,8 @@ class _RightRegisterForm extends StatelessWidget {
     required this.onToggle1,
     required this.onToggle2,
     required this.usernameCtrl,
+    required this.emailCtrl,
+    required this.phoneCtrl,
     required this.passwordCtrl,
     required this.confirmCtrl,
     required this.onSubmit,
@@ -620,6 +792,8 @@ class _RightRegisterForm extends StatelessWidget {
   final VoidCallback onToggle2;
 
   final TextEditingController usernameCtrl;
+  final TextEditingController emailCtrl;
+  final TextEditingController phoneCtrl;
   final TextEditingController passwordCtrl;
   final TextEditingController confirmCtrl;
 
@@ -682,6 +856,24 @@ class _RightRegisterForm extends StatelessWidget {
                   controller: usernameCtrl,
                   enabled: !loading,
                   icon: Icons.person_outline,
+                ),
+                const SizedBox(height: 12),
+
+                _TextFieldGlass(
+                  label: "Email",
+                  controller: emailCtrl,
+                  enabled: !loading,
+                  icon: Icons.email_outlined,
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 12),
+
+                _TextFieldGlass(
+                  label: "Nomor HP",
+                  controller: phoneCtrl,
+                  enabled: !loading,
+                  icon: Icons.phone_iphone,
+                  keyboardType: TextInputType.phone,
                 ),
                 const SizedBox(height: 12),
 
@@ -771,7 +963,7 @@ class _Panel extends StatelessWidget {
     if (style == PanelStyle.solidWhite) {
       return Container(
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.90), 
+          color: Colors.white.withValues(alpha: 0.90),
           borderRadius: BorderRadius.circular(22),
           boxShadow: [
             BoxShadow(
@@ -885,6 +1077,7 @@ class _TextFieldSoft extends StatelessWidget {
     required this.controller,
     required this.enabled,
     required this.icon,
+    this.keyboardType,
     this.obscureText = false,
     this.suffix,
   });
@@ -893,6 +1086,7 @@ class _TextFieldSoft extends StatelessWidget {
   final TextEditingController controller;
   final bool enabled;
   final IconData icon;
+  final TextInputType? keyboardType;
   final bool obscureText;
   final Widget? suffix;
 
@@ -902,6 +1096,7 @@ class _TextFieldSoft extends StatelessWidget {
       controller: controller,
       enabled: enabled,
       obscureText: obscureText,
+      keyboardType: keyboardType,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon),
@@ -928,6 +1123,7 @@ class _TextFieldGlass extends StatelessWidget {
     required this.controller,
     required this.enabled,
     required this.icon,
+    this.keyboardType,
     this.obscureText = false,
     this.suffix,
   });
@@ -936,6 +1132,7 @@ class _TextFieldGlass extends StatelessWidget {
   final TextEditingController controller;
   final bool enabled;
   final IconData icon;
+  final TextInputType? keyboardType;
   final bool obscureText;
   final Widget? suffix;
 
@@ -945,6 +1142,7 @@ class _TextFieldGlass extends StatelessWidget {
       controller: controller,
       enabled: enabled,
       obscureText: obscureText,
+      keyboardType: keyboardType,
       style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
       decoration: InputDecoration(
         labelText: label,
@@ -986,7 +1184,8 @@ class _GlassDropdown extends StatelessWidget {
     return DropdownButtonFormField<String>(
       value: initialValue,
       onChanged: enabled ? onChanged : null,
-      dropdownColor: const Color.fromARGB(255, 180, 196, 203),
+      dropdownColor: const Color.fromARGB(255, 18, 55, 71),
+      iconEnabledColor: Colors.white, // panah putih
       style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
       decoration: InputDecoration(
         labelText: "Daftar sebagai",
