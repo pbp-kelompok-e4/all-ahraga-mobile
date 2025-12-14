@@ -1,4 +1,4 @@
-import 'package:all_ahraga/screens/login.dart';
+import 'package:all_ahraga/screens/authPage.dart';
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
             secondary: Colors.tealAccent[400],
           ),
         ),
-        home: const LoginPage(),
+        home: const AuthPage(),
       ),
     );
   }
