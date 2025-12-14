@@ -19,10 +19,30 @@ class _MyHomePageState extends State<MyHomePage> {
   String? _error;
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
+  String? _selectedLocation;
+  String? _selectedCategory;
+  final List<String> _allLocations = [
+    'Bekasi',
+    'Bogor',
+    'Depok',
+    'Jakarta',
+    'Tangerang',
+  ];
+  final List<String> _allCategories = [
+    'Basket',
+    'Futsal',
+    'Mini Soccer',
+    'Padel',
+    'Tenis',
+  ];
+  late List<String> _availableLocations;
+  late List<String> _availableCategories;
 
   @override
   void initState() {
     super.initState();
+    _availableLocations = _allLocations;
+    _availableCategories = _allCategories;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkUserRoleAndRoute();
       _fetchVenues();
@@ -55,6 +75,14 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 
+  List<dynamic> get _filteredVenues {
+    return _venues.where((venue) {
+      final bool locationMatches = _selectedLocation == null || (venue['location'] ?? '') == _selectedLocation;
+      final bool categoryMatches = _selectedCategory == null || (venue['sport_category'] ?? '') == _selectedCategory;
+      return locationMatches && categoryMatches;
+    }).toList();
+  }
+
   Future<void> _fetchVenues() async {
     setState(() {
       _isLoading = true;
@@ -65,12 +93,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
     try {
       final response = await request.get(
-      '${ApiConstants.venues}?search=$_searchQuery', 
-    );
+        '${ApiConstants.venues}?search=$_searchQuery',
+      );
 
       if (response['success'] == true) {
+        final List<dynamic> fetchedVenues = response['venues'] ?? [];
         setState(() {
-          _venues = response['venues'] ?? [];
+          _venues = fetchedVenues;
           _isLoading = false;
         });
       } else {
@@ -89,9 +118,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   String _formatPrice(double price) {
     return price.toStringAsFixed(0).replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]}.',
-    );
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (Match m) => '${m[1]}.',
+        );
   }
 
   @override
@@ -117,40 +146,159 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header Banner with Search
               _buildHeaderBanner(),
+              _buildFilterOptions(),
 
-              // Venue List Section
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Section Title
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF0D9488).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(20),
+                        Text(
+                          'Daftar Lapangan',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey.shade800,
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 16),
 
-                    // Venue List
                     _buildVenueList(),
                   ],
                 ),
               ),
+              const SizedBox(height: 30),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterOptions() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _buildDropdownFilter(
+              hint: "Semua Lokasi",
+              value: _selectedLocation,
+              items: _availableLocations,
+              icon: Icons.location_on_outlined,
+              onChanged: (val) {
+                setState(() {
+                  _selectedLocation = val;
+                });
+              },
+            ),
+            
+            const SizedBox(width: 12),
+
+            _buildDropdownFilter(
+              hint: "Semua Olahraga",
+              value: _selectedCategory,
+              items: _availableCategories,
+              icon: Icons.sports_soccer_outlined,
+              onChanged: (val) {
+                setState(() {
+                  _selectedCategory = val;
+                });
+              },
+            ),
+
+            if (_selectedLocation != null || _selectedCategory != null) ...[
+              const SizedBox(width: 12),
+              InkWell(
+                onTap: () {
+                  setState(() {
+                    _selectedLocation = null;
+                    _selectedCategory = null;
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.close, size: 20, color: Colors.red),
+                ),
+              )
+            ]
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDropdownFilter({
+    required String hint,
+    required String? value,
+    required List<String> items,
+    required IconData icon,
+    required Function(String?) onChanged,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.grey.shade300),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          )
+        ],
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: value,
+          hint: Row(
+            children: [
+              Icon(icon, size: 16, color: const Color(0xFF0D9488)),
+              const SizedBox(width: 8),
+              Text(
+                hint,
+                style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+              ),
+            ],
+          ),
+          icon: const Icon(Icons.arrow_drop_down, color: Colors.grey),
+          style: TextStyle(fontSize: 13, color: Colors.grey.shade800),
+          onChanged: onChanged,
+          items: <DropdownMenuItem<String>>[
+            DropdownMenuItem<String>(
+              value: null,
+              child: Row(
+                children: [
+                  Icon(icon, size: 16, color: Colors.grey),
+                  const SizedBox(width: 8),
+                  Text(hint),
+                ],
+              ),
+            ),
+            
+            for (final item in items)
+              DropdownMenuItem<String>(
+                value: item,
+                child: Row(
+                  children: [
+                    const SizedBox(width: 24), 
+                    Text(item),
+                  ],
+                ),
+              ),
+          ],
         ),
       ),
     );
@@ -206,7 +354,13 @@ class _MyHomePageState extends State<MyHomePage> {
               onChanged: (value) {
                 _searchQuery = value;
               },
-              onSubmitted: (_) => _fetchVenues(),
+              onSubmitted: (_) {
+                setState(() {
+                  _selectedLocation = null;
+                  _selectedCategory = null;
+                });
+                _fetchVenues();
+              },
               decoration: InputDecoration(
                 hintText: 'Cari lapangan berdasarkan nama...',
                 hintStyle: TextStyle(color: Colors.grey.shade400),
@@ -231,7 +385,13 @@ class _MyHomePageState extends State<MyHomePage> {
                         Icons.search,
                         color: Color(0xFF0D9488),
                       ),
-                      onPressed: _fetchVenues,
+                      onPressed: () {
+                        setState(() {
+                          _selectedLocation = null;
+                          _selectedCategory = null;
+                        });
+                        _fetchVenues();
+                      },
                     ),
                   ],
                 ),
@@ -297,40 +457,36 @@ class _MyHomePageState extends State<MyHomePage> {
       );
     }
 
-    if (_venues.isEmpty) {
+    if (_filteredVenues.isEmpty) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(48),
           child: Column(
             children: [
               Icon(
-                Icons.sports_soccer,
+                Icons.mood_bad,
                 size: 80,
                 color: Colors.grey.shade300,
               ),
               const SizedBox(height: 16),
               Text(
-                _searchQuery.isEmpty
-                    ? 'Belum ada venue tersedia'
-                    : 'Tidak ada venue untuk "$_searchQuery"',
+                'Tidak Ditemukan.',
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16,
-                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
                 ),
-                textAlign: TextAlign.center,
               ),
-              if (_searchQuery.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                TextButton.icon(
-                  onPressed: () {
-                    _searchController.clear();
-                    _searchQuery = '';
-                    _fetchVenues();
-                  },
-                  icon: const Icon(Icons.clear),
-                  label: const Text('Hapus pencarian'),
+              const SizedBox(height: 8),
+              Text(
+                'Tidak ada lapangan yang sesuai dengan pencarian Anda',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
                 ),
-              ],
+              )
             ],
           ),
         ),
@@ -340,9 +496,9 @@ class _MyHomePageState extends State<MyHomePage> {
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: _venues.length,
+      itemCount: _filteredVenues.length,
       itemBuilder: (context, index) {
-        final venue = _venues[index];
+        final venue = _filteredVenues[index];
         return _buildVenueCard(venue);
       },
     );
@@ -364,7 +520,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ).then((result) {
             if (result == true) {
-              _fetchVenues(); // Refresh after booking
+              _fetchVenues(); 
             }
           });
         },
@@ -372,7 +528,6 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Venue Image with Rating Badge
             Stack(
               children: [
                 ClipRRect(
@@ -405,7 +560,6 @@ class _MyHomePageState extends State<MyHomePage> {
                       : _buildPlaceholderImage(),
                 ),
 
-                // Rating Badge
                 Positioned(
                   top: 12,
                   right: 12,
@@ -453,7 +607,6 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Venue Name
                   Text(
                     venue['name'] ?? 'Venue',
                     style: const TextStyle(
@@ -466,7 +619,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
                   const SizedBox(height: 8),
 
-                  // Location
                   Row(
                     children: [
                       Icon(
@@ -491,7 +643,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
                   const SizedBox(height: 12),
 
-                  // Sport Category Badge
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -527,7 +678,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
                   const SizedBox(height: 12),
 
-                  // Description
                   if (venue['description'] != null &&
                       venue['description'].toString().isNotEmpty)
                     Text(
@@ -543,11 +693,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
                   const Divider(height: 24),
 
-                  // Price & Booking Button
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Price
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -569,7 +717,6 @@ class _MyHomePageState extends State<MyHomePage> {
                         ],
                       ),
 
-                      // Booking Button
                       ElevatedButton.icon(
                         onPressed: () {
                           Navigator.push(
