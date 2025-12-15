@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
-import 'package:all_ahraga/screens/login.dart';
+import 'package:all_ahraga/screens/authPage.dart';
 import 'package:all_ahraga/widgets/left_drawer.dart';
 import 'package:all_ahraga/screens/venue/venue_revenue.dart';
 
@@ -148,7 +148,7 @@ class VenueHomePage extends StatelessWidget {
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const LoginPage(),
+                              builder: (context) => const AuthPage(),
                             ),
                           );
                         }

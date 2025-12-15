@@ -39,7 +39,11 @@ class LeftDrawer extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.sports_soccer, size: 48, color: Colors.white),
+                const Icon(
+                  Icons.sports_soccer,
+                  size: 48,
+                  color: Colors.white,
+                ),
                 const SizedBox(height: 12),
                 const Text(
                   "ALL-AHRAGA",
@@ -63,7 +67,7 @@ class LeftDrawer extends StatelessWidget {
               ],
             ),
           ),
-
+          
           // Home
           ListTile(
             leading: const Icon(Icons.home_outlined),
@@ -71,11 +75,13 @@ class LeftDrawer extends StatelessWidget {
             onTap: () {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => const MyHomePage()),
+                MaterialPageRoute(
+                  builder: (context) => const MyHomePage(),
+                ),
               );
             },
           ),
-
+          
           const Divider(),
           if (showBookingMenu) ...[
             Padding(
