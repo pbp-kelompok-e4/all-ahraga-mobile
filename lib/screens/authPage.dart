@@ -1182,7 +1182,7 @@ class _GlassDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<String>(
-      value: initialValue,
+      initialValue: initialValue,
       onChanged: enabled ? onChanged : null,
       dropdownColor: const Color.fromARGB(255, 18, 55, 71),
       iconEnabledColor: Colors.white, // panah putih
