@@ -36,4 +36,11 @@ class ApiConstants {
   static const String coachSchedule = '$baseUrl/coach/schedule/'; 
   static const String coachScheduleDelete = '$baseUrl/coach/schedule/delete/';
 
+  // Review endpoints
+  static String upsertReview(int bookingId, {required String target}) =>
+      '$baseUrl/review/$bookingId/new/?target=$target';
+  static String deleteReview(int reviewId) =>
+      '$baseUrl/review/$reviewId/delete/';
+  static String reviewsList(int bookingId) =>
+      '$baseUrl/review/$bookingId/list/json/';
 }
