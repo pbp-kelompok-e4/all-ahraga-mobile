@@ -4,7 +4,6 @@ import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:all_ahraga/screens/booking/my_bookings.dart';
 import 'package:all_ahraga/constants/api.dart';
-import 'package:all_ahraga/screens/booking/customer_payment.dart';
 
 class CreateBookingPage extends StatefulWidget {
   final int venueId;

@@ -184,7 +184,6 @@ class _CustomerPaymentPageState extends State<CustomerPaymentPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Header Icon
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -199,7 +198,6 @@ class _CustomerPaymentPageState extends State<CustomerPaymentPage> {
               ),
               const SizedBox(height: 24),
 
-              // Title
               Text(
                 isCash ? 'Bayar di Tempat (Cash)' : 'Transfer Bank',
                 style: const TextStyle(
@@ -210,7 +208,6 @@ class _CustomerPaymentPageState extends State<CustomerPaymentPage> {
               ),
               const SizedBox(height: 24),
 
-              // Payment Details Card
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -274,7 +271,6 @@ class _CustomerPaymentPageState extends State<CustomerPaymentPage> {
               ),
               const SizedBox(height: 24),
 
-              // Instructions
               if (isCash) ...[
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -327,7 +323,6 @@ class _CustomerPaymentPageState extends State<CustomerPaymentPage> {
               ],
               const SizedBox(height: 32),
 
-              // Buttons
               if (isCash) ...[
                 ElevatedButton(
                   onPressed: () {

@@ -80,7 +80,6 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
         onRefresh: () async => setState(() {}),
         child: CustomScrollView(
           slivers: [
-            // Header Search Bar
             SliverToBoxAdapter(
               child: Container(
                 margin: const EdgeInsets.all(16),
@@ -114,7 +113,6 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
               ),
             ),
 
-            // List Booking
             SliverToBoxAdapter(
               child: FutureBuilder(
                 future: fetchMyBookings(request),
@@ -440,7 +438,6 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
               ),
             ),
 
-            // ACTION BUTTONS
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Row(
@@ -646,49 +643,39 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () async {
-              Navigator.pop(dialogContext);
+              Navigator.pop(dialogContext); 
+              
               try {
-                final url = ApiConstants.cancelBooking(booking.pk);
-                final response = await http.delete(
-                  Uri.parse(url),
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'Cookie': request.cookies.entries
-                        .map((e) => '${e.key}=${e.value}')
-                        .join('; '),
-                  },
+                final response = await request.post(
+                  ApiConstants.cancelBooking(booking.pk),
+                  {}, 
                 );
 
                 if (!context.mounted) return;
 
-                if (response.statusCode == 200) {
-                  final data = jsonDecode(response.body);
-                  if (data['success'] == true) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                          content: Text('Booking #${booking.pk} dibatalkan'),
-                          backgroundColor: Colors.green),
-                    );
-                    setState(() {});
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                          content: Text(data['message'] ?? 'Gagal'),
-                          backgroundColor: Colors.red),
-                    );
-                  }
+                if (response['success'] == true) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Booking #${booking.pk} berhasil dibatalkan'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                  setState(() {});
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                        content: Text('Error: ${response.statusCode}'),
-                        backgroundColor: Colors.red),
+                      content: Text(response['message'] ?? 'Gagal membatalkan booking'),
+                      backgroundColor: Colors.red,
+                    ),
                   );
                 }
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                        content: Text('Error: $e'), backgroundColor: Colors.red),
+                      content: Text('Terjadi kesalahan: $e'),
+                      backgroundColor: Colors.red,
+                    ),
                   );
                 }
               }
@@ -729,7 +716,6 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
           ),
         );
         
-        // Refresh list
         setState(() {});
       } else {
         ScaffoldMessenger.of(context).showSnackBar(

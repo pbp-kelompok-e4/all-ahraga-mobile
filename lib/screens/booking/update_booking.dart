@@ -194,54 +194,34 @@ class _UpdateBookingPageState extends State<UpdateBookingPage> {
 
     try {
       final request = context.read<CookieRequest>();
+      
       final data = {
-        'schedule_id': _selectedScheduleId,
-        'coach_schedule_id': _selectedCoachScheduleId,
-        'equipment': _selectedEquipmentIds.toList(),
-        'quantities': _equipmentQuantities.map((k, v) => MapEntry(k.toString(), v)),
+        'schedule_id': _selectedScheduleId.toString(),
+        'coach_schedule_id': _selectedCoachScheduleId?.toString() ?? '',
+        'equipment': _selectedEquipmentIds.map((id) => id.toString()).toList(), 
+        'quantities': _equipmentQuantities.map((k, v) => MapEntry(k.toString(), v.toString())),
         'payment_method': _paymentMethod,
       };
 
-      String csrfTokenValue = request.cookies['csrftoken']?.toString() ?? "";
-      String cookieHeader = request.cookies.entries
-          .map((e) => '${e.key}=${e.value}')
-          .join('; ');
-
-      final response = await http.put(
-        Uri.parse(ApiConstants.updateBooking(widget.bookingId)),
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': csrfTokenValue,
-          'Cookie': cookieHeader,
-        },
-        body: jsonEncode(data),
+      final response = await request.post(
+        ApiConstants.updateBooking(widget.bookingId),
+        jsonEncode(data), 
       );
 
       if (!context.mounted) return;
 
-      dynamic responseData;
-      try {
-        responseData = jsonDecode(response.body);
-      } catch (e) {
-        throw Exception("Gagal memproses respon server (Status: ${response.statusCode})");
-      }
-
-      if (response.statusCode == 200 && responseData['success'] == true) {
+      if (response['success'] == true) {
         _showSuccessDialog();
       } else {
         _showSnackBar(
-          responseData['message'] ?? 'Gagal mengupdate booking. Kode: ${response.statusCode}',
+          response['message'] ?? 'Gagal mengupdate booking.',
           isError: true,
         );
       }
     } catch (e) {
-      if (context.mounted) {
-        _showSnackBar('Error: $e', isError: true);
-      }
+      _showSnackBar('Terjadi kesalahan: $e', isError: true);
     } finally {
-      if (mounted) {
-        setState(() => _isSubmitting = false);
-      }
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
@@ -362,7 +342,7 @@ class _UpdateBookingPageState extends State<UpdateBookingPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Edit Booking #${widget.bookingId}'),
-        backgroundColor: const Color(0xFF2563EB),
+        backgroundColor: const Color(0xFF0D9488),
         foregroundColor: Colors.white,
       ),
       body: _isLoading
@@ -410,10 +390,10 @@ class _UpdateBookingPageState extends State<UpdateBookingPage> {
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(16),
-          color: Colors.blue.shade50,
+          color: const Color(0xFFF0FDFA),
           child: Row(
             children: [
-              Icon(Icons.info_outline, color: Colors.blue.shade700),
+              const Icon(Icons.info_outline, color: Color(0xFF0F766E)),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
