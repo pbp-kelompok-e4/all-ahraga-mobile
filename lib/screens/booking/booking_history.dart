@@ -79,7 +79,6 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
         }
         return reviews;
       } on FormatException {
-        // CookieRequest failed, try fallback
       }
       
       final httpResponse = await http.get(
@@ -142,7 +141,6 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
         onRefresh: () async => setState(() {}),
         child: CustomScrollView(
           slivers: [
-            // Search Bar
             SliverToBoxAdapter(
               child: Container(
                 margin: const EdgeInsets.all(16),
@@ -171,7 +169,6 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
               ),
             ),
 
-            // List Booking History
             FutureBuilder<List<BookingListEntry>>(
               future: fetchBookingHistory(request),
               builder: (context, AsyncSnapshot<List<BookingListEntry>> snapshot) {
@@ -295,7 +292,6 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // HEADER
                   Text(
                     'Booking #${booking.pk}',
                     style: TextStyle(fontSize: 12, color: Colors.grey.shade500, fontWeight: FontWeight.w500),
@@ -311,7 +307,6 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
                   ),
                   const SizedBox(height: 20),
 
-                  // DETAILS
                   _buildInfoRow(
                     Icons.calendar_today_outlined,
                     "Tanggal",
@@ -395,7 +390,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
                           children: [
                             Text(
                               "METODE PEMBAYARAN",
-                              style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.grey.shade600),
+                              style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.grey.shade600),
                             ),
                             const SizedBox(height: 4),
                             Text(
@@ -466,7 +461,6 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
               ),
             ),
 
-            // Feedback Section
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -698,7 +692,6 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -737,12 +730,10 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
             ),
             const SizedBox(height: 12),
 
-            // Rating dan date
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Rating stars
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -769,7 +760,6 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
                     ),
                   ],
                 ),
-                // Date
                 Text(
                   _formatDate(review.fields.updatedAt),
                   style: const TextStyle(
@@ -783,7 +773,6 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
             
             if (review.fields.comment.isNotEmpty) ...[
               const SizedBox(height: 12),
-              // Comment
               Text(
                 review.fields.comment,
                 style: const TextStyle(
@@ -862,7 +851,6 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
           }
         }
       } on FormatException {
-        // CookieRequest failed, try fallback
       }
       
       final httpResponse = await http.post(
@@ -924,7 +912,6 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
             SnackBar(content: Text('Gagal menghapus review: $e')),
           );
         } catch (_) {
-          // Context no longer valid
         }
       }
     }
