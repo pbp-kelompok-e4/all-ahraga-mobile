@@ -4,11 +4,27 @@ import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:intl/intl.dart';
-import 'package:intl/date_symbol_data_local.dart'; // Wajib ada
+import 'package:intl/date_symbol_data_local.dart';
 
-// Sesuaikan path ini dengan project kamu
 import 'package:all_ahraga/constants/api.dart';
 import 'package:all_ahraga/models/venue_schedule_entry.dart';
+
+// --- PALETTE LIGHT MODE (SAMA DENGAN COACH) ---
+const Color _kBg = Colors.white; // Background Utama Putih
+const Color _kTeal = Color(0xFF0D9488); // Ijo Tosca (Primary Brand)
+const Color _kSlate = Color(
+  0xFF0F172A,
+); // Hitam/Biru Gelap (Untuk Text & Border)
+const Color _kLightGrey = Color(0xFFF1F5F9); // Abu muda (Untuk Booked Item)
+const Color _kMuted = Color(0xFF64748B); // Text abu-abu
+const Color _kRedLight = Color(
+  0xFFFEF2F2,
+); // Merah sangat muda (Background Delete)
+const Color _kRed = Color(0xFFDC2626); // Merah tegas
+
+// Konstanta Desain
+const double _kRadius = 8.0;
+const double _kBorderWidth = 2.0;
 
 class VenueManageSchedulePage extends StatefulWidget {
   final int venueId;
@@ -21,18 +37,16 @@ class VenueManageSchedulePage extends StatefulWidget {
 }
 
 class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
-  // Variabel Form
+  // --- LOGIC VARIABLES ---
   DateTime? _selectedDate;
   TimeOfDay? _startTime;
   TimeOfDay? _endTimeGlobal;
 
-  // Variabel Data
+  // Model diganti ke VenueSchedule
   List<VenueSchedule> _schedules = [];
   bool _isLoading = true;
-  bool _isLocaleReady = false; // Penanda apakah bahasa sudah siap
+  bool _isLocaleReady = false;
   String? _selectedMonthKey;
-
-  // State Mode Hapus
   bool _isSelectionMode = false;
 
   @override
@@ -42,25 +56,21 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
   }
 
   Future<void> _initData() async {
-    // 1. Load Data Bahasa Indonesia
     await initializeDateFormatting('id_ID', null);
-
     if (!mounted) return;
-
-    // 2. Tandai bahasa siap, lalu ambil data jadwal
     setState(() {
       _isLocaleReady = true;
     });
-
     _fetchSchedules();
   }
 
-  // --- 1. GET DATA ---
+  // --- 1. GET DATA (VENUE) ---
   Future<void> _fetchSchedules() async {
     final request = context.read<CookieRequest>();
     setState(() => _isLoading = true);
 
     try {
+      // Logic URL khusus Venue
       final url =
           "${ApiConstants.venueManageSchedule(widget.venueId)}?format=json";
       final response = await request.get(url);
@@ -77,9 +87,7 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
       List<VenueSchedule> listData = [];
       if (response is List) {
         for (var d in response) {
-          if (d != null) {
-            listData.add(VenueSchedule.fromJson(d));
-          }
+          if (d != null) listData.add(VenueSchedule.fromJson(d));
         }
       }
 
@@ -89,7 +97,6 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
         _schedules = listData;
         _isLoading = false;
         _isSelectionMode = false;
-
         if (_schedules.isNotEmpty && _selectedMonthKey == null) {
           _selectedMonthKey = _getMonthKey(_schedules.first.date);
         }
@@ -103,25 +110,23 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
     }
   }
 
-  // --- 2. POST DATA (Tambah) ---
+  // --- 2. POST DATA (VENUE) ---
   Future<void> _addSchedule() async {
     if (_selectedDate == null || _startTime == null || _endTimeGlobal == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Mohon lengkapi Tanggal, Jam Mulai, dan Batas Akhir."),
-        ),
+        const SnackBar(content: Text("Mohon lengkapi Tanggal & Waktu.")),
       );
       return;
     }
 
     final request = context.read<CookieRequest>();
-    // Pastikan _isLocaleReady true sebelum pakai DateFormat
     String dateStr = DateFormat('yyyy-MM-dd', 'id_ID').format(_selectedDate!);
     String startStr =
         '${_startTime!.hour.toString().padLeft(2, '0')}:${_startTime!.minute.toString().padLeft(2, '0')}';
     String endGlobalStr =
         '${_endTimeGlobal!.hour.toString().padLeft(2, '0')}:${_endTimeGlobal!.minute.toString().padLeft(2, '0')}';
 
+    // Logic Payload khusus Venue (ada is_available)
     Map<String, dynamic> payload = {
       'date': dateStr,
       'start_time': startStr,
@@ -141,6 +146,7 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(response['message'] ?? "Jadwal berhasil dibuat!"),
+            backgroundColor: _kTeal,
           ),
         );
         setState(() {
@@ -163,25 +169,45 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
     }
   }
 
-  // --- 3. DELETE DATA ---
+  // --- 3. DELETE DATA (VENUE) ---
   Future<void> _deleteSchedules(List<int> ids) async {
     if (ids.isEmpty) return;
-
     final request = context.read<CookieRequest>();
 
     bool? confirm = await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Hapus Jadwal?"),
-        content: Text("Anda akan menghapus ${ids.length} jadwal."),
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          side: const BorderSide(color: _kSlate, width: 2),
+          borderRadius: BorderRadius.circular(_kRadius),
+        ),
+        title: const Text(
+          "HAPUS JADWAL?",
+          style: TextStyle(color: _kSlate, fontWeight: FontWeight.w900),
+        ),
+        content: Text(
+          "Anda akan menghapus ${ids.length} jadwal permanen.",
+          style: const TextStyle(color: _kSlate),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text("Batal"),
+            child: const Text(
+              "BATAL",
+              style: TextStyle(fontWeight: FontWeight.bold, color: _kMuted),
+            ),
           ),
-          TextButton(
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text("Hapus", style: TextStyle(color: Colors.red)),
+            child: const Text(
+              "HAPUS SEKARANG",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -190,6 +216,7 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
     if (confirm != true) return;
 
     try {
+      // Logic URL khusus Venue
       final response = await request.postJson(
         ApiConstants.venueDeleteSchedule(widget.venueId),
         jsonEncode({'selected_schedules': ids}),
@@ -231,7 +258,6 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
     _deleteSchedules(selectedIds);
   }
 
-  // --- LOGIC MODE SELEKSI ---
   void _toggleSelectionMode() {
     setState(() {
       _isSelectionMode = !_isSelectionMode;
@@ -241,7 +267,7 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
     });
   }
 
-  // --- UI HELPERS ---
+  // --- PICKERS ---
   Future<void> _pickDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -251,10 +277,11 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
           colorScheme: const ColorScheme.light(
-            primary: Colors.teal,
+            primary: _kTeal,
             onPrimary: Colors.white,
-            onSurface: Colors.black,
+            onSurface: _kSlate,
           ),
+          dialogBackgroundColor: Colors.white,
         ),
         child: child!,
       ),
@@ -276,44 +303,43 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (BuildContext builder) {
-        return SizedBox(
-          height: 300,
+        return Container(
+          height: 320,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+          ),
           child: Column(
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
+                  horizontal: 20,
+                  vertical: 16,
                 ),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(20),
-                  ),
+                decoration: const BoxDecoration(
+                  border: Border(bottom: BorderSide(color: Colors.black12)),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     GestureDetector(
                       onTap: () => Navigator.pop(context),
-                      child: Text(
+                      child: const Text(
                         "Batal",
                         style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 16,
+                          color: _kMuted,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
                     Text(
-                      isStart ? "Jam Mulai" : "Batas Akhir",
+                      isStart ? "JAM MULAI" : "JAM SELESAI",
                       style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                        color: _kSlate,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                     GestureDetector(
@@ -327,11 +353,10 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
                         Navigator.pop(context);
                       },
                       child: const Text(
-                        "Pilih",
+                        "PILIH",
                         style: TextStyle(
-                          color: Colors.teal,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                          color: _kTeal,
+                          fontWeight: FontWeight.w900,
                         ),
                       ),
                     ),
@@ -353,51 +378,7 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
     );
   }
 
-  Widget _buildTimePickerCard({
-    required String title,
-    required TimeOfDay? time,
-    required VoidCallback onTap,
-    required IconData icon,
-  }) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(8),
-            color: Colors.white,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-              ),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  Icon(icon, size: 18, color: Colors.teal),
-                  const SizedBox(width: 8),
-                  Text(
-                    time == null ? "--:--" : time.format(context),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // --- LOGIC GROUPING ---
+  // --- HELPERS ---
   String _getMonthKey(String dateIso) {
     if (dateIso.length >= 7) return dateIso.substring(0, 7);
     return dateIso;
@@ -406,7 +387,7 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
   String _formatMonthDisplay(String monthKey) {
     try {
       DateTime dt = DateTime.parse("$monthKey-01");
-      return DateFormat('MMMM yyyy', 'id_ID').format(dt);
+      return DateFormat('MMMM yyyy', 'id_ID').format(dt).toUpperCase();
     } catch (e) {
       return monthKey;
     }
@@ -438,20 +419,256 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
   String _formatDateHeader(String dateIso) {
     try {
       DateTime dt = DateTime.parse(dateIso);
-      return DateFormat('EEEE, d MMM yyyy', 'id_ID').format(dt);
+      return DateFormat('d MMM yyyy', 'id_ID').format(dt).toUpperCase();
     } catch (e) {
       return dateIso;
     }
   }
 
-  // --- BUILD UI ---
-  @override
-  Widget build(BuildContext context) {
-    // --- CEK APAKAH LOCALE SUDAH SIAP ---
-    if (!_isLocaleReady) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+  String _getDayName(String dateIso) {
+    try {
+      DateTime dt = DateTime.parse(dateIso);
+      return DateFormat('EEEE', 'id_ID').format(dt).toUpperCase();
+    } catch (e) {
+      return "HARI INI";
+    }
+  }
+
+  // --- COMPONENTS (SAMA DENGAN COACH) ---
+
+  Widget _buildBrutalBox({
+    required Widget child,
+    VoidCallback? onTap,
+    Color bgColor = Colors.white,
+    Color borderColor = _kSlate,
+    double shadowOffset = 4.0,
+    EdgeInsets? padding,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: padding,
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(_kRadius),
+          border: Border.all(color: borderColor, width: _kBorderWidth),
+          boxShadow: [
+            BoxShadow(
+              color: _kSlate,
+              offset: Offset(shadowOffset, shadowOffset),
+              blurRadius: 0,
+            ),
+          ],
+        ),
+        child: child,
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      decoration: const BoxDecoration(
+        color: _kBg,
+        border: Border(bottom: BorderSide(color: Colors.black12, width: 1)),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Row(
+          children: [
+            // TOMBOL BACK
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: _kSlate, width: 2),
+                  boxShadow: const [
+                    BoxShadow(color: _kSlate, offset: Offset(2, 2)),
+                  ],
+                ),
+                child: const Icon(Icons.arrow_back, color: _kSlate, size: 20),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "MANAGER AREA",
+                  style: TextStyle(
+                    color: _kTeal,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+                Text(
+                  _isSelectionMode ? "DELETE MODE" : "VENUE SCHEDULE",
+                  style: TextStyle(
+                    color: _isSelectionMode ? _kRed : _kSlate,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimeField(
+    String label,
+    TimeOfDay? time,
+    bool isStart,
+    IconData icon,
+  ) {
+    return Expanded(
+      child: _buildBrutalBox(
+        onTap: () => _showScrollTimePicker(isStart),
+        padding: const EdgeInsets.all(16),
+        shadowOffset: 3,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, size: 16, color: _kTeal),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: _kMuted,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              time == null ? "--:--" : time.format(context),
+              style: const TextStyle(
+                color: _kSlate,
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGridItem(VenueSchedule item, double width) {
+    bool isBooked = item.isBooked;
+    bool isSelected = item.isSelected;
+
+    Color bg = isBooked ? _kLightGrey : Colors.white;
+    Color border = _kSlate;
+    Color text = isBooked ? _kMuted : _kSlate;
+    double shadow = 3.0;
+
+    if (_isSelectionMode && isSelected) {
+      bg = const Color(0xFFFFE4E6);
+      border = _kRed;
+      text = _kRed;
     }
 
+    return GestureDetector(
+      onTap: () {
+        if (isBooked) return;
+        if (_isSelectionMode) {
+          setState(() => item.isSelected = !item.isSelected);
+        }
+      },
+      child: Container(
+        width: width,
+        height: 60,
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: border, width: _kBorderWidth),
+          boxShadow: isBooked
+              ? []
+              : [
+                  BoxShadow(
+                    color: _isSelectionMode && isSelected
+                        ? _kRed.withOpacity(0.4)
+                        : _kSlate,
+                    offset: Offset(shadow, shadow),
+                    blurRadius: 0,
+                  ),
+                ],
+        ),
+        child: Stack(
+          children: [
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "${item.startTime} - ${item.endTime}",
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w900,
+                      color: text,
+                      decoration: isBooked ? TextDecoration.lineThrough : null,
+                    ),
+                  ),
+                  if (isBooked)
+                    const Text(
+                      "BOOKED",
+                      style: TextStyle(
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
+                        color: _kMuted,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            if (!isBooked && !_isSelectionMode)
+              Positioned(
+                top: 6,
+                right: 6,
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: _kTeal,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            if (_isSelectionMode)
+              Positioned(
+                top: 4,
+                right: 4,
+                child: Icon(
+                  isSelected ? Icons.check_circle : Icons.circle_outlined,
+                  size: 16,
+                  color: isSelected ? _kRed : Colors.grey,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_isLocaleReady) {
+      return const Scaffold(
+        backgroundColor: _kBg,
+        body: Center(child: CircularProgressIndicator(color: _kTeal)),
+      );
+    }
     List<String> availableMonths = _getAvailableMonths();
     if (availableMonths.isNotEmpty &&
         (_selectedMonthKey == null ||
@@ -460,377 +677,426 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
     }
     final groupedSchedules = _groupSchedulesByDate();
     final sortedDates = groupedSchedules.keys.toList()..sort();
-
     int selectedCount = _getVisibleSchedules()
         .where((s) => s.isSelected)
         .length;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Kelola Jadwal"),
-        backgroundColor: _isSelectionMode ? Colors.grey.shade800 : Colors.teal,
-        foregroundColor: Colors.white,
-        actions: [
-          if (!_isSelectionMode)
-            TextButton.icon(
-              onPressed: sortedDates.isEmpty ? null : _toggleSelectionMode,
-              icon: const Icon(Icons.delete_outline, color: Colors.white),
-              label: const Text(
-                "Hapus Jadwal",
-                style: TextStyle(color: Colors.white),
-              ),
-            )
-          else
-            Row(
-              children: [
-                TextButton(
-                  onPressed: _toggleSelectionMode,
-                  child: const Text(
-                    "Batal",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-                TextButton.icon(
-                  onPressed: selectedCount > 0 ? _deleteBulk : null,
-                  icon: Icon(
-                    Icons.delete,
-                    color: selectedCount > 0 ? Colors.redAccent : Colors.grey,
-                  ),
-                  label: Text(
-                    selectedCount > 0 ? "Hapus ($selectedCount)" : "Hapus",
-                    style: TextStyle(
-                      color: selectedCount > 0 ? Colors.redAccent : Colors.grey,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (!_isSelectionMode) ...[
-              Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: const [
-                          Icon(Icons.add_task, color: Colors.teal),
-                          SizedBox(width: 8),
-                          Text(
-                            "Buat Jadwal Baru",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      InkWell(
-                        onTap: _pickDate,
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 12,
-                            horizontal: 16,
-                          ),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey.shade300),
-                            borderRadius: BorderRadius.circular(8),
-                            color: Colors.grey.shade50,
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.calendar_month,
-                                color: Colors.grey,
-                              ),
-                              const SizedBox(width: 12),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "Pilih Tanggal",
-                                    style: TextStyle(
-                                      color: Colors.grey.shade600,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  Text(
-                                    _selectedDate == null
-                                        ? "Belum dipilih"
-                                        : DateFormat(
-                                            'EEEE, d MMMM yyyy',
-                                            'id_ID',
-                                          ).format(_selectedDate!),
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w600,
-                                      color: _selectedDate == null
-                                          ? Colors.grey
-                                          : Colors.black87,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          _buildTimePickerCard(
-                            title: "Mulai Jam",
-                            time: _startTime,
-                            icon: Icons.access_time,
-                            onTap: () => _showScrollTimePicker(true),
-                          ),
-                          const SizedBox(width: 12),
-                          _buildTimePickerCard(
-                            title: "Sampai Jam",
-                            time: _endTimeGlobal,
-                            icon: Icons.timer_off_outlined,
-                            onTap: () => _showScrollTimePicker(false),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _addSchedule,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.teal,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: const Text(
-                            "Generate Slot Jadwal",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-            ],
+      backgroundColor: _kBg,
+      body: Column(
+        children: [
+          // 1. Header
+          _buildHeader(),
 
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  _isSelectionMode ? "Pilih Jadwal" : "Daftar Slot",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: _isSelectionMode ? Colors.red : Colors.black,
-                  ),
-                ),
-                if (availableMonths.isNotEmpty)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.teal.shade100),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: _selectedMonthKey,
-                        icon: const Icon(
-                          Icons.arrow_drop_down,
-                          color: Colors.teal,
-                        ),
-                        style: const TextStyle(
-                          color: Colors.teal,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        onChanged: (val) =>
-                            setState(() => _selectedMonthKey = val),
-                        items: availableMonths
-                            .map(
-                              (m) => DropdownMenuItem(
-                                value: m,
-                                child: Text(_formatMonthDisplay(m)),
-                              ),
-                            )
-                            .toList(),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 10),
-
-            _isLoading
-                ? const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(40),
-                      child: CircularProgressIndicator(),
-                    ),
-                  )
-                : sortedDates.isEmpty
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(40),
+          // 2. Content
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // --- LOGIC SWITCH TAMPILAN ---
+                  if (!_isSelectionMode) ...[
+                    // --- A. INPUT FORM (NORMAL MODE) ---
+                    _buildBrutalBox(
+                      shadowOffset: 6,
+                      padding: const EdgeInsets.all(20),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(
-                            Icons.calendar_today_outlined,
-                            size: 60,
-                            color: Colors.grey.shade300,
-                          ),
-                          const SizedBox(height: 16),
-                          const Text(
-                            "Belum ada jadwal bulan ini.",
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                : ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: sortedDates.length,
-                    itemBuilder: (context, index) {
-                      String dateKey = sortedDates[index];
-                      List<VenueSchedule> slots = groupedSchedules[dateKey]!;
-
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        elevation: 1,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Theme(
-                          data: Theme.of(
-                            context,
-                          ).copyWith(dividerColor: Colors.transparent),
-                          child: ExpansionTile(
-                            initiallyExpanded:
-                                sortedDates.length == 1 || index == 0,
-                            tilePadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            leading: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.teal.shade50,
-                                borderRadius: BorderRadius.circular(8),
+                          Row(
+                            children: const [
+                              Icon(
+                                Icons.add_circle_outline,
+                                color: _kTeal,
+                                size: 20,
                               ),
-                              child: const Icon(
-                                Icons.calendar_month,
-                                color: Colors.teal,
-                              ),
-                            ),
-                            title: Text(
-                              _formatDateHeader(dateKey),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                              ),
-                            ),
-                            subtitle: Text(
-                              "${slots.length} sesi",
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 8.0),
-                                child: Column(
-                                  children: slots.map((item) {
-                                    return ListTile(
-                                      visualDensity: VisualDensity.compact,
-                                      leading: _isSelectionMode
-                                          ? Checkbox(
-                                              activeColor: Colors.red,
-                                              value: item.isSelected,
-                                              onChanged: item.isBooked
-                                                  ? null
-                                                  : (val) => setState(
-                                                      () => item.isSelected =
-                                                          val ?? false,
-                                                    ),
-                                            )
-                                          : null,
-                                      title: Text(
-                                        "${item.startTime} - ${item.endTime}",
-                                        style: TextStyle(
-                                          decoration: item.isBooked
-                                              ? TextDecoration.lineThrough
-                                              : null,
-                                          color: item.isBooked
-                                              ? Colors.grey
-                                              : Colors.black87,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      trailing: item.isBooked
-                                          ? Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 8,
-                                                    vertical: 4,
-                                                  ),
-                                              decoration: BoxDecoration(
-                                                color: Colors.red.shade50,
-                                                borderRadius:
-                                                    BorderRadius.circular(4),
-                                              ),
-                                              child: const Text(
-                                                "Booked",
-                                                style: TextStyle(
-                                                  color: Colors.red,
-                                                  fontSize: 11,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            )
-                                          : null,
-                                      onTap: _isSelectionMode && !item.isBooked
-                                          ? () => setState(
-                                              () => item.isSelected =
-                                                  !item.isSelected,
-                                            )
-                                          : null,
-                                    );
-                                  }).toList(),
+                              SizedBox(width: 8),
+                              Text(
+                                "BUAT JADWAL VENUE",
+                                style: TextStyle(
+                                  color: _kSlate,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 1.0,
+                                  fontSize: 12,
                                 ),
                               ),
                             ],
                           ),
+                          const SizedBox(height: 16),
+                          // Date Input
+                          GestureDetector(
+                            onTap: _pickDate,
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(_kRadius),
+                                border: Border.all(color: _kSlate, width: 2),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        "TANGGAL",
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: _kMuted,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        _selectedDate == null
+                                            ? "Pilih Tanggal..."
+                                            : DateFormat(
+                                                    'EEEE, d MMM yyyy',
+                                                    'id_ID',
+                                                  )
+                                                  .format(_selectedDate!)
+                                                  .toUpperCase(),
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 16,
+                                          color: _selectedDate == null
+                                              ? _kMuted
+                                              : _kSlate,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const Icon(
+                                    Icons.calendar_month_outlined,
+                                    color: _kSlate,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          // Time Inputs
+                          Row(
+                            children: [
+                              _buildTimeField(
+                                "MULAI",
+                                _startTime,
+                                true,
+                                Icons.play_arrow_outlined,
+                              ),
+                              const SizedBox(width: 12),
+                              _buildTimeField(
+                                "SELESAI",
+                                _endTimeGlobal,
+                                false,
+                                Icons.stop_circle_outlined,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          // Button (TOSCA)
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _kTeal,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 18,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(_kRadius),
+                                ),
+                                elevation: 0,
+                              ),
+                              onPressed: _addSchedule,
+                              child: const Text(
+                                "PUBLISH JADWAL",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 1.0,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+                  ] else ...[
+                    // --- A. INSTRUCTION BANNER (DELETE MODE) ---
+                    _buildBrutalBox(
+                      bgColor: _kRedLight,
+                      borderColor: _kRed,
+                      shadowOffset: 4,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 20,
+                        horizontal: 24,
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.delete_sweep,
+                            color: _kRed,
+                            size: 32,
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: const [
+                                SizedBox(height: 4),
+                                Text(
+                                  "Pilih jadwal yang ingin dihapus",
+                                  style: TextStyle(
+                                    color: _kSlate,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+
+                  // --- B. Filter & Title ---
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "Daftar Jadwal",
+                        style: TextStyle(
+                          color: _kSlate,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
                         ),
-                      );
-                    },
+                      ),
+                      if (availableMonths.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: _kSlate, width: 2),
+                            boxShadow: const [
+                              BoxShadow(color: _kSlate, offset: Offset(2, 2)),
+                            ],
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: _selectedMonthKey,
+                              dropdownColor: Colors.white,
+                              icon: const Icon(
+                                Icons.keyboard_arrow_down,
+                                color: _kSlate,
+                              ),
+                              style: const TextStyle(
+                                color: _kSlate,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 12,
+                              ),
+                              onChanged: (val) =>
+                                  setState(() => _selectedMonthKey = val),
+                              items: availableMonths
+                                  .map(
+                                    (m) => DropdownMenuItem(
+                                      value: m,
+                                      child: Text(_formatMonthDisplay(m)),
+                                    ),
+                                  )
+                                  .toList(),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
-            const SizedBox(height: 50),
-          ],
-        ),
+                  const SizedBox(height: 16),
+
+                  // --- C. List (Accordion Style) ---
+                  _isLoading
+                      ? const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(32),
+                            child: CircularProgressIndicator(color: _kSlate),
+                          ),
+                        )
+                      : sortedDates.isEmpty
+                      ? Center(
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 40),
+                            child: Column(
+                              children: const [
+                                Icon(
+                                  Icons.event_busy,
+                                  size: 48,
+                                  color: Colors.black12,
+                                ),
+                                SizedBox(height: 16),
+                                Text(
+                                  "Belum ada jadwal",
+                                  style: TextStyle(color: _kMuted),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      : ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: sortedDates.length,
+                          itemBuilder: (context, index) {
+                            String dateKey = sortedDates[index];
+                            List<VenueSchedule> slots =
+                                groupedSchedules[dateKey]!;
+
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 20),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                border: Border.all(color: _kSlate, width: 2),
+                                borderRadius: BorderRadius.circular(8),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: _kSlate,
+                                    offset: Offset(4, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Theme(
+                                data: Theme.of(
+                                  context,
+                                ).copyWith(dividerColor: Colors.transparent),
+                                child: ExpansionTile(
+                                  initiallyExpanded: index == 0,
+                                  tilePadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
+                                  iconColor: _kTeal,
+                                  collapsedIconColor: _kSlate,
+                                  title: Row(
+                                    children: [
+                                      Text(
+                                        _getDayName(dateKey),
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w900,
+                                          color: _kTeal,
+                                        ),
+                                      ),
+                                      Container(
+                                        margin: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                        ),
+                                        width: 2,
+                                        height: 14,
+                                        color: _kSlate,
+                                      ),
+                                      Text(
+                                        _formatDateHeader(dateKey),
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: _kSlate,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  children: [
+                                    Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: const BoxDecoration(
+                                        color: _kLightGrey, // Isi abu muda
+                                        border: Border(
+                                          top: BorderSide(
+                                            color: _kSlate,
+                                            width: 2,
+                                          ),
+                                        ),
+                                        borderRadius: BorderRadius.vertical(
+                                          bottom: Radius.circular(6),
+                                        ),
+                                      ),
+                                      child: LayoutBuilder(
+                                        builder: (context, constraints) {
+                                          double spacing = 12.0;
+                                          double itemWidth =
+                                              (constraints.maxWidth - spacing) /
+                                              2;
+                                          return Wrap(
+                                            spacing: spacing,
+                                            runSpacing: 12,
+                                            children: slots.map((item) {
+                                              return _buildGridItem(
+                                                item,
+                                                itemWidth,
+                                              );
+                                            }).toList(),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                  const SizedBox(height: 80),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
+
+      // FAB
+      floatingActionButton: _isSelectionMode
+          ? Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                const SizedBox(width: 32),
+                FloatingActionButton(
+                  heroTag: "btn_cancel",
+                  onPressed: _toggleSelectionMode,
+                  backgroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: const BorderSide(color: _kSlate, width: 2),
+                  ),
+                  child: const Icon(Icons.close, color: _kSlate),
+                ),
+                const SizedBox(width: 16),
+                FloatingActionButton.extended(
+                  heroTag: "btn_delete",
+                  onPressed: selectedCount > 0 ? _deleteBulk : null,
+                  backgroundColor: selectedCount > 0 ? _kRed : Colors.grey,
+                  label: Text(
+                    "HAPUS ($selectedCount)",
+                    style: const TextStyle(fontWeight: FontWeight.w900),
+                  ),
+                  icon: const Icon(Icons.delete_forever),
+                ),
+              ],
+            )
+          : FloatingActionButton(
+              heroTag: "btn_edit",
+              onPressed: _toggleSelectionMode,
+              backgroundColor: _kTeal,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: const BorderSide(color: Colors.white, width: 2),
+              ),
+              child: const Icon(Icons.edit, color: Colors.white),
+            ),
     );
   }
 }

@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'dart:io'; 
+import 'dart:io';
 import 'package:flutter/foundation.dart'; // PENTING: Untuk kIsWeb
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart'; 
+import 'package:image_picker/image_picker.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:all_ahraga/constants/api.dart';
@@ -39,7 +39,7 @@ class _VenueManagePageState extends State<VenueManagePage> {
 
   // PERBAIKAN 1: Gunakan XFile
   XFile? _newImageFile;
-  String? _currentImageUrl; 
+  String? _currentImageUrl;
   final ImagePicker _picker = ImagePicker();
 
   @override
@@ -70,7 +70,7 @@ class _VenueManagePageState extends State<VenueManagePage> {
           _selectedLocationId = venue['location_id'];
           _selectedCategoryId = venue['sport_category_id'];
           _selectedPaymentOption = venue['payment_options'];
-          
+
           _currentImageUrl = venue['image']; // URL dari server
 
           _equipments = response['equipments'] ?? [];
@@ -83,7 +83,7 @@ class _VenueManagePageState extends State<VenueManagePage> {
       if (mounted) setState(() => _isLoading = false);
     }
   }
-  
+
   Future<void> _pickImage() async {
     final XFile? pickedFile = await _picker.pickImage(
       source: ImageSource.gallery,
@@ -99,7 +99,7 @@ class _VenueManagePageState extends State<VenueManagePage> {
 
   Future<void> _saveVenue() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     // PERBAIKAN 2: Baca bytes dari XFile
     String? base64Image;
     if (_newImageFile != null) {
@@ -121,7 +121,7 @@ class _VenueManagePageState extends State<VenueManagePage> {
           'location': _selectedLocationId,
           'sport_category': _selectedCategoryId,
           'payment_options': _selectedPaymentOption,
-          'image': base64Image, 
+          'image': base64Image,
         }),
       );
 
@@ -132,28 +132,49 @@ class _VenueManagePageState extends State<VenueManagePage> {
           );
         }
       } else {
-         if (mounted) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text("Gagal: ${response['message']}")),
           );
         }
       }
     } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
-        }
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Error: $e")));
+      }
     }
   }
-  
+
   // (Bagian Equipment tidak berubah, saya singkat agar fokus ke perbaikan gambar)
-  Future<void> _deleteEquipment(int id) async { /* ... kode lama ... */ }
-  void _showEquipmentDialog({Map<String, dynamic>? equipment}) { /* ... kode lama ... */ }
-  Future<void> _submitEquipment({int? id, required String name, required String stock, required String price, required bool isEdit}) async { /* ... kode lama ... */ }
+  Future<void> _deleteEquipment(int id) async {
+    /* ... kode lama ... */
+  }
+  void _showEquipmentDialog({Map<String, dynamic>? equipment}) {
+    /* ... kode lama ... */
+  }
+  Future<void> _submitEquipment({
+    int? id,
+    required String name,
+    required String stock,
+    required String price,
+    required bool isEdit,
+  }) async {
+    /* ... kode lama ... */
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Kelola Venue", style: TextStyle(color: Colors.white)), backgroundColor: const Color(0xFF0D9488), iconTheme: const IconThemeData(color: Colors.white)),
+      appBar: AppBar(
+        title: const Text(
+          "Kelola Venue",
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: const Color(0xFF0D9488),
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -161,90 +182,195 @@ class _VenueManagePageState extends State<VenueManagePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                   const Text("Detail Venue", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                   const SizedBox(height: 10),
-                   
-                   // --- PERBAIKAN 3: TAMPILAN GAMBAR (WEB SAFE) ---
-                   Center(
-                      child: GestureDetector(
-                        onTap: _pickImage,
-                        child: Container(
-                          width: double.infinity,
-                          height: 200,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: _newImageFile != null
-                                ? (kIsWeb 
-                                    ? Image.network(_newImageFile!.path, fit: BoxFit.cover)
-                                    : Image.file(File(_newImageFile!.path), fit: BoxFit.cover))
-                                : (_currentImageUrl != null && _currentImageUrl!.isNotEmpty)
+                  const Text(
+                    "Detail Venue",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 10),
+
+                  // --- PERBAIKAN 3: TAMPILAN GAMBAR (WEB SAFE) ---
+                  Center(
+                    child: GestureDetector(
+                      onTap: _pickImage,
+                      child: Container(
+                        width: double.infinity,
+                        height: 200,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: _newImageFile != null
+                              ? (kIsWeb
                                     ? Image.network(
-                                        _currentImageUrl!.startsWith('http') 
-                                            ? _currentImageUrl! 
-                                            : "${ApiConstants.baseUrl}$_currentImageUrl",
+                                        _newImageFile!.path,
                                         fit: BoxFit.cover,
-                                        errorBuilder: (ctx, err, stack) => const Icon(Icons.broken_image, size: 50, color: Colors.grey),
                                       )
-                                    : const Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Icon(Icons.add_a_photo, size: 50, color: Colors.grey),
-                                          Text("Tap ganti foto", style: TextStyle(color: Colors.grey)),
-                                        ],
-                                      ),
-                          ),
+                                    : Image.file(
+                                        File(_newImageFile!.path),
+                                        fit: BoxFit.cover,
+                                      ))
+                              : (_currentImageUrl != null &&
+                                    _currentImageUrl!.isNotEmpty)
+                              ? Image.network(
+                                  _currentImageUrl!.startsWith('http')
+                                      ? _currentImageUrl!
+                                      : "${ApiConstants.baseUrl}$_currentImageUrl",
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (ctx, err, stack) => const Icon(
+                                    Icons.broken_image,
+                                    size: 50,
+                                    color: Colors.grey,
+                                  ),
+                                )
+                              : const Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.add_a_photo,
+                                      size: 50,
+                                      color: Colors.grey,
+                                    ),
+                                    Text(
+                                      "Tap ganti foto",
+                                      style: TextStyle(color: Colors.grey),
+                                    ),
+                                  ],
+                                ),
                         ),
                       ),
                     ),
-                   const SizedBox(height: 16),
-                   // ---------------------------------------------
+                  ),
+                  const SizedBox(height: 16),
 
-                   Form(
+                  // ---------------------------------------------
+                  Form(
                     key: _formKey,
                     child: Column(
                       children: [
-                        TextFormField(controller: _nameController, decoration: const InputDecoration(labelText: "Nama Venue", border: OutlineInputBorder())),
-                        const SizedBox(height: 10),
-                        TextFormField(controller: _descController, decoration: const InputDecoration(labelText: "Deskripsi", border: OutlineInputBorder()), maxLines: 3),
-                        const SizedBox(height: 10),
-                        TextFormField(controller: _priceController, decoration: const InputDecoration(labelText: "Harga per Jam", border: OutlineInputBorder()), keyboardType: TextInputType.number),
-                        const SizedBox(height: 10),
-                        
-                        DropdownButtonFormField<int>(
-                          decoration: const InputDecoration(labelText: "Lokasi", border: OutlineInputBorder()),
-                          value: _selectedLocationId,
-                          items: _locationsList.map<DropdownMenuItem<int>>((item) => DropdownMenuItem<int>(value: item['id'], child: Text(item['name']))).toList(),
-                          onChanged: (val) => setState(() => _selectedLocationId = val),
+                        TextFormField(
+                          controller: _nameController,
+                          decoration: const InputDecoration(
+                            labelText: "Nama Venue",
+                            border: OutlineInputBorder(),
+                          ),
                         ),
                         const SizedBox(height: 10),
-                         DropdownButtonFormField<int>(
-                          decoration: const InputDecoration(labelText: "Kategori", border: OutlineInputBorder()),
+                        TextFormField(
+                          controller: _descController,
+                          decoration: const InputDecoration(
+                            labelText: "Deskripsi",
+                            border: OutlineInputBorder(),
+                          ),
+                          maxLines: 3,
+                        ),
+                        const SizedBox(height: 10),
+                        TextFormField(
+                          controller: _priceController,
+                          decoration: const InputDecoration(
+                            labelText: "Harga per Jam",
+                            border: OutlineInputBorder(),
+                          ),
+                          keyboardType: TextInputType.number,
+                        ),
+                        const SizedBox(height: 10),
+
+                        DropdownButtonFormField<int>(
+                          decoration: const InputDecoration(
+                            labelText: "Lokasi",
+                            border: OutlineInputBorder(),
+                          ),
+                          value: _selectedLocationId,
+                          items: _locationsList
+                              .map<DropdownMenuItem<int>>(
+                                (item) => DropdownMenuItem<int>(
+                                  value: item['id'],
+                                  child: Text(item['name']),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (val) =>
+                              setState(() => _selectedLocationId = val),
+                        ),
+                        const SizedBox(height: 10),
+                        DropdownButtonFormField<int>(
+                          decoration: const InputDecoration(
+                            labelText: "Kategori",
+                            border: OutlineInputBorder(),
+                          ),
                           value: _selectedCategoryId,
-                          items: _categoriesList.map<DropdownMenuItem<int>>((item) => DropdownMenuItem<int>(value: item['id'], child: Text(item['name']))).toList(),
-                          onChanged: (val) => setState(() => _selectedCategoryId = val),
+                          items: _categoriesList
+                              .map<DropdownMenuItem<int>>(
+                                (item) => DropdownMenuItem<int>(
+                                  value: item['id'],
+                                  child: Text(item['name']),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (val) =>
+                              setState(() => _selectedCategoryId = val),
                         ),
                         const SizedBox(height: 10),
                         DropdownButtonFormField<String>(
-                          decoration: const InputDecoration(labelText: "Pembayaran", border: OutlineInputBorder()),
+                          decoration: const InputDecoration(
+                            labelText: "Pembayaran",
+                            border: OutlineInputBorder(),
+                          ),
                           value: _selectedPaymentOption,
-                          items: _paymentOptionsList.map((item) => DropdownMenuItem<String>(value: item['value'], child: Text(item['label']!))).toList(),
-                          onChanged: (val) => setState(() => _selectedPaymentOption = val),
+                          items: _paymentOptionsList
+                              .map(
+                                (item) => DropdownMenuItem<String>(
+                                  value: item['value'],
+                                  child: Text(item['label']!),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (val) =>
+                              setState(() => _selectedPaymentOption = val),
                         ),
 
                         const SizedBox(height: 16),
-                        SizedBox(width: double.infinity, child: ElevatedButton(onPressed: _saveVenue, style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0D9488), foregroundColor: Colors.white), child: const Text("Simpan Perubahan Venue"))),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _saveVenue,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF0D9488),
+                              foregroundColor: Colors.white,
+                            ),
+                            child: const Text("Simpan Perubahan Venue"),
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                  
+
                   // ... (Bagian Jadwal & Equipment tetap sama) ...
                   const SizedBox(height: 12),
-                  SizedBox(width: double.infinity, child: ElevatedButton.icon(onPressed: () { Navigator.push(context, MaterialPageRoute(builder: (context) => VenueManageSchedulePage(venueId: widget.venueId))); }, icon: const Icon(Icons.calendar_month), label: const Text("Kelola Jadwal & Slot"), style: ElevatedButton.styleFrom(backgroundColor: Colors.orange.shade800, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)))),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => VenueManageSchedulePage(
+                              venueId: widget.venueId,
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.calendar_month),
+                      label: const Text("Kelola Jadwal Lapangan"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange.shade800,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
                   // ... dan seterusnya (ListView Equipment) ...
                 ],
               ),
