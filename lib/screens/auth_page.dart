@@ -9,7 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:all_ahraga/screens/menu.dart' as customer;
 import 'package:all_ahraga/screens/venue_menu.dart';
 import 'package:all_ahraga/screens/coach_menu.dart';
-import 'package:all_ahraga/screens/landingPage.dart';
+import 'package:all_ahraga/screens/landing_page.dart';
 
 enum AuthMode { login, register }
 enum PanelStyle { solidWhite, glass }
@@ -148,8 +148,9 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
           ..showSnackBar(
             SnackBar(
               content: Text(
-                "$message Welcome, $uname.${roleType != null ? ' (Role: $roleType)' : ''}",
+                "$message Welcome, $uname",
               ),
+              backgroundColor: Colors.green,
             ),
           );
       } else {
@@ -211,7 +212,7 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
       if (response['status'] == "success") {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
-          ..showSnackBar(const SnackBar(content: Text("Successfully registered!")));
+          ..showSnackBar(const SnackBar(content: Text("Successfully registered!"), backgroundColor: Colors.green));
 
         _switchTo(AuthMode.login);
       } else {
@@ -595,73 +596,76 @@ class _LeftLoginForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          "Sign In",
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w900,
-            color: Color(0xFF0F172A),
-          ),
-        ),
-        const SizedBox(height: 6),
-        const Text(
-          "Masuk untuk melanjutkan aktivitas olahraga kamu.",
-          style: TextStyle(
-            color: Color(0xFF475569),
-            fontWeight: FontWeight.w600,
-            fontSize: 12.8,
-          ),
-        ),
-        const SizedBox(height: 18),
-        if (error != null) ...[
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFfee2e2),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFfca5a5)),
+    return SingleChildScrollView(
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "Sign In",
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFF0F172A),
             ),
-            child: Text(
-              error!,
-              style: const TextStyle(
-                color: Color(0xFF7f1d1d),
-                fontWeight: FontWeight.w700,
-                fontSize: 12.8,
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            "Masuk untuk melanjutkan aktivitas olahraga kamu.",
+            style: TextStyle(
+              color: Color(0xFF475569),
+              fontWeight: FontWeight.w600,
+              fontSize: 12.8,
+            ),
+          ),
+          const SizedBox(height: 18),
+          if (error != null) ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFfee2e2),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFfca5a5)),
+              ),
+              child: Text(
+                error!,
+                style: const TextStyle(
+                  color: Color(0xFF7f1d1d),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12.8,
+                ),
               ),
             ),
+            const SizedBox(height: 14),
+          ],
+          _TextFieldSoft(
+            label: "Username",
+            controller: usernameCtrl,
+            enabled: !loading,
+            icon: Icons.person_outline,
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
+          _TextFieldSoft(
+            label: "Password",
+            controller: passwordCtrl,
+            enabled: !loading,
+            icon: Icons.lock_outline,
+            obscureText: obscure,
+            suffix: IconButton(
+              onPressed: loading ? null : onToggleObscure,
+              icon: Icon(obscure ? Icons.visibility_off : Icons.visibility),
+            ),
+          ),
+          const SizedBox(height: 20),
+          _PrimaryPillButton(
+            text: loading ? "Signing In..." : "Sign In",
+            enabled: !loading,
+            onTap: onSubmit,
+            inverted: false,
+          ),
         ],
-        _TextFieldSoft(
-          label: "Username",
-          controller: usernameCtrl,
-          enabled: !loading,
-          icon: Icons.person_outline,
-        ),
-        const SizedBox(height: 12),
-        _TextFieldSoft(
-          label: "Password",
-          controller: passwordCtrl,
-          enabled: !loading,
-          icon: Icons.lock_outline,
-          obscureText: obscure,
-          suffix: IconButton(
-            onPressed: loading ? null : onToggleObscure,
-            icon: Icon(obscure ? Icons.visibility_off : Icons.visibility),
-          ),
-        ),
-        const Spacer(),
-        _PrimaryPillButton(
-          text: loading ? "Signing In..." : "Sign In",
-          enabled: !loading,
-          onTap: onSubmit,
-          inverted: false,
-        ),
-      ],
+      ),
     );
   }
 }
@@ -677,38 +681,42 @@ class _RightWelcomeSignUp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text(
-            "Welcome!",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 26,
-              fontWeight: FontWeight.w900,
+    return SingleChildScrollView(
+      padding: EdgeInsets.zero,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              "Welcome!",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.w900,
+              ),
             ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            "Buat akun untuk mulai booking venue, sewa alat, dan pesan coach dengan cepat.",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.82),
-              fontSize: 13.2,
-              height: 1.35,
-              fontWeight: FontWeight.w600,
+            const SizedBox(height: 8),
+            Text(
+              "Buat akun untuk mulai booking venue, sewa alat, dan pesan coach dengan cepat.",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.82),
+                fontSize: 12,
+                height: 1.3,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ),
-          const SizedBox(height: 18),
-          _PrimaryPillButton(
-            text: "Sign Up",
-            enabled: enabled,
-            onTap: onSignUp,
-            inverted: true,
-          ),
-        ],
+            const SizedBox(height: 14),
+            _PrimaryPillButton(
+              text: "Sign Up",
+              enabled: enabled,
+              onTap: onSignUp,
+              inverted: true,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -725,38 +733,42 @@ class _LeftWelcomeSignIn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text(
-            "Welcome!",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Color(0xFF0F172A),
-              fontSize: 26,
-              fontWeight: FontWeight.w900,
+    return SingleChildScrollView(
+      padding: EdgeInsets.zero,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              "Welcome!",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Color(0xFF0F172A),
+                fontSize: 24,
+                fontWeight: FontWeight.w900,
+              ),
             ),
-          ),
-          const SizedBox(height: 10),
-          const Text(
-            "Sudah punya akun? Masuk untuk lanjut booking & coaching.",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Color(0xFF475569),
-              fontSize: 13.2,
-              height: 1.35,
-              fontWeight: FontWeight.w700,
+            const SizedBox(height: 8),
+            const Text(
+              "Sudah punya akun? Masuk untuk lanjut booking & coaching.",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Color(0xFF475569),
+                fontSize: 12,
+                height: 1.3,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-          ),
-          const SizedBox(height: 18),
-          _PrimaryPillButton(
-            text: "Sign In",
-            enabled: enabled,
-            onTap: onSignIn,
-            inverted: false,
-          ),
-        ],
+            const SizedBox(height: 14),
+            _PrimaryPillButton(
+              text: "Sign In",
+              enabled: enabled,
+              onTap: onSignIn,
+              inverted: false,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1077,7 +1089,6 @@ class _TextFieldSoft extends StatelessWidget {
     required this.controller,
     required this.enabled,
     required this.icon,
-    this.keyboardType,
     this.obscureText = false,
     this.suffix,
   });
@@ -1086,7 +1097,6 @@ class _TextFieldSoft extends StatelessWidget {
   final TextEditingController controller;
   final bool enabled;
   final IconData icon;
-  final TextInputType? keyboardType;
   final bool obscureText;
   final Widget? suffix;
 
@@ -1096,7 +1106,6 @@ class _TextFieldSoft extends StatelessWidget {
       controller: controller,
       enabled: enabled,
       obscureText: obscureText,
-      keyboardType: keyboardType,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon),

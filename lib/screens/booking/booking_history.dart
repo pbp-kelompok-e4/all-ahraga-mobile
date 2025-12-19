@@ -78,7 +78,8 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
           }
         }
         return reviews;
-      } on FormatException {
+      } on FormatException catch (_) {
+        // Fallback to http request if initial response fails
       }
       
       final httpResponse = await http.get(
@@ -826,9 +827,10 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
   }
 
   Future<void> _deleteReview(BuildContext context, int reviewId) async {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    
     try {
       final request = context.read<CookieRequest>();
-      final scaffoldMessenger = ScaffoldMessenger.of(context);
       final url = ApiConstants.deleteReview(reviewId);
       
       String errorMessage = '';
@@ -844,13 +846,14 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
             if (mounted) {
               setState(() {});
               scaffoldMessenger.showSnackBar(
-                const SnackBar(content: Text('Review berhasil dihapus')),
+                const SnackBar(content: Text('Review berhasil dihapus'), backgroundColor: Colors.green),
               );
             }
             return;
           }
         }
-      } on FormatException {
+      } on FormatException catch (_) {
+        // Fallback to http request if initial response fails
       }
       
       final httpResponse = await http.post(
@@ -880,7 +883,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
               if (mounted) {
                 setState(() {});
                 scaffoldMessenger.showSnackBar(
-                  const SnackBar(content: Text('Review berhasil dihapus')),
+                  const SnackBar(content: Text('Review berhasil dihapus'), backgroundColor: Colors.green),
                 );
               }
               return;
@@ -907,11 +910,11 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
     } catch (e) {
       if (mounted) {
         try {
-          final scaffoldMessenger = ScaffoldMessenger.of(context);
           scaffoldMessenger.showSnackBar(
             SnackBar(content: Text('Gagal menghapus review: $e')),
           );
-        } catch (_) {
+        } catch (ex) {
+          debugPrint('Error showing snackbar: $ex');
         }
       }
     }
