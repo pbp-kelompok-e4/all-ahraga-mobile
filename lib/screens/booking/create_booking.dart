@@ -92,14 +92,15 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
     final dateStr =
         '${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}';
     final dateNow = DateTime.now();
-    final isToday = _selectedDate.year == dateNow.year &&
+    final isToday =
+        _selectedDate.year == dateNow.year &&
         _selectedDate.month == dateNow.month &&
         _selectedDate.day == dateNow.day;
 
     return _schedules.where((s) {
       if (s['date'] != dateStr) return false;
       if (s['is_booked'] == true) return false;
-      
+
       if (isToday) {
         try {
           final timeParts = s['start_time'].toString().split(':');
@@ -169,7 +170,9 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
           'schedule_id': _selectedScheduleId,
           'coach_schedule_id': _selectedCoachScheduleId,
           'equipment': _selectedEquipmentIds.toList(),
-          'quantities': _equipmentQuantities.map((k, v) => MapEntry(k.toString(), v)),
+          'quantities': _equipmentQuantities.map(
+            (k, v) => MapEntry(k.toString(), v),
+          ),
           'payment_method': _paymentMethod,
         }),
       );
@@ -179,7 +182,9 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
           _showSuccessDialog();
         } else {
           _showSnackBar(
-              response['message'] ?? 'Gagal membuat booking', isError: true);
+            response['message'] ?? 'Gagal membuat booking',
+            isError: true,
+          );
         }
       }
     } catch (e) {
@@ -242,10 +247,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
               const Text(
                 'Booking telah dibuat.\nSilahkan lakukan pembayaran.',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: _kMuted,
-                  fontSize: 13,
-                ),
+                style: TextStyle(color: _kMuted, fontSize: 13),
               ),
               const SizedBox(height: 24),
               SizedBox(
@@ -296,10 +298,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                 },
                 child: const Text(
                   'KEMBALI KE HOME',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: _kMuted,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.w700, color: _kMuted),
                 ),
               ),
             ],
@@ -317,7 +316,10 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
     }
 
     for (var eqId in _selectedEquipmentIds) {
-      final eq = _equipments.firstWhere((e) => e['id'] == eqId, orElse: () => null);
+      final eq = _equipments.firstWhere(
+        (e) => e['id'] == eqId,
+        orElse: () => null,
+      );
       if (eq != null) {
         int qty = _equipmentQuantities[eqId] ?? 1;
         total += (eq['rental_price'] ?? 0).toDouble() * qty;
@@ -338,7 +340,9 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
   }
 
   String _formatPrice(double price) {
-    return price.toStringAsFixed(0).replaceAllMapped(
+    return price
+        .toStringAsFixed(0)
+        .replaceAllMapped(
           RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
           (Match m) => '${m[1]}.',
         );
@@ -393,7 +397,11 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                   borderRadius: BorderRadius.circular(_kRadius),
                   border: Border.all(color: _kSlate, width: _kBorderWidth),
                   boxShadow: const [
-                    BoxShadow(color: _kSlate, offset: Offset(2, 2), blurRadius: 0),
+                    BoxShadow(
+                      color: _kSlate,
+                      offset: Offset(2, 2),
+                      blurRadius: 0,
+                    ),
                   ],
                 ),
                 child: const Icon(Icons.arrow_back, color: _kSlate, size: 20),
@@ -442,7 +450,9 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
           _buildHeader(primaryColor),
           if (_isLoading)
             Expanded(
-              child: Center(child: CircularProgressIndicator(color: primaryColor)),
+              child: Center(
+                child: CircularProgressIndicator(color: primaryColor),
+              ),
             )
           else if (_error != null)
             Expanded(
@@ -475,7 +485,8 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                           const SizedBox(height: 24),
                           _buildCoachSelector(primaryColor),
                           const SizedBox(height: 24),
-                          if (_equipments.isNotEmpty) _buildEquipmentSelector(primaryColor),
+                          if (_equipments.isNotEmpty)
+                            _buildEquipmentSelector(primaryColor),
                           const SizedBox(height: 24),
                           _buildPaymentMethodSelector(primaryColor),
                           const SizedBox(height: 100),
@@ -493,6 +504,19 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
   }
 
   Widget _buildVenueInfoCard(Color primaryColor) {
+    // --- [LOGIC FIX] Handle Image URL ---
+    String? rawImage = _venue?['image'];
+    String? imageUrl;
+    if (rawImage != null && rawImage.isNotEmpty) {
+      if (rawImage.startsWith('http')) {
+        imageUrl = rawImage; // Pakai langsung kalau URL lengkap
+      } else {
+        imageUrl =
+            '${ApiConstants.baseUrl}$rawImage'; // Tambah base kalau path relative
+      }
+    }
+    // ------------------------------------
+
     return _buildBrutalBox(
       shadowOffset: 4,
       padding: const EdgeInsets.all(20),
@@ -507,17 +531,14 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
               borderRadius: BorderRadius.circular(_kRadius),
               border: Border.all(color: primaryColor, width: 2),
             ),
-            child: _venue?['image'] != null
+            child: imageUrl != null
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(_kRadius - 2),
                     child: Image.network(
-                      '${ApiConstants.baseUrl}${_venue!['image']}',
+                      imageUrl, // Gunakan URL yang sudah diperbaiki
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Icon(
-                        Icons.stadium,
-                        size: 40,
-                        color: primaryColor,
-                      ),
+                      errorBuilder: (_, __, ___) =>
+                          Icon(Icons.stadium, size: 40, color: primaryColor),
                     ),
                   )
                 : Icon(Icons.stadium, size: 40, color: primaryColor),
@@ -582,7 +603,8 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
             itemCount: _availableDates.length,
             itemBuilder: (context, index) {
               final date = _availableDates[index];
-              final isSelected = date.year == _selectedDate.year &&
+              final isSelected =
+                  date.year == _selectedDate.year &&
                   date.month == _selectedDate.month &&
                   date.day == _selectedDate.day;
 
@@ -607,7 +629,9 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: isSelected ? primaryColor.withOpacity(0.4) : _kSlate,
+                        color: isSelected
+                            ? primaryColor.withOpacity(0.4)
+                            : _kSlate,
                         offset: const Offset(3, 3),
                         blurRadius: 0,
                       ),
@@ -617,8 +641,15 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        ['SEN', 'SEL', 'RAB', 'KAM', 'JUM', 'SAB', 'MIN']
-                            [date.weekday - 1],
+                        [
+                          'SEN',
+                          'SEL',
+                          'RAB',
+                          'KAM',
+                          'JUM',
+                          'SAB',
+                          'MIN',
+                        ][date.weekday - 1],
                         style: TextStyle(
                           fontSize: 9,
                           fontWeight: FontWeight.w900,
@@ -636,8 +667,18 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                       ),
                       Text(
                         [
-                          'JAN', 'FEB', 'MAR', 'APR', 'MEI', 'JUN',
-                          'JUL', 'AGU', 'SEP', 'OKT', 'NOV', 'DES'
+                          'JAN',
+                          'FEB',
+                          'MAR',
+                          'APR',
+                          'MEI',
+                          'JUN',
+                          'JUL',
+                          'AGU',
+                          'SEP',
+                          'OKT',
+                          'NOV',
+                          'DES',
                         ][date.month - 1],
                         style: TextStyle(
                           fontSize: 9,
@@ -709,7 +750,10 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                   _fetchAvailableCoaches(schedule['id']);
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
                     color: isSelected ? primaryColor : Colors.white,
                     borderRadius: BorderRadius.circular(_kRadius),
@@ -719,7 +763,9 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: isSelected ? primaryColor.withOpacity(0.4) : _kSlate,
+                        color: isSelected
+                            ? primaryColor.withOpacity(0.4)
+                            : _kSlate,
                         offset: const Offset(2, 2),
                         blurRadius: 0,
                       ),
@@ -788,7 +834,11 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
     );
   }
 
-  Widget _buildCoachCard(Map<String, dynamic>? coach, Color primaryColor, {bool isNoCoach = false}) {
+  Widget _buildCoachCard(
+    Map<String, dynamic>? coach,
+    Color primaryColor, {
+    bool isNoCoach = false,
+  }) {
     final isSelected = isNoCoach
         ? _selectedCoachScheduleId == null
         : _selectedCoachScheduleId == coach?['coach_schedule_id'];
@@ -796,8 +846,9 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
     return GestureDetector(
       onTap: () {
         setState(() {
-          _selectedCoachScheduleId =
-              isNoCoach ? null : coach?['coach_schedule_id'];
+          _selectedCoachScheduleId = isNoCoach
+              ? null
+              : coach?['coach_schedule_id'];
         });
       },
       child: Container(
@@ -962,7 +1013,9 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                     children: [
                       GestureDetector(
                         onTap: qty > 1
-                            ? () => setState(() => _equipmentQuantities[eq['id']] = qty - 1)
+                            ? () => setState(
+                                () => _equipmentQuantities[eq['id']] = qty - 1,
+                              )
                             : null,
                         child: Container(
                           padding: const EdgeInsets.all(4),
@@ -971,31 +1024,44 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                             borderRadius: BorderRadius.circular(4),
                             border: Border.all(color: _kSlate, width: 2),
                           ),
-                          child: Icon(Icons.remove, size: 16, color: qty > 1 ? _kSlate : _kMuted),
+                          child: Icon(
+                            Icons.remove,
+                            size: 16,
+                            color: qty > 1 ? _kSlate : _kMuted,
+                          ),
                         ),
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         child: Text(
                           '$qty',
-                          style: const TextStyle(fontWeight: FontWeight.w900, color: _kSlate),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w900,
+                            color: _kSlate,
+                          ),
                         ),
                       ),
                       GestureDetector(
                         onTap: qty < (eq['stock_quantity'] ?? 1)
-                            ? () => setState(() => _equipmentQuantities[eq['id']] = qty + 1)
+                            ? () => setState(
+                                () => _equipmentQuantities[eq['id']] = qty + 1,
+                              )
                             : null,
                         child: Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: qty < (eq['stock_quantity'] ?? 1) ? _kLightGrey : Colors.grey.shade300,
+                            color: qty < (eq['stock_quantity'] ?? 1)
+                                ? _kLightGrey
+                                : Colors.grey.shade300,
                             borderRadius: BorderRadius.circular(4),
                             border: Border.all(color: _kSlate, width: 2),
                           ),
                           child: Icon(
                             Icons.add,
                             size: 16,
-                            color: qty < (eq['stock_quantity'] ?? 1) ? _kSlate : _kMuted,
+                            color: qty < (eq['stock_quantity'] ?? 1)
+                                ? _kSlate
+                                : _kMuted,
                           ),
                         ),
                       ),
@@ -1031,7 +1097,9 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: _paymentMethod == 'CASH' ? primaryColor.withOpacity(0.1) : Colors.white,
+                  color: _paymentMethod == 'CASH'
+                      ? primaryColor.withOpacity(0.1)
+                      : Colors.white,
                   borderRadius: BorderRadius.circular(_kRadius),
                   border: Border.all(
                     color: _paymentMethod == 'CASH' ? primaryColor : _kSlate,
@@ -1039,7 +1107,9 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: _paymentMethod == 'CASH' ? primaryColor.withOpacity(0.3) : _kSlate,
+                      color: _paymentMethod == 'CASH'
+                          ? primaryColor.withOpacity(0.3)
+                          : _kSlate,
                       offset: const Offset(3, 3),
                       blurRadius: 0,
                     ),
@@ -1051,12 +1121,18 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                       width: 20,
                       height: 20,
                       decoration: BoxDecoration(
-                        color: _paymentMethod == 'CASH' ? primaryColor : Colors.white,
+                        color: _paymentMethod == 'CASH'
+                            ? primaryColor
+                            : Colors.white,
                         shape: BoxShape.circle,
                         border: Border.all(color: _kSlate, width: 2),
                       ),
                       child: _paymentMethod == 'CASH'
-                          ? const Icon(Icons.check, size: 12, color: Colors.white)
+                          ? const Icon(
+                              Icons.check,
+                              size: 12,
+                              color: Colors.white,
+                            )
                           : null,
                     ),
                     const SizedBox(width: 12),
@@ -1069,7 +1145,9 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                             style: TextStyle(
                               fontWeight: FontWeight.w900,
                               fontSize: 13,
-                              color: _paymentMethod == 'CASH' ? primaryColor : _kSlate,
+                              color: _paymentMethod == 'CASH'
+                                  ? primaryColor
+                                  : _kSlate,
                             ),
                           ),
                           const Text(
@@ -1092,15 +1170,21 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: _paymentMethod == 'TRANSFER' ? primaryColor.withOpacity(0.1) : Colors.white,
+                  color: _paymentMethod == 'TRANSFER'
+                      ? primaryColor.withOpacity(0.1)
+                      : Colors.white,
                   borderRadius: BorderRadius.circular(_kRadius),
                   border: Border.all(
-                    color: _paymentMethod == 'TRANSFER' ? primaryColor : _kSlate,
+                    color: _paymentMethod == 'TRANSFER'
+                        ? primaryColor
+                        : _kSlate,
                     width: _kBorderWidth,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: _paymentMethod == 'TRANSFER' ? primaryColor.withOpacity(0.3) : _kSlate,
+                      color: _paymentMethod == 'TRANSFER'
+                          ? primaryColor.withOpacity(0.3)
+                          : _kSlate,
                       offset: const Offset(3, 3),
                       blurRadius: 0,
                     ),
@@ -1112,12 +1196,18 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                       width: 20,
                       height: 20,
                       decoration: BoxDecoration(
-                        color: _paymentMethod == 'TRANSFER' ? primaryColor : Colors.white,
+                        color: _paymentMethod == 'TRANSFER'
+                            ? primaryColor
+                            : Colors.white,
                         shape: BoxShape.circle,
                         border: Border.all(color: _kSlate, width: 2),
                       ),
                       child: _paymentMethod == 'TRANSFER'
-                          ? const Icon(Icons.check, size: 12, color: Colors.white)
+                          ? const Icon(
+                              Icons.check,
+                              size: 12,
+                              color: Colors.white,
+                            )
                           : null,
                     ),
                     const SizedBox(width: 12),
@@ -1130,7 +1220,9 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                             style: TextStyle(
                               fontWeight: FontWeight.w900,
                               fontSize: 13,
-                              color: _paymentMethod == 'TRANSFER' ? primaryColor : _kSlate,
+                              color: _paymentMethod == 'TRANSFER'
+                                  ? primaryColor
+                                  : _kSlate,
                             ),
                           ),
                           const Text(

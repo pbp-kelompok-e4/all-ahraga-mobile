@@ -1,25 +1,20 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:all_ahraga/constants/api.dart';
 import 'package:all_ahraga/screens/venue/venue_manage_schedule.dart';
 
 // --- DESIGN SYSTEM CONSTANTS & WIDGETS ---
-// (Disertakan agar file ini bisa berdiri sendiri atau konsisten dengan Dashboard)
-
 class NeoColors {
-  static const Color primary = Color(0xFF0D9488); // Tosca
-  static const Color text = Color(0xFF0F172A);    // Slate
-  static const Color muted = Color(0xFF64748B);   // Grey
-  static const Color danger = Color(0xFFDC2626);  // Red
+  static const Color primary = Color(0xFF0D9488);
+  static const Color text = Color(0xFF0F172A);
+  static const Color muted = Color(0xFF64748B);
+  static const Color danger = Color(0xFFDC2626);
   static const Color background = Colors.white;
 }
 
-// 1. Neo Container (Base Box)
 class NeoContainer extends StatelessWidget {
   final Widget child;
   final Color? color;
@@ -68,7 +63,6 @@ class NeoContainer extends StatelessWidget {
   }
 }
 
-// 2. Neo Button
 class NeoButton extends StatelessWidget {
   final String label;
   final VoidCallback onPressed;
@@ -113,7 +107,6 @@ class NeoButton extends StatelessWidget {
   }
 }
 
-// 3. Neo Input Wrapper (Label + Styled Field)
 class NeoInputWrapper extends StatelessWidget {
   final String label;
   final Widget child;
@@ -159,25 +152,18 @@ class _VenueManagePageState extends State<VenueManagePage> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
+  final TextEditingController _imageController = TextEditingController();
 
   List<dynamic> _locationsList = [];
   List<dynamic> _categoriesList = [];
 
   int? _selectedLocationId;
   int? _selectedCategoryId;
-  String? _selectedPaymentOption;
 
-  final List<Map<String, String>> _paymentOptionsList = [
-    {'value': 'CASH', 'label': 'Bayar di Tempat (Cash)'},
-    {'value': 'TRANSFER', 'label': 'Transfer Manual'},
-  ];
+  // Payment option dihapus
 
   List<dynamic> _equipments = [];
   bool _isLoading = true;
-
-  XFile? _newImageFile;
-  String? _currentImageUrl;
-  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -206,16 +192,16 @@ class _VenueManagePageState extends State<VenueManagePage> {
 
           _selectedLocationId = venue['location_id'];
           _selectedCategoryId = venue['sport_category_id'];
-          _selectedPaymentOption = venue['payment_options'];
 
-          _currentImageUrl = venue['image'];
+          _imageController.text = venue['image'] ?? '';
 
           _equipments = response['equipments'] ?? [];
           _isLoading = false;
         });
       } else {
         setState(() => _isLoading = false);
-        if (mounted) _showSnack(response['message'] ?? 'Gagal memuat data', isError: true);
+        if (mounted)
+          _showSnack(response['message'] ?? 'Gagal memuat data', isError: true);
       }
     } catch (e) {
       if (mounted) {
@@ -225,13 +211,15 @@ class _VenueManagePageState extends State<VenueManagePage> {
     }
   }
 
-  // Helper Custom Snackbar
   void _showSnack(String message, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
           message,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         backgroundColor: isError ? NeoColors.danger : NeoColors.text,
         behavior: SnackBarBehavior.floating,
@@ -243,27 +231,8 @@ class _VenueManagePageState extends State<VenueManagePage> {
     );
   }
 
-  Future<void> _pickImage() async {
-    final XFile? pickedFile = await _picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 50,
-      maxWidth: 800,
-    );
-    if (pickedFile != null) {
-      setState(() {
-        _newImageFile = pickedFile;
-      });
-    }
-  }
-
   Future<void> _saveVenue() async {
     if (!_formKey.currentState!.validate()) return;
-
-    String? base64Image;
-    if (_newImageFile != null) {
-      final bytes = await _newImageFile!.readAsBytes();
-      base64Image = "data:image/jpeg;base64,${base64Encode(bytes)}";
-    }
 
     final request = context.read<CookieRequest>();
     final url = ApiConstants.venueManage(widget.venueId);
@@ -278,19 +247,21 @@ class _VenueManagePageState extends State<VenueManagePage> {
           'price_per_hour': double.tryParse(_priceController.text) ?? 0,
           'location': _selectedLocationId,
           'sport_category': _selectedCategoryId,
-          'payment_options': _selectedPaymentOption,
-          if (base64Image != null) 'image': base64Image,
+          // 'payment_options' dihapus dari payload
+          'image': _imageController.text,
         }),
       );
 
       if (response['success'] == true) {
-        setState(() {
-          _newImageFile = null;
-        });
-        if (mounted) _showSnack(response['message'] ?? "Data venue berhasil diperbarui!");
+        if (mounted)
+          _showSnack(response['message'] ?? "Data venue berhasil diperbarui!");
         await _fetchData();
       } else {
-        if (mounted) _showSnack(response['message'] ?? "Gagal memperbarui venue", isError: true);
+        if (mounted)
+          _showSnack(
+            response['message'] ?? "Gagal memperbarui venue",
+            isError: true,
+          );
       }
     } catch (e) {
       if (mounted) _showSnack("Error: $e", isError: true);
@@ -300,33 +271,33 @@ class _VenueManagePageState extends State<VenueManagePage> {
   Future<void> _deleteEquipment(int id) async {
     final request = context.read<CookieRequest>();
     final url = ApiConstants.venueManage(widget.venueId);
-
     try {
       final response = await request.postJson(
         url,
-        jsonEncode({
-          'action': 'delete_equipment',
-          'equipment_id': id,
-        }),
+        jsonEncode({'action': 'delete_equipment', 'equipment_id': id}),
       );
-
       if (response['success'] == true) {
         setState(() {
           _equipments = response['equipments'] ?? [];
         });
-        if (mounted) _showSnack(response['message'] ?? "Equipment berhasil dihapus");
+        if (mounted)
+          _showSnack(response['message'] ?? "Equipment berhasil dihapus");
       } else {
-        if (mounted) _showSnack(response['message'] ?? "Gagal menghapus equipment", isError: true);
+        if (mounted)
+          _showSnack(
+            response['message'] ?? "Gagal menghapus equipment",
+            isError: true,
+          );
       }
     } catch (e) {
       if (mounted) _showSnack("Error: $e", isError: true);
     }
   }
 
-  // --- NEO STYLE DIALOGS ---
-
   void _showEquipmentDialog({Map<String, dynamic>? equipment}) {
-    final nameController = TextEditingController(text: equipment?['name'] ?? '');
+    final nameController = TextEditingController(
+      text: equipment?['name'] ?? '',
+    );
     final stockController = TextEditingController(
       text: equipment != null ? equipment['stock'].toString() : '',
     );
@@ -386,7 +357,13 @@ class _VenueManagePageState extends State<VenueManagePage> {
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text("BATAL", style: TextStyle(color: NeoColors.text, fontWeight: FontWeight.bold)),
+                      child: const Text(
+                        "BATAL",
+                        style: TextStyle(
+                          color: NeoColors.text,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                     const SizedBox(width: 8),
                     NeoButton(
@@ -437,18 +414,30 @@ class _VenueManagePageState extends State<VenueManagePage> {
                     child: const Icon(Icons.warning, color: NeoColors.danger),
                   ),
                   const SizedBox(width: 12),
-                  const Text("HAPUS ALAT?", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
+                  const Text(
+                    "HAPUS ALAT?",
+                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+                  ),
                 ],
               ),
               const SizedBox(height: 16),
-              Text("Yakin ingin menghapus \"$name\"?", style: const TextStyle(color: NeoColors.muted)),
+              Text(
+                "Yakin ingin menghapus \"$name\"?",
+                style: const TextStyle(color: NeoColors.muted),
+              ),
               const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text("BATAL", style: TextStyle(color: NeoColors.text, fontWeight: FontWeight.bold)),
+                    child: const Text(
+                      "BATAL",
+                      style: TextStyle(
+                        color: NeoColors.text,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 8),
                   NeoButton(
@@ -460,7 +449,7 @@ class _VenueManagePageState extends State<VenueManagePage> {
                     },
                   ),
                 ],
-              )
+              ),
             ],
           ),
         ),
@@ -477,21 +466,17 @@ class _VenueManagePageState extends State<VenueManagePage> {
   }) async {
     final request = context.read<CookieRequest>();
     final url = ApiConstants.venueManage(widget.venueId);
-
     Map<String, dynamic> data = {
       'action': isEdit ? 'edit_equipment' : 'add_equipment',
       'name': name,
       'stock_quantity': int.tryParse(stock) ?? 0,
       'rental_price': double.tryParse(price) ?? 0,
     };
-    
     if (isEdit && id != null) {
       data['equipment_id'] = id;
     }
-
     try {
       final response = await request.postJson(url, jsonEncode(data));
-      
       if (response['success'] == true) {
         setState(() {
           _equipments = response['equipments'] ?? [];
@@ -502,7 +487,6 @@ class _VenueManagePageState extends State<VenueManagePage> {
       }
     } catch (e) {
       if (mounted) _showSnack("Error: $e", isError: true);
-      print("Error submit equipment: $e");
     }
   }
 
@@ -513,12 +497,14 @@ class _VenueManagePageState extends State<VenueManagePage> {
       body: SafeArea(
         child: Column(
           children: [
-            // --- CUSTOM HEADER ---
+            // --- HEADER ---
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               decoration: const BoxDecoration(
                 color: Colors.white,
-                border: Border(bottom: BorderSide(color: NeoColors.text, width: 2)),
+                border: Border(
+                  bottom: BorderSide(color: NeoColors.text, width: 2),
+                ),
               ),
               child: Row(
                 children: [
@@ -530,7 +516,10 @@ class _VenueManagePageState extends State<VenueManagePage> {
                         border: Border.all(color: NeoColors.text, width: 2),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.arrow_back, color: NeoColors.text),
+                      child: const Icon(
+                        Icons.arrow_back,
+                        color: NeoColors.text,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -549,7 +538,9 @@ class _VenueManagePageState extends State<VenueManagePage> {
             // --- CONTENT ---
             Expanded(
               child: _isLoading
-                  ? const Center(child: CircularProgressIndicator(color: NeoColors.text))
+                  ? const Center(
+                      child: CircularProgressIndicator(color: NeoColors.text),
+                    )
                   : SingleChildScrollView(
                       padding: const EdgeInsets.all(20),
                       child: Form(
@@ -557,29 +548,53 @@ class _VenueManagePageState extends State<VenueManagePage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // 1. IMAGE PICKER
-                            NeoContainer(
-                              height: 220,
-                              width: double.infinity,
-                              padding: EdgeInsets.zero,
-                              onTap: _pickImage,
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(6), // slightly less than container
-                                child: _newImageFile != null
-                                    ? (kIsWeb
-                                        ? Image.network(_newImageFile!.path, fit: BoxFit.cover)
-                                        : Image.file(File(_newImageFile!.path), fit: BoxFit.cover))
-                                    : (_currentImageUrl != null && _currentImageUrl!.isNotEmpty)
-                                        ? Image.network(
-                                            _currentImageUrl!.startsWith('http')
-                                                ? _currentImageUrl!
-                                                : "${ApiConstants.baseUrl}$_currentImageUrl",
-                                            fit: BoxFit.cover,
-                                            errorBuilder: (ctx, err, stack) => _buildImagePlaceholder(),
-                                          )
-                                        : _buildImagePlaceholder(),
+                            // 1. URL INPUT & PREVIEW
+                            NeoInputWrapper(
+                              label: "URL Foto Venue",
+                              child: TextFormField(
+                                controller: _imageController,
+                                decoration: const InputDecoration(
+                                  border: InputBorder.none,
+                                  hintText: "Tempel link gambar (https://...)",
+                                ),
+                                onChanged: (val) => setState(() {}),
                               ),
                             ),
+                            const SizedBox(height: 16),
+
+                            if (_imageController.text.isNotEmpty)
+                              NeoContainer(
+                                height: 220,
+                                width: double.infinity,
+                                padding: EdgeInsets.zero,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(6),
+                                  child: Image.network(
+                                    _imageController.text,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (ctx, err, stack) => Center(
+                                      child: Icon(
+                                        Icons.broken_image,
+                                        size: 40,
+                                        color: Colors.grey[400],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              )
+                            else
+                              NeoContainer(
+                                height: 100,
+                                width: double.infinity,
+                                padding: EdgeInsets.zero,
+                                child: Center(
+                                  child: Text(
+                                    "Masukkan URL untuk preview",
+                                    style: TextStyle(color: Colors.grey[600]),
+                                  ),
+                                ),
+                              ),
+
                             const SizedBox(height: 24),
 
                             // 2. FORM FIELDS
@@ -591,7 +606,9 @@ class _VenueManagePageState extends State<VenueManagePage> {
                                   border: InputBorder.none,
                                   hintText: "Masukkan nama venue...",
                                 ),
-                                validator: (val) => val == null || val.isEmpty ? 'Wajib diisi' : null,
+                                validator: (val) => val == null || val.isEmpty
+                                    ? 'Wajib diisi'
+                                    : null,
                               ),
                             ),
                             const SizedBox(height: 16),
@@ -616,27 +633,38 @@ class _VenueManagePageState extends State<VenueManagePage> {
                                   hintText: "0",
                                 ),
                                 keyboardType: TextInputType.number,
-                                validator: (val) => val == null || val.isEmpty ? 'Wajib diisi' : null,
+                                validator: (val) => val == null || val.isEmpty
+                                    ? 'Wajib diisi'
+                                    : null,
                               ),
                             ),
                             const SizedBox(height: 16),
-                            
+
                             // Dropdowns
                             NeoInputWrapper(
                               label: "Lokasi",
                               child: DropdownButtonFormField<int>(
                                 value: _selectedLocationId,
-                                decoration: const InputDecoration(border: InputBorder.none),
+                                decoration: const InputDecoration(
+                                  border: InputBorder.none,
+                                ),
                                 isExpanded: true,
-                                icon: const Icon(Icons.keyboard_arrow_down, color: NeoColors.text),
-                                items: _locationsList.map<DropdownMenuItem<int>>((item) {
-                                  return DropdownMenuItem<int>(
-                                    value: item['id'],
-                                    child: Text(item['name']),
-                                  );
-                                }).toList(),
-                                onChanged: (val) => setState(() => _selectedLocationId = val),
-                                validator: (val) => val == null ? 'Wajib dipilih' : null,
+                                icon: const Icon(
+                                  Icons.keyboard_arrow_down,
+                                  color: NeoColors.text,
+                                ),
+                                items: _locationsList
+                                    .map<DropdownMenuItem<int>>((item) {
+                                      return DropdownMenuItem<int>(
+                                        value: item['id'],
+                                        child: Text(item['name']),
+                                      );
+                                    })
+                                    .toList(),
+                                onChanged: (val) =>
+                                    setState(() => _selectedLocationId = val),
+                                validator: (val) =>
+                                    val == null ? 'Wajib dipilih' : null,
                               ),
                             ),
                             const SizedBox(height: 16),
@@ -644,40 +672,32 @@ class _VenueManagePageState extends State<VenueManagePage> {
                               label: "Kategori Olahraga",
                               child: DropdownButtonFormField<int>(
                                 value: _selectedCategoryId,
-                                decoration: const InputDecoration(border: InputBorder.none),
+                                decoration: const InputDecoration(
+                                  border: InputBorder.none,
+                                ),
                                 isExpanded: true,
-                                icon: const Icon(Icons.keyboard_arrow_down, color: NeoColors.text),
-                                items: _categoriesList.map<DropdownMenuItem<int>>((item) {
-                                  return DropdownMenuItem<int>(
-                                    value: item['id'],
-                                    child: Text(item['name']),
-                                  );
-                                }).toList(),
-                                onChanged: (val) => setState(() => _selectedCategoryId = val),
-                                validator: (val) => val == null ? 'Wajib dipilih' : null,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            NeoInputWrapper(
-                              label: "Opsi Pembayaran",
-                              child: DropdownButtonFormField<String>(
-                                value: _selectedPaymentOption,
-                                decoration: const InputDecoration(border: InputBorder.none),
-                                isExpanded: true,
-                                icon: const Icon(Icons.keyboard_arrow_down, color: NeoColors.text),
-                                items: _paymentOptionsList.map((item) {
-                                  return DropdownMenuItem<String>(
-                                    value: item['value'],
-                                    child: Text(item['label']!),
-                                  );
-                                }).toList(),
-                                onChanged: (val) => setState(() => _selectedPaymentOption = val),
-                                validator: (val) => val == null ? 'Wajib dipilih' : null,
+                                icon: const Icon(
+                                  Icons.keyboard_arrow_down,
+                                  color: NeoColors.text,
+                                ),
+                                items: _categoriesList
+                                    .map<DropdownMenuItem<int>>((item) {
+                                      return DropdownMenuItem<int>(
+                                        value: item['id'],
+                                        child: Text(item['name']),
+                                      );
+                                    })
+                                    .toList(),
+                                onChanged: (val) =>
+                                    setState(() => _selectedCategoryId = val),
+                                validator: (val) =>
+                                    val == null ? 'Wajib dipilih' : null,
                               ),
                             ),
 
+                            // Payment Options dihapus
                             const SizedBox(height: 32),
-                            
+
                             // ACTION BUTTONS
                             SizedBox(
                               width: double.infinity,
@@ -693,14 +713,15 @@ class _VenueManagePageState extends State<VenueManagePage> {
                               child: NeoButton(
                                 label: "KELOLA JADWAL",
                                 icon: Icons.calendar_month,
-                                backgroundColor: const Color(0xFFF59E0B), // Amber for secondary action
+                                backgroundColor: const Color(0xFFF59E0B),
                                 onPressed: () {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => VenueManageSchedulePage(
-                                        venueId: widget.venueId,
-                                      ),
+                                      builder: (context) =>
+                                          VenueManageSchedulePage(
+                                            venueId: widget.venueId,
+                                          ),
                                     ),
                                   );
                                 },
@@ -711,7 +732,7 @@ class _VenueManagePageState extends State<VenueManagePage> {
                             const Divider(color: NeoColors.text, thickness: 2),
                             const SizedBox(height: 24),
 
-                            // EQUIPMENT SECTION
+                            // EQUIPMENT SECTION (Sama persis)
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -725,14 +746,28 @@ class _VenueManagePageState extends State<VenueManagePage> {
                                 ),
                                 NeoContainer(
                                   onTap: () => _showEquipmentDialog(),
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                  color: NeoColors.text, // Dark button
-                                  hasShadow: false, // Small button style
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                  color: NeoColors.text,
+                                  hasShadow: false,
                                   child: const Row(
                                     children: [
-                                      Icon(Icons.add, color: Colors.white, size: 16),
+                                      Icon(
+                                        Icons.add,
+                                        color: Colors.white,
+                                        size: 16,
+                                      ),
                                       SizedBox(width: 4),
-                                      Text("TAMBAH", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                                      Text(
+                                        "TAMBAH",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -748,20 +783,29 @@ class _VenueManagePageState extends State<VenueManagePage> {
                                     hasShadow: false,
                                     child: Column(
                                       children: [
-                                        Icon(Icons.sports_tennis, size: 48, color: Colors.grey[400]),
+                                        Icon(
+                                          Icons.sports_tennis,
+                                          size: 48,
+                                          color: Colors.grey[400],
+                                        ),
                                         const SizedBox(height: 12),
                                         Text(
-                                          "Belum ada peralatan yang terdaftar.",
-                                          style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold),
+                                          "Belum ada peralatan.",
+                                          style: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ],
                                     ),
                                   )
                                 : ListView.separated(
                                     shrinkWrap: true,
-                                    physics: const NeverScrollableScrollPhysics(),
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
                                     itemCount: _equipments.length,
-                                    separatorBuilder: (ctx, i) => const SizedBox(height: 16),
+                                    separatorBuilder: (ctx, i) =>
+                                        const SizedBox(height: 16),
                                     itemBuilder: (context, index) {
                                       final equipment = _equipments[index];
                                       return NeoContainer(
@@ -773,25 +817,49 @@ class _VenueManagePageState extends State<VenueManagePage> {
                                               padding: const EdgeInsets.all(10),
                                               decoration: BoxDecoration(
                                                 color: const Color(0xFFE0F2FE),
-                                                border: Border.all(color: NeoColors.text, width: 2),
-                                                borderRadius: BorderRadius.circular(8),
+                                                border: Border.all(
+                                                  color: NeoColors.text,
+                                                  width: 2,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
                                               ),
-                                              child: const Icon(Icons.sports_soccer, color: NeoColors.text),
+                                              child: const Icon(
+                                                Icons.sports_soccer,
+                                                color: NeoColors.text,
+                                              ),
                                             ),
                                             const SizedBox(width: 16),
                                             Expanded(
                                               child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
                                                 children: [
                                                   Text(
-                                                    equipment['name']?.toString().toUpperCase() ?? '-',
-                                                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+                                                    equipment['name']
+                                                            ?.toString()
+                                                            .toUpperCase() ??
+                                                        '-',
+                                                    style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.w900,
+                                                      fontSize: 16,
+                                                    ),
                                                   ),
                                                   const SizedBox(height: 4),
-                                                  Text("Stok: ${equipment['stock'] ?? 0}", style: const TextStyle(color: NeoColors.muted)),
+                                                  Text(
+                                                    "Stok: ${equipment['stock'] ?? 0}",
+                                                    style: const TextStyle(
+                                                      color: NeoColors.muted,
+                                                    ),
+                                                  ),
                                                   Text(
                                                     "Rp ${equipment['price'] ?? 0}/jam",
-                                                    style: const TextStyle(color: NeoColors.primary, fontWeight: FontWeight.bold),
+                                                    style: const TextStyle(
+                                                      color: NeoColors.primary,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
                                                   ),
                                                 ],
                                               ),
@@ -799,16 +867,29 @@ class _VenueManagePageState extends State<VenueManagePage> {
                                             Column(
                                               children: [
                                                 GestureDetector(
-                                                  onTap: () => _showEquipmentDialog(equipment: equipment),
-                                                  child: const Icon(Icons.edit, color: NeoColors.text),
+                                                  onTap: () =>
+                                                      _showEquipmentDialog(
+                                                        equipment: equipment,
+                                                      ),
+                                                  child: const Icon(
+                                                    Icons.edit,
+                                                    color: NeoColors.text,
+                                                  ),
                                                 ),
                                                 const SizedBox(height: 16),
                                                 GestureDetector(
-                                                  onTap: () => _confirmDeleteEquipment(equipment['id'], equipment['name']),
-                                                  child: const Icon(Icons.delete_outline, color: NeoColors.danger),
+                                                  onTap: () =>
+                                                      _confirmDeleteEquipment(
+                                                        equipment['id'],
+                                                        equipment['name'],
+                                                      ),
+                                                  child: const Icon(
+                                                    Icons.delete_outline,
+                                                    color: NeoColors.danger,
+                                                  ),
                                                 ),
                                               ],
-                                            )
+                                            ),
                                           ],
                                         ),
                                       );
@@ -823,24 +904,6 @@ class _VenueManagePageState extends State<VenueManagePage> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildImagePlaceholder() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(Icons.add_a_photo, size: 40, color: Colors.grey[600]),
-        const SizedBox(height: 8),
-        Text(
-          "TAP TO UPLOAD PHOTO",
-          style: TextStyle(
-            color: Colors.grey[600],
-            fontWeight: FontWeight.w900,
-            fontSize: 14,
-          ),
-        ),
-      ],
     );
   }
 }

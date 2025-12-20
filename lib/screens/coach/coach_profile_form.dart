@@ -1,19 +1,13 @@
 // lib/screens/coach/coach_profile_form.dart
 
-import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '/models/coach_entry.dart';
 import '/models/sport_category.dart';
 import '/models/location_area.dart';
 import '/constants/api.dart';
-import 'package:http/browser_client.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 
 // Design System Constants
 class NeoBrutalism {
@@ -42,10 +36,9 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
   final TextEditingController _ageController = TextEditingController();
   final TextEditingController _rateController = TextEditingController();
   final TextEditingController _experienceController = TextEditingController();
+  final TextEditingController _profilePictureUrlController = TextEditingController();
 
   bool _isLoading = false;
-  dynamic _imageFile;
-  final ImagePicker _picker = ImagePicker();
 
   List<SportCategory> _sportCategories = [];
   List<LocationArea> _locationAreas = [];
@@ -69,6 +62,7 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
       _ageController.text = profile.age?.toString() ?? '';
       _rateController.text = profile.ratePerHour?.toString() ?? '';
       _experienceController.text = profile.experienceDesc ?? '';
+      _profilePictureUrlController.text = profile.profilePicture ?? '';
       _selectedSportId = profile.mainSportTrainedId;
       _selectedAreaIds = profile.serviceAreaIds ?? [];
     }
@@ -118,39 +112,6 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
     }
   }
 
-  Future<void> _pickImage() async {
-    try {
-      final XFile? pickedFile = await _picker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 1024,
-        maxHeight: 1024,
-        imageQuality: 85,
-      );
-
-      if (pickedFile != null) {
-        if (kIsWeb) {
-          final bytes = await pickedFile.readAsBytes();
-          setState(() {
-            _imageFile = bytes;
-          });
-        } else {
-          setState(() {
-            _imageFile = File(pickedFile.path);
-          });
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gagal memilih gambar: $e'),
-            backgroundColor: NeoBrutalism.danger,
-          ),
-        );
-      }
-    }
-  }
-
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -183,59 +144,26 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
     try {
       final request = context.read<CookieRequest>();
       
-      var uri = Uri.parse(ApiConstants.coachProfileSave);
-      var multipartRequest = http.MultipartRequest('POST', uri);
-
-      final cookies = request.cookies;
-      if (cookies.isNotEmpty) {
-        multipartRequest.headers['cookie'] = cookies.entries
-            .map((e) => '${e.key}=${e.value}')
-            .join('; ');
-      }
-
-      multipartRequest.fields['age'] = _ageController.text;
-      multipartRequest.fields['rate_per_hour'] = _rateController.text;
-      multipartRequest.fields['main_sport_trained_id'] = _selectedSportId.toString();
-      multipartRequest.fields['experience_desc'] = _experienceController.text;
-      multipartRequest.fields['service_area_ids'] = jsonEncode(_selectedAreaIds);
-
-      if (_imageFile != null) {
-        if (kIsWeb && _imageFile is Uint8List) {
-          multipartRequest.files.add(
-            http.MultipartFile.fromBytes(
-              'profile_picture',
-              _imageFile,
-              filename: 'profile_${DateTime.now().millisecondsSinceEpoch}.jpg',
-            ),
-          );
-        } else if (!kIsWeb && _imageFile is File) {
-          multipartRequest.files.add(
-            await http.MultipartFile.fromPath(
-              'profile_picture',
-              _imageFile.path,
-            ),
-          );
-        }
-      }
-
-      http.StreamedResponse streamedResponse;
-
-      if (kIsWeb) {
-        final client = BrowserClient()..withCredentials = true;
-        streamedResponse = await client.send(multipartRequest);
-      } else {
-        streamedResponse = await multipartRequest.send();
-      }
-
-      final response = await http.Response.fromStream(streamedResponse);
-      final responseData = jsonDecode(response.body);
+      final response = await request.post(
+        ApiConstants.coachProfileSave,
+        jsonEncode({
+          'age': int.parse(_ageController.text),
+          'rate_per_hour': double.parse(_rateController.text),
+          'main_sport_trained_id': _selectedSportId,
+          'experience_desc': _experienceController.text,
+          'service_area_ids': _selectedAreaIds,
+          'profile_picture': _profilePictureUrlController.text.isEmpty 
+              ? null 
+              : _profilePictureUrlController.text,
+        }),
+      );
 
       if (mounted) {
-        if (responseData['success'] == true) {
+        if (response['success'] == true) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                responseData['message'] ?? 'Profil berhasil disimpan',
+                response['message'] ?? 'Profil berhasil disimpan',
               ),
               backgroundColor: NeoBrutalism.primary,
             ),
@@ -245,7 +173,7 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                responseData['message'] ?? 'Gagal menyimpan profil',
+                response['message'] ?? 'Gagal menyimpan profil',
               ),
               backgroundColor: NeoBrutalism.danger,
             ),
@@ -275,6 +203,7 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
     _ageController.dispose();
     _rateController.dispose();
     _experienceController.dispose();
+    _profilePictureUrlController.dispose();
     super.dispose();
   }
 
@@ -401,87 +330,90 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Profile Picture Section
+            // Profile Picture Preview Section
             Center(
               child: Column(
                 children: [
-                  GestureDetector(
-                    onTap: _pickImage,
-                    child: Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        color: NeoBrutalism.white,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: NeoBrutalism.slate,
-                            offset: Offset(4, 4),
-                            blurRadius: 0,
-                          ),
-                        ],
-                      ),
-                      child: _imageFile != null
-                          ? ClipOval(
-                              child: kIsWeb
-                                  ? Image.memory(
-                                      _imageFile as Uint8List,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Image.file(_imageFile as File, fit: BoxFit.cover),
-                            )
-                          : widget.existingProfile?.profilePicture != null
-                              ? ClipOval(
-                                  child: Image.network(
-                                    widget.existingProfile!.profilePicture!,
-                                    fit: BoxFit.cover,
-                                  ),
-                                )
-                              : const Icon(
-                                  Icons.add_a_photo,
-                                  size: 40,
-                                  color: NeoBrutalism.grey,
-                                ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
                   Container(
+                    width: 120,
+                    height: 120,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+                      color: NeoBrutalism.white,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
                       boxShadow: const [
                         BoxShadow(
                           color: NeoBrutalism.slate,
-                          offset: Offset(2, 2),
+                          offset: Offset(4, 4),
                           blurRadius: 0,
                         ),
                       ],
                     ),
-                    child: ElevatedButton.icon(
-                      onPressed: _pickImage,
-                      icon: const Icon(Icons.upload, size: 16),
-                      label: Text(
-                        _imageFile != null || widget.existingProfile?.profilePicture != null
-                            ? 'GANTI FOTO'
-                            : 'PILIH FOTO',
-                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: NeoBrutalism.white,
-                        foregroundColor: NeoBrutalism.slate,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
-                          side: const BorderSide(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
-                        ),
-                      ),
+                    child: ClipOval(
+                      child: _profilePictureUrlController.text.isNotEmpty
+                          ? Image.network(
+                              _profilePictureUrlController.text,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return const Icon(
+                                  Icons.person,
+                                  size: 60,
+                                  color: NeoBrutalism.grey,
+                                );
+                              },
+                              loadingBuilder: (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return const Center(
+                                  child: CircularProgressIndicator(
+                                    valueColor: AlwaysStoppedAnimation<Color>(NeoBrutalism.primary),
+                                  ),
+                                );
+                              },
+                            )
+                          : const Icon(
+                              Icons.person,
+                              size: 60,
+                              color: NeoBrutalism.grey,
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'PREVIEW FOTO PROFIL',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: NeoBrutalism.grey,
+                      letterSpacing: 1,
                     ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 24),
+
+            // Profile Picture URL Field
+            _buildTextField(
+              controller: _profilePictureUrlController,
+              label: 'URL FOTO PROFIL',
+              hint: 'https://example.com/foto-profil.jpg',
+              icon: Icons.image,
+              keyboardType: TextInputType.url,
+              onChanged: (value) {
+                // Trigger rebuild to update preview
+                setState(() {});
+              },
+              validator: (value) {
+                if (value != null && value.isNotEmpty) {
+                  final uri = Uri.tryParse(value);
+                  if (uri == null || !uri.hasScheme || (!uri.scheme.startsWith('http'))) {
+                    return 'URL tidak valid. Gunakan format: https://...';
+                  }
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
 
             // Age Field
             _buildTextField(
@@ -611,8 +543,8 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
                 if (value == null || value.isEmpty) {
                   return 'Deskripsi pengalaman harus diisi';
                 }
-                if (value.length < 50) {
-                  return 'Deskripsi minimal 50 karakter';
+                if (value.length < 15) {
+                  return 'Deskripsi minimal 15 karakter';
                 }
                 return null;
               },
@@ -655,6 +587,7 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
     TextInputType? keyboardType,
     int maxLines = 1,
     String? Function(String?)? validator,
+    void Function(String)? onChanged,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -684,6 +617,7 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
             controller: controller,
             keyboardType: keyboardType,
             maxLines: maxLines,
+            onChanged: onChanged,
             style: const TextStyle(fontWeight: FontWeight.w600, color: NeoBrutalism.slate),
             decoration: InputDecoration(
               hintText: hint,
