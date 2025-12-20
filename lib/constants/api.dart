@@ -41,6 +41,15 @@ class ApiConstants {
   // Coach endpoints
   static const String coachSchedule = '$baseUrl/coach/schedule/';
   static const String coachScheduleDelete = '$baseUrl/coach/schedule/delete/';
+  static const String sportCategories = '$baseUrl/api/sport-categories/';
+  static const String locationAreas = '$baseUrl/api/location-areas/';
+  static const String coachList = '$baseUrl/api/coaches/';
+  static String coachDetail(int coachId) =>
+      '$baseUrl/api/coach/$coachId/';
+  static const String coachProfileSave = '$baseUrl/coach/profile/save/';
+  static const String coachProfileJson = '$baseUrl/coach/profile/json/';
+  static const String coachProfileDelete = '$baseUrl/coach/profile/delete/';
+  static const String coachRevenue = '$baseUrl/api/coach/revenue/';
 
   // Review endpoints
   static String upsertReview(int bookingId, {required String target}) =>

@@ -11,6 +11,7 @@ import 'dart:convert';
 import '/models/coach_entry.dart';
 import '/models/sport_category.dart';
 import '/models/location_area.dart';
+import '/constants/api.dart';
 import 'package:http/browser_client.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
@@ -83,7 +84,7 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
 
     try {
       final sportResponse = await request.get(
-        'http://localhost:8000/api/sport-categories/',
+        ApiConstants.sportCategories,
       );
 
       if (sportResponse['success'] == true) {
@@ -95,7 +96,7 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
       }
 
       final areaResponse = await request.get(
-        'http://localhost:8000/api/location-areas/',
+        ApiConstants.locationAreas,
       );
 
       if (areaResponse['success'] == true) {
@@ -182,7 +183,7 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
     try {
       final request = context.read<CookieRequest>();
       
-      var uri = Uri.parse('http://localhost:8000/coach/profile/save/');
+      var uri = Uri.parse(ApiConstants.coachProfileSave);
       var multipartRequest = http.MultipartRequest('POST', uri);
 
       final cookies = request.cookies;

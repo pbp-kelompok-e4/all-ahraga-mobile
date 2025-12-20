@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import '/models/coach_entry.dart';
+import '/constants/api.dart';
 import 'coach_profile_form.dart';
 
 // Design System Constants
@@ -48,7 +49,7 @@ class _CoachProfilePageState extends State<CoachProfilePage> {
     
     try {
       final response = await request.get(
-        'http://localhost:8000/coach/profile/json/',
+        ApiConstants.coachProfileJson,
       );
 
       if (response['success'] == true) {
@@ -109,7 +110,7 @@ class _CoachProfilePageState extends State<CoachProfilePage> {
     
     try {
       final response = await request.post(
-        'http://localhost:8000/coach/profile/delete/',
+        ApiConstants.coachProfileDelete,
         {},
       );
 

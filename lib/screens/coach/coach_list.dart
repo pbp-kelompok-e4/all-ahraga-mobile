@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'dart:async';
 import '/models/coach_list_models.dart';
+import '/constants/api.dart';
 import 'coach_detail.dart';
 
 // Design System Constants
@@ -66,7 +67,7 @@ class _CoachListPageState extends State<CoachListPage> {
     try {
       final request = context.read<CookieRequest>();
       final response = await request.get(
-        'http://localhost:8000/api/sport-categories/',
+        ApiConstants.sportCategories,
       );
 
       if (response['success'] == true) {
@@ -84,7 +85,7 @@ class _CoachListPageState extends State<CoachListPage> {
     try {
       final request = context.read<CookieRequest>();
       final response = await request.get(
-        'http://localhost:8000/api/location-areas/',
+        ApiConstants.locationAreas,
       );
 
       if (response['success'] == true) {
@@ -132,7 +133,7 @@ class _CoachListPageState extends State<CoachListPage> {
           )
           .join('&');
 
-      final url = 'http://localhost:8000/api/coaches/?$queryString';
+      final url = '${ApiConstants.coachList}?$queryString';
       final response = await request.get(url);
 
       if (response['success'] == true) {
