@@ -220,7 +220,6 @@ class _LandingPageState extends State<LandingPage>
                           child: Center(
                             child: ConstrainedBox(
                               constraints: const BoxConstraints(maxWidth: 1200),
-                              // FIX 1: Bungkus SizedBox width infinity agar _SectionTitle rata kiri
                               child: const SizedBox(
                                 width: double.infinity,
                                 child: _SectionTitle(
@@ -271,7 +270,6 @@ class _LandingPageState extends State<LandingPage>
 
                                 if (is1Col) {
                                   return Column(
-                                    // FIX 2 (REQUESTED): CrossAxisAlignment.stretch agar kotak melebar penuh
                                     crossAxisAlignment:
                                         CrossAxisAlignment.stretch,
                                     children: children
@@ -287,7 +285,6 @@ class _LandingPageState extends State<LandingPage>
                                   );
                                 }
 
-                                // FIX 3: IntrinsicHeight agar tinggi card sama rata di desktop
                                 return IntrinsicHeight(
                                   child: Row(
                                     crossAxisAlignment:
@@ -325,7 +322,6 @@ class _LandingPageState extends State<LandingPage>
                                     horizontal: 24,
                                     vertical: 40,
                                   ),
-                                  // FIX 4: CrossAxisAlignment.start agar judul Rata Kiri
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
@@ -344,7 +340,6 @@ class _LandingPageState extends State<LandingPage>
                                           final is1Col = c3.maxWidth < 800;
                                           if (is1Col) {
                                             return const Column(
-                                              // Agar step card juga full width di mobile
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.stretch,
                                               children: [
@@ -425,7 +420,6 @@ class _LandingPageState extends State<LandingPage>
                           child: Center(
                             child: ConstrainedBox(
                               constraints: const BoxConstraints(maxWidth: 1200),
-                              // FIX 5: Bungkus SizedBox width infinity agar Rata Kiri
                               child: const SizedBox(
                                 width: double.infinity,
                                 child: _SectionTitle(
@@ -577,7 +571,8 @@ class _TopBar extends StatelessWidget {
                 onTap: onHome,
                 child: Row(
                   children: [
-                    const Icon(Icons.flash_on, color: _kAmber, size: 20),
+                    // GANTI: Icons.flash_on -> Icons.sports_soccer
+                    const Icon(Icons.sports_soccer, color: _kWhite, size: 20),
                     const SizedBox(width: 8),
                     const Text(
                       "ALL-AHRAGA",

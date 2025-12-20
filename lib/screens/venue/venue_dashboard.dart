@@ -8,9 +8,9 @@ import 'dart:convert';
 
 class NeoColors {
   static const Color primary = Color(0xFF0D9488); // Tosca
-  static const Color text = Color(0xFF0F172A);    // Slate (Border & Text)
-  static const Color muted = Color(0xFF64748B);   // Grey
-  static const Color danger = Color(0xFFDC2626);  // Red
+  static const Color text = Color(0xFF0F172A); // Slate (Border & Text)
+  static const Color muted = Color(0xFF64748B); // Grey
+  static const Color danger = Color(0xFFDC2626); // Red
   static const Color background = Colors.white;
 }
 
@@ -124,7 +124,7 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
     final request = context.read<CookieRequest>();
     _venuesFuture = fetchVenues(request);
   }
-  
+
   Future<List<Map<String, dynamic>>> fetchVenues(CookieRequest request) async {
     final String url = ApiConstants.venueDashboard;
 
@@ -142,9 +142,8 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
         }
       }
       return listVenues;
-
     } catch (e) {
-      rethrow; 
+      rethrow;
     }
   }
 
@@ -169,7 +168,10 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
             SnackBar(
               content: Text(
                 response['message'] ?? "Venue berhasil dihapus",
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               backgroundColor: NeoColors.text,
               behavior: SnackBarBehavior.floating,
@@ -190,9 +192,9 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: $e")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Error: $e")));
       }
     }
   }
@@ -256,7 +258,7 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
                     },
                   ),
                 ],
-              )
+              ),
             ],
           ),
         ),
@@ -276,7 +278,9 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               decoration: const BoxDecoration(
                 color: Colors.white,
-                border: Border(bottom: BorderSide(color: NeoColors.text, width: 2)),
+                border: Border(
+                  bottom: BorderSide(color: NeoColors.text, width: 2),
+                ),
               ),
               child: Row(
                 children: [
@@ -290,12 +294,15 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: NeoColors.text, width: 2),
                       ),
-                      child: const Icon(Icons.arrow_back, color: NeoColors.text),
+                      child: const Icon(
+                        Icons.arrow_back,
+                        color: NeoColors.text,
+                      ),
                     ),
                   ),
-                  
+
                   const SizedBox(width: 16),
-                  
+
                   // 2. Title
                   const Text(
                     "VENUE DASHBOARD",
@@ -306,7 +313,7 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
                       letterSpacing: -0.5,
                     ),
                   ),
-                  
+
                   // Spacer to push title if needed, or keeping it left aligned
                 ],
               ),
@@ -333,20 +340,30 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.error_outline, size: 60, color: NeoColors.text),
+                            const Icon(
+                              Icons.error_outline,
+                              size: 60,
+                              color: NeoColors.text,
+                            ),
                             const SizedBox(height: 16),
                             const Text(
                               "SOMETHING WENT WRONG",
-                              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w900,
+                                fontSize: 18,
+                              ),
                             ),
                             const SizedBox(height: 8),
-                            Text("${snapshot.error}", style: const TextStyle(color: NeoColors.muted)),
+                            Text(
+                              "${snapshot.error}",
+                              style: const TextStyle(color: NeoColors.muted),
+                            ),
                             const SizedBox(height: 24),
                             NeoButton(
                               label: "TRY AGAIN",
                               onPressed: _refreshVenues,
                               backgroundColor: NeoColors.text,
-                            )
+                            ),
                           ],
                         ),
                       );
@@ -358,7 +375,11 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
                             NeoContainer(
                               padding: const EdgeInsets.all(24),
                               hasShadow: true,
-                              child: const Icon(Icons.stadium_outlined, size: 64, color: NeoColors.text),
+                              child: const Icon(
+                                Icons.stadium_outlined,
+                                size: 64,
+                                color: NeoColors.text,
+                              ),
                             ),
                             const SizedBox(height: 32),
                             const Text(
@@ -381,7 +402,9 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
                               onPressed: () async {
                                 final result = await Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (context) => const VenueFormPage()),
+                                  MaterialPageRoute(
+                                    builder: (context) => const VenueFormPage(),
+                                  ),
                                 );
                                 if (result == true) _refreshVenues();
                               },
@@ -428,15 +451,22 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: NeoColors.text, width: 2),
+                                    border: Border.all(
+                                      color: NeoColors.text,
+                                      width: 2,
+                                    ),
                                   ),
-                                  child: const Icon(Icons.analytics_outlined, color: NeoColors.text, size: 32),
-                                )
+                                  child: const Icon(
+                                    Icons.analytics_outlined,
+                                    color: NeoColors.text,
+                                    size: 32,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
                           const SizedBox(height: 30),
-                          
+
                           const Text(
                             "YOUR LIST",
                             style: TextStyle(
@@ -457,9 +487,11 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
                               padding: const EdgeInsets.only(bottom: 24.0),
                               child: NeoContainer(
                                 color: Colors.white,
-                                padding: EdgeInsets.zero, // Padding handled inside
+                                padding:
+                                    EdgeInsets.zero, // Padding handled inside
                                 child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
                                   children: [
                                     // Image Section with Border Bottom
                                     Container(
@@ -467,25 +499,38 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
                                       decoration: BoxDecoration(
                                         color: Colors.grey[200],
                                         borderRadius: const BorderRadius.only(
-                                          topLeft: Radius.circular(6), // adjust for border
+                                          topLeft: Radius.circular(
+                                            6,
+                                          ), // adjust for border
                                           topRight: Radius.circular(6),
                                         ),
                                         border: const Border(
-                                          bottom: BorderSide(color: NeoColors.text, width: 2),
+                                          bottom: BorderSide(
+                                            color: NeoColors.text,
+                                            width: 2,
+                                          ),
                                         ),
-                                        image: (imageUrl != null && imageUrl.isNotEmpty)
+                                        image:
+                                            (imageUrl != null &&
+                                                imageUrl.isNotEmpty)
                                             ? DecorationImage(
-                                                image: NetworkImage(imageUrl.startsWith('http')
-                                                    ? imageUrl
-                                                    : "http://10.0.2.2:8000$imageUrl"),
+                                                image: NetworkImage(
+                                                  imageUrl.startsWith('http')
+                                                      ? imageUrl
+                                                      : "http://10.0.2.2:8000$imageUrl",
+                                                ),
                                                 fit: BoxFit.cover,
                                               )
                                             : null,
                                       ),
-                                      child: (imageUrl == null || imageUrl.isEmpty)
+                                      child:
+                                          (imageUrl == null || imageUrl.isEmpty)
                                           ? const Center(
-                                              child: Icon(Icons.image_not_supported, 
-                                                size: 50, color: NeoColors.muted),
+                                              child: Icon(
+                                                Icons.image_not_supported,
+                                                size: 50,
+                                                color: NeoColors.muted,
+                                              ),
                                             )
                                           : null,
                                     ),
@@ -494,15 +539,20 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
                                     Padding(
                                       padding: const EdgeInsets.all(16),
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
                                               Expanded(
                                                 child: Text(
-                                                  venue['name'].toString().toUpperCase(),
+                                                  venue['name']
+                                                      .toString()
+                                                      .toUpperCase(),
                                                   style: const TextStyle(
                                                     fontSize: 20,
                                                     fontWeight: FontWeight.w900,
@@ -512,29 +562,53 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
                                                 ),
                                               ),
                                               GestureDetector(
-                                                onTap: () => _showDeleteConfirmation(venue['id'], venue['name']),
+                                                onTap: () =>
+                                                    _showDeleteConfirmation(
+                                                      venue['id'],
+                                                      venue['name'],
+                                                    ),
                                                 child: Container(
-                                                  padding: const EdgeInsets.all(8),
+                                                  padding: const EdgeInsets.all(
+                                                    8,
+                                                  ),
                                                   decoration: BoxDecoration(
                                                     color: Colors.red[50],
-                                                    border: Border.all(color: NeoColors.text, width: 2),
-                                                    borderRadius: BorderRadius.circular(4),
+                                                    border: Border.all(
+                                                      color: NeoColors.text,
+                                                      width: 2,
+                                                    ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          4,
+                                                        ),
                                                   ),
-                                                  child: const Icon(Icons.delete_outline, size: 20, color: NeoColors.danger),
+                                                  child: const Icon(
+                                                    Icons.delete_outline,
+                                                    size: 20,
+                                                    color: NeoColors.danger,
+                                                  ),
                                                 ),
-                                              )
+                                              ),
                                             ],
                                           ),
                                           const SizedBox(height: 8),
                                           Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 4,
+                                            ),
                                             decoration: BoxDecoration(
                                               color: Colors.grey[100],
-                                              border: Border.all(color: NeoColors.text, width: 1.5),
-                                              borderRadius: BorderRadius.circular(4),
+                                              border: Border.all(
+                                                color: NeoColors.text,
+                                                width: 1.5,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
                                             ),
                                             child: Text(
-                                              venue['category'] ?? 'UNCATEGORIZED',
+                                              venue['category'] ??
+                                                  'UNCATEGORIZED',
                                               style: const TextStyle(
                                                 fontSize: 12,
                                                 fontWeight: FontWeight.bold,
@@ -545,7 +619,11 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
                                           const SizedBox(height: 12),
                                           Row(
                                             children: [
-                                              const Icon(Icons.location_on, size: 16, color: NeoColors.text),
+                                              const Icon(
+                                                Icons.location_on,
+                                                size: 16,
+                                                color: NeoColors.text,
+                                              ),
                                               const SizedBox(width: 4),
                                               Expanded(
                                                 child: Text(
@@ -555,13 +633,14 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
                                                     fontWeight: FontWeight.w500,
                                                   ),
                                                   maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                 ),
                                               ),
                                             ],
                                           ),
                                           const SizedBox(height: 20),
-                                          
+
                                           // Action Button
                                           SizedBox(
                                             width: double.infinity,
@@ -572,9 +651,10 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
                                                 Navigator.push(
                                                   context,
                                                   MaterialPageRoute(
-                                                    builder: (context) => VenueManagePage(
-                                                      venueId: venue['id'],
-                                                    ),
+                                                    builder: (context) =>
+                                                        VenueManagePage(
+                                                          venueId: venue['id'],
+                                                        ),
                                                   ),
                                                 ).then((_) => _refreshVenues());
                                               },
