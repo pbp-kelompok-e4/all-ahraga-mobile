@@ -2,7 +2,7 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:all_ahraga/screens/authPage.dart';
+import 'package:all_ahraga/screens/auth_page.dart';
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
