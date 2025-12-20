@@ -4,6 +4,13 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:all_ahraga/screens/auth_page.dart';
 
+// --- CONSTANTS UNTUK WARNA (Supaya Konsisten) ---
+const Color _kBgDark = Color(0xFF061B2B);
+const Color _kTeal = Color(0xFF0D9488);
+const Color _kAmber = Color(0xFFFBBF24); // Aksen Baru (Kuning)
+const Color _kSlate = Color(0xFF0F172A);
+const Color _kWhite = Colors.white;
+
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
 
@@ -11,7 +18,8 @@ class LandingPage extends StatefulWidget {
   State<LandingPage> createState() => _LandingPageState();
 }
 
-class _LandingPageState extends State<LandingPage> with TickerProviderStateMixin {
+class _LandingPageState extends State<LandingPage>
+    with TickerProviderStateMixin {
   late final AnimationController _bgCtrl;
   late final AnimationController _introCtrl;
 
@@ -21,13 +29,12 @@ class _LandingPageState extends State<LandingPage> with TickerProviderStateMixin
 
   final _scrollCtrl = ScrollController();
 
-  // ======= SECTION ANCHORS =======
   final _kHero = GlobalKey();
   final _kFeatures = GlobalKey();
   final _kFlow = GlobalKey();
   final _kTestimonials = GlobalKey();
 
-  static const double _topOffset = 86;
+  static const double _topOffset = 100; // Adjusted for taller header
 
   @override
   void initState() {
@@ -35,25 +42,27 @@ class _LandingPageState extends State<LandingPage> with TickerProviderStateMixin
 
     _bgCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 5200),
+      duration: const Duration(
+        milliseconds: 8000,
+      ), // Diperlambat biar lebih smooth
     )..repeat();
 
     _introCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 850),
+      duration: const Duration(milliseconds: 1000),
     );
 
     _fade = CurvedAnimation(parent: _introCtrl, curve: Curves.easeOut);
 
     _heroLeftSlide = Tween<Offset>(
-      begin: const Offset(-0.12, 0),
+      begin: const Offset(-0.05, 0),
       end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _introCtrl, curve: Curves.easeOutCubic));
+    ).animate(CurvedAnimation(parent: _introCtrl, curve: Curves.easeOutBack));
 
     _heroRightSlide = Tween<Offset>(
-      begin: const Offset(0.12, 0),
+      begin: const Offset(0.05, 0),
       end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _introCtrl, curve: Curves.easeOutCubic));
+    ).animate(CurvedAnimation(parent: _introCtrl, curve: Curves.easeOutBack));
 
     _introCtrl.forward();
   }
@@ -70,20 +79,10 @@ class _LandingPageState extends State<LandingPage> with TickerProviderStateMixin
     Navigator.push(
       context,
       PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 420),
+        transitionDuration: const Duration(milliseconds: 400),
         pageBuilder: (_, __, ___) => const AuthPage(),
         transitionsBuilder: (_, anim, __, child) {
-          final curved = CurvedAnimation(parent: anim, curve: Curves.easeInOutCubic);
-          return FadeTransition(
-            opacity: curved,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0.06, 0),
-                end: Offset.zero,
-              ).animate(curved),
-              child: child,
-            ),
-          );
+          return FadeTransition(opacity: anim, child: child);
         },
       ),
     );
@@ -92,46 +91,57 @@ class _LandingPageState extends State<LandingPage> with TickerProviderStateMixin
   Future<void> _scrollToKey(GlobalKey key) async {
     final ctx = key.currentContext;
     if (ctx == null) return;
-
     final box = ctx.findRenderObject() as RenderBox;
     final pos = box.localToGlobal(Offset.zero);
-
-    final target = (_scrollCtrl.offset + pos.dy - _topOffset)
-        .clamp(0.0, _scrollCtrl.position.maxScrollExtent);
+    final target = (_scrollCtrl.offset + pos.dy - _topOffset).clamp(
+      0.0,
+      _scrollCtrl.position.maxScrollExtent,
+    );
 
     await _scrollCtrl.animateTo(
       target,
-      duration: const Duration(milliseconds: 650),
-      curve: Curves.easeInOutCubic,
+      duration: const Duration(milliseconds: 800),
+      curve: Curves.fastOutSlowIn,
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF061B2B),
+      backgroundColor: _kBgDark,
       body: Stack(
         children: [
+          // BACKGROUND
           Positioned.fill(
             child: AnimatedBuilder(
               animation: _bgCtrl,
-              builder: (_, __) => CustomPaint(
-                painter: _SportBgPainter(t: _bgCtrl.value),
-              ),
+              builder: (_, __) =>
+                  CustomPaint(painter: _SportBgPainter(t: _bgCtrl.value)),
             ),
           ),
 
+          // CONTENT
           SafeArea(
             child: LayoutBuilder(
               builder: (context, c) {
-                final isNarrow = c.maxWidth < 860;
+                final isNarrow = c.maxWidth < 900;
+                // Padding konten utama dibuat lebih lega
+                final contentPadding = EdgeInsets.symmetric(
+                  horizontal: isNarrow ? 20 : 40,
+                );
 
                 return CustomScrollView(
                   controller: _scrollCtrl,
                   slivers: [
+                    // TOP BAR (HEADER)
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(18, 10, 18, 18),
+                        padding: EdgeInsets.fromLTRB(
+                          isNarrow ? 16 : 32,
+                          20,
+                          isNarrow ? 16 : 32,
+                          32,
+                        ),
                         child: _TopBar(
                           isNarrow: isNarrow,
                           onAuth: _goAuth,
@@ -143,15 +153,15 @@ class _LandingPageState extends State<LandingPage> with TickerProviderStateMixin
                       ),
                     ),
 
-                    // HERO
+                    // HERO SECTION
                     SliverToBoxAdapter(
                       child: _Anchor(
                         key: _kHero,
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(18, 8, 18, 22),
+                          padding: contentPadding,
                           child: Center(
                             child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 1120),
+                              constraints: const BoxConstraints(maxWidth: 1200),
                               child: isNarrow
                                   ? Column(
                                       children: [
@@ -161,7 +171,9 @@ class _LandingPageState extends State<LandingPage> with TickerProviderStateMixin
                                           onPrimary: _goAuth,
                                           onSecondary: _goAuth,
                                         ),
-                                        const SizedBox(height: 14),
+                                        const SizedBox(
+                                          height: 24,
+                                        ), // Jarak diperbesar
                                         _HeroRight(
                                           fade: _fade,
                                           slide: _heroRightSlide,
@@ -169,10 +181,11 @@ class _LandingPageState extends State<LandingPage> with TickerProviderStateMixin
                                       ],
                                     )
                                   : Row(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Expanded(
-                                          flex: 11,
+                                          flex: 6, // Ratio disesuaikan
                                           child: _HeroLeft(
                                             fade: _fade,
                                             slide: _heroLeftSlide,
@@ -180,9 +193,9 @@ class _LandingPageState extends State<LandingPage> with TickerProviderStateMixin
                                             onSecondary: _goAuth,
                                           ),
                                         ),
-                                        const SizedBox(width: 14),
+                                        const SizedBox(width: 32),
                                         Expanded(
-                                          flex: 10,
+                                          flex: 5,
                                           child: _HeroRight(
                                             fade: _fade,
                                             slide: _heroRightSlide,
@@ -196,20 +209,27 @@ class _LandingPageState extends State<LandingPage> with TickerProviderStateMixin
                       ),
                     ),
 
-                    // FEATURES
+                    const SliverToBoxAdapter(child: SizedBox(height: 80)),
+
+                    // FEATURES SECTION
                     SliverToBoxAdapter(
                       child: _Anchor(
                         key: _kFeatures,
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(18, 10, 18, 10),
+                          padding: contentPadding,
                           child: Center(
                             child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 1120),
-                              child: const _SectionTitle(
-                                eyebrow: "FEATURES",
-                                title: "KENAPA ALL-AHRAGA?",
-                                subtitle: "SOLUSI LENGKAP DALAM SATU PLATFORM.",
-                                dark: false,
+                              constraints: const BoxConstraints(maxWidth: 1200),
+                              // FIX 1: Bungkus SizedBox width infinity agar _SectionTitle rata kiri
+                              child: const SizedBox(
+                                width: double.infinity,
+                                child: _SectionTitle(
+                                  eyebrow: "POWERFUL FEATURES",
+                                  title: "KENAPA ALL-AHRAGA?",
+                                  subtitle:
+                                      "SOLUSI LENGKAP DALAM SATU PLATFORM.",
+                                  dark: false,
+                                ),
                               ),
                             ),
                           ),
@@ -219,53 +239,67 @@ class _LandingPageState extends State<LandingPage> with TickerProviderStateMixin
 
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(18, 8, 18, 26),
+                        padding: contentPadding.add(
+                          const EdgeInsets.only(top: 32, bottom: 60),
+                        ),
                         child: Center(
                           child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 1120),
+                            constraints: const BoxConstraints(maxWidth: 1200),
                             child: LayoutBuilder(
                               builder: (context, c2) {
-                                final is1Col = c2.maxWidth < 720;
+                                final is1Col = c2.maxWidth < 800;
                                 final children = const [
                                   _FeatureCard(
-                                    icon: Icons.place_outlined,
+                                    icon: Icons.stadium_outlined,
                                     title: "VENUE TERLENGKAP",
                                     desc:
-                                        "Akses ratusan venue olahraga dengan sistem booking real-time dan jadwal yang jelas.",
+                                        "Akses ratusan venue olahraga dengan sistem booking real-time.",
                                   ),
                                   _FeatureCard(
                                     icon: Icons.verified_user_outlined,
-                                    title: "COACH BERSERTIFIKAT",
+                                    title: "COACH VERIFIED",
                                     desc:
-                                        "Pelatih profesional terverifikasi siap bantu tingkatkan performa olahraga kamu.",
+                                        "Pelatih profesional terverifikasi siap bantu tingkatkan performa.",
                                   ),
                                   _FeatureCard(
                                     icon: Icons.flash_on_outlined,
                                     title: "INSTANT BOOKING",
                                     desc:
-                                        "Pesan cepat, konfirmasi instan, pengalaman booking lebih simpel dan aman.",
+                                        "Pesan cepat, konfirmasi instan, main tanpa ribet.",
                                   ),
                                 ];
 
                                 if (is1Col) {
                                   return Column(
-                                    children: [
-                                      for (final w in children) ...[
-                                        w,
-                                        const SizedBox(height: 12),
-                                      ]
-                                    ],
+                                    // FIX 2 (REQUESTED): CrossAxisAlignment.stretch agar kotak melebar penuh
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: children
+                                        .map(
+                                          (e) => Padding(
+                                            padding: const EdgeInsets.only(
+                                              bottom: 20,
+                                            ),
+                                            child: e,
+                                          ),
+                                        )
+                                        .toList(),
                                   );
                                 }
 
-                                return Row(
-                                  children: [
-                                    Expanded(child: children[0]),
-                                    const SizedBox(width: 12),
-                                    Expanded(child: children[1]),
-                                    const SizedBox(width: 12),
-                                    Expanded(child: children[2]),
-                                  ],
+                                // FIX 3: IntrinsicHeight agar tinggi card sama rata di desktop
+                                return IntrinsicHeight(
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      Expanded(child: children[0]),
+                                      const SizedBox(width: 24),
+                                      Expanded(child: children[1]),
+                                      const SizedBox(width: 24),
+                                      Expanded(child: children[2]),
+                                    ],
+                                  ),
                                 );
                               },
                             ),
@@ -274,94 +308,104 @@ class _LandingPageState extends State<LandingPage> with TickerProviderStateMixin
                       ),
                     ),
 
-                    // HOW IT WORKS (dark section)
+                    // HOW IT WORKS (Dark Band)
                     SliverToBoxAdapter(
                       child: _Anchor(
                         key: _kFlow,
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(18, 6, 18, 26),
+                          padding: contentPadding.add(
+                            const EdgeInsets.only(bottom: 60),
+                          ),
                           child: Center(
                             child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 1120),
+                              constraints: const BoxConstraints(maxWidth: 1200),
                               child: _DarkBand(
                                 child: Padding(
-                                  padding: const EdgeInsets.all(18),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                    vertical: 40,
+                                  ),
+                                  // FIX 4: CrossAxisAlignment.start agar judul Rata Kiri
                                   child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      const SizedBox(height: 8),
                                       const _SectionTitle(
-                                        eyebrow: "FLOW",
-                                        title: "ALUR KERJA",
+                                        eyebrow: "SIMPLE FLOW",
+                                        title: "CARA KERJA",
                                         subtitle:
-                                            "MULAI PETUALANGAN OLAHRAGA ANDA. MUDAH. CEPAT.",
+                                            "MULAI OLAHRAGA DALAM 3 LANGKAH.",
                                         dark: true,
                                       ),
-                                      const SizedBox(height: 18),
+                                      const SizedBox(height: 40),
 
                                       LayoutBuilder(
                                         builder: (context, c3) {
-                                          final is1Col = c3.maxWidth < 860;
+                                          final is1Col = c3.maxWidth < 800;
                                           if (is1Col) {
                                             return const Column(
+                                              // Agar step card juga full width di mobile
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.stretch,
                                               children: [
                                                 _StepCard(
-                                                  number: "1",
-                                                  title: "REGISTRASI AKUN",
+                                                  number: "01",
+                                                  title: "BUAT AKUN",
                                                   desc:
-                                                      "Buat akun. Pilih peran: Customer, Venue Owner, atau Coach.",
+                                                      "Registrasi cepat sebagai Customer atau Partner.",
                                                 ),
-                                                SizedBox(height: 12),
+                                                SizedBox(height: 24),
                                                 _StepCard(
-                                                  number: "2",
-                                                  title: "SEARCH & SELECT",
+                                                  number: "02",
+                                                  title: "CARI & PILIH",
                                                   desc:
-                                                      "Temukan venue atau coach. Cek jadwal, harga, dan rating.",
+                                                      "Temukan venue atau coach favoritmu.",
                                                 ),
-                                                SizedBox(height: 12),
+                                                SizedBox(height: 24),
                                                 _StepCard(
-                                                  number: "3",
-                                                  title: "PAY & PLAY!",
+                                                  number: "03",
+                                                  title: "MAIN!",
                                                   desc:
-                                                      "Selesaikan pembayaran. Konfirmasi instan. Waktunya berolahraga!",
+                                                      "Bayar mudah & langsung datang ke lokasi.",
                                                 ),
                                               ],
                                             );
                                           }
 
                                           return const Row(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
                                               Expanded(
                                                 child: _StepCard(
-                                                  number: "1",
-                                                  title: "REGISTRASI AKUN",
+                                                  number: "01",
+                                                  title: "BUAT AKUN",
                                                   desc:
-                                                      "Buat akun. Pilih peran: Customer, Venue Owner, atau Coach.",
+                                                      "Registrasi cepat sebagai Customer atau Partner.",
                                                 ),
                                               ),
-                                              SizedBox(width: 12),
+                                              SizedBox(width: 24),
                                               Expanded(
                                                 child: _StepCard(
-                                                  number: "2",
-                                                  title: "SEARCH & SELECT",
+                                                  number: "02",
+                                                  title: "CARI & PILIH",
                                                   desc:
-                                                      "Temukan venue atau coach. Cek jadwal, harga, dan rating.",
+                                                      "Temukan venue atau coach favoritmu.",
                                                 ),
                                               ),
-                                              SizedBox(width: 12),
+                                              SizedBox(width: 24),
                                               Expanded(
                                                 child: _StepCard(
-                                                  number: "3",
-                                                  title: "PAY & PLAY!",
+                                                  number: "03",
+                                                  title: "MAIN!",
                                                   desc:
-                                                      "Selesaikan pembayaran. Konfirmasi instan. Waktunya berolahraga!",
+                                                      "Bayar mudah & langsung datang ke lokasi.",
                                                 ),
                                               ),
                                             ],
                                           );
                                         },
                                       ),
-                                      const SizedBox(height: 14),
                                     ],
                                   ),
                                 ),
@@ -377,15 +421,19 @@ class _LandingPageState extends State<LandingPage> with TickerProviderStateMixin
                       child: _Anchor(
                         key: _kTestimonials,
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(18, 6, 18, 10),
+                          padding: contentPadding,
                           child: Center(
                             child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 1120),
-                              child: const _SectionTitle(
-                                eyebrow: "TESTIMONIALS",
-                                title: "Apa Kata Mereka?",
-                                subtitle: "Cerita singkat dari pengguna & partner.",
-                                dark: false,
+                              constraints: const BoxConstraints(maxWidth: 1200),
+                              // FIX 5: Bungkus SizedBox width infinity agar Rata Kiri
+                              child: const SizedBox(
+                                width: double.infinity,
+                                child: _SectionTitle(
+                                  eyebrow: "TESTIMONIALS",
+                                  title: "APA KATA MEREKA?",
+                                  subtitle: "Cerita nyata dari komunitas.",
+                                  dark: false,
+                                ),
                               ),
                             ),
                           ),
@@ -395,78 +443,72 @@ class _LandingPageState extends State<LandingPage> with TickerProviderStateMixin
 
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(18, 8, 18, 26),
+                        padding: contentPadding.add(
+                          const EdgeInsets.only(top: 32, bottom: 40),
+                        ),
                         child: Center(
                           child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 1120),
+                            constraints: const BoxConstraints(maxWidth: 1200),
                             child: LayoutBuilder(
                               builder: (context, c4) {
-                                final is1Col = c4.maxWidth < 820;
+                                final is1Col = c4.maxWidth < 800;
+                                final cards = const [
+                                  _TestimonialCard(
+                                    name: "Budi Hartono",
+                                    role: "Pemain Futsal",
+                                    quote:
+                                        "Booking lapangan jadi gampang banget. Jadwal real-time, prosesnya sat-set.",
+                                  ),
+                                  _TestimonialCard(
+                                    name: "Siti Aminah",
+                                    role: "Owner Venue",
+                                    quote:
+                                        "Manajemen venue jauh lebih efisien. Laporan keuangan jadi makin mudah.",
+                                  ),
+                                  _TestimonialCard(
+                                    name: "Coach David",
+                                    role: "Pelatih Basket",
+                                    quote:
+                                        "Dapat klien baru lebih cepat. Profil coach jadi terlihat banyak orang.",
+                                  ),
+                                ];
 
                                 if (is1Col) {
                                   return Column(
-                                    children: const [
-                                      _TestimonialCard(
-                                        name: "Budi Hartono",
-                                        role: "Pemain Futsal",
-                                        quote:
-                                            "Booking lapangan jadi gampang banget. Jadwal real-time, prosesnya sat-set.",
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      ...cards.map(
+                                        (e) => Padding(
+                                          padding: const EdgeInsets.only(
+                                            bottom: 20,
+                                          ),
+                                          child: e,
+                                        ),
                                       ),
-                                      SizedBox(height: 12),
-                                      _TestimonialCard(
-                                        name: "Siti Aminah",
-                                        role: "Pemilik Venue",
-                                        quote:
-                                            "Manajemen venue jauh lebih efisien. Jadwal rapi dan laporan makin mudah.",
-                                      ),
-                                      SizedBox(height: 12),
-                                      _TestimonialCard(
-                                        name: "David Lee",
-                                        role: "Coach Certified",
-                                        quote:
-                                            "Dapat klien baru lebih cepat. Profil coach jadi terlihat banyak orang.",
-                                      ),
-                                      SizedBox(height: 14),
-                                      _BigCtaCard(),
+                                      const SizedBox(height: 20),
+                                      const _BigCtaCard(),
                                     ],
                                   );
                                 }
 
-                                return const Column(
+                                return Column(
                                   children: [
-                                    Row(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Expanded(
-                                          child: _TestimonialCard(
-                                            name: "Budi Hartono",
-                                            role: "Pemain Futsal",
-                                            quote:
-                                                "Booking lapangan jadi gampang banget. Jadwal real-time, prosesnya sat-set.",
-                                          ),
-                                        ),
-                                        SizedBox(width: 12),
-                                        Expanded(
-                                          child: _TestimonialCard(
-                                            name: "Siti Aminah",
-                                            role: "Pemilik Venue",
-                                            quote:
-                                                "Manajemen venue jauh lebih efisien. Jadwal rapi dan laporan makin mudah.",
-                                          ),
-                                        ),
-                                        SizedBox(width: 12),
-                                        Expanded(
-                                          child: _TestimonialCard(
-                                            name: "David Lee",
-                                            role: "Coach Certified",
-                                            quote:
-                                                "Dapat klien baru lebih cepat. Profil coach jadi terlihat banyak orang.",
-                                          ),
-                                        ),
-                                      ],
+                                    IntrinsicHeight(
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: [
+                                          Expanded(child: cards[0]),
+                                          const SizedBox(width: 24),
+                                          Expanded(child: cards[1]),
+                                          const SizedBox(width: 24),
+                                          Expanded(child: cards[2]),
+                                        ],
+                                      ),
                                     ),
-                                    SizedBox(height: 14),
-                                    _BigCtaCard(),
+                                    const SizedBox(height: 40),
+                                    const _BigCtaCard(),
                                   ],
                                 );
                               },
@@ -476,7 +518,7 @@ class _LandingPageState extends State<LandingPage> with TickerProviderStateMixin
                       ),
                     ),
 
-                    const SliverToBoxAdapter(child: SizedBox(height: 16)),
+                    const SliverToBoxAdapter(child: SizedBox(height: 40)),
                   ],
                 );
               },
@@ -488,17 +530,16 @@ class _LandingPageState extends State<LandingPage> with TickerProviderStateMixin
   }
 }
 
-// ======================= ANCHOR WRAPPER =======================
+// ======================= WIDGETS =======================
+
 class _Anchor extends StatelessWidget {
   const _Anchor({required super.key, required this.child});
   final Widget child;
-
   @override
   Widget build(BuildContext context) => child;
 }
 
-// ======================= TOP BAR =======================
-
+// 1. TOP BAR (Dirapikan dengan Glassmorphism)
 class _TopBar extends StatelessWidget {
   const _TopBar({
     required this.isNarrow,
@@ -518,41 +559,55 @@ class _TopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        InkWell(
-          onTap: onHome,
-          borderRadius: BorderRadius.circular(10),
-          child: const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-            child: Text(
-              "ALL-AHRAGA",
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1.0,
-                fontSize: 16.5,
+    // Dibungkus ClipRRect & BackdropFilter agar terlihat seperti "floating glass"
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(100), // Pill shape
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(100),
+            border: Border.all(color: Colors.white.withOpacity(0.2)),
+          ),
+          child: Row(
+            children: [
+              InkWell(
+                onTap: onHome,
+                child: Row(
+                  children: [
+                    const Icon(Icons.flash_on, color: _kAmber, size: 20),
+                    const SizedBox(width: 8),
+                    const Text(
+                      "ALL-AHRAGA",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.0,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
+
+              const Spacer(),
+
+              if (!isNarrow) ...[
+                _TopLink(text: "Features", onTap: onFeatures),
+                const SizedBox(width: 24),
+                _TopLink(text: "Flow", onTap: onHowItWorks),
+                const SizedBox(width: 24),
+                _TopLink(text: "Stories", onTap: onTestimonials),
+                const SizedBox(width: 32),
+              ],
+
+              _MiniPillButton(text: "Masuk / Daftar", onTap: onAuth),
+            ],
           ),
         ),
-
-        const Spacer(),
-
-        if (!isNarrow) ...[
-          _TopLink(text: "Features", onTap: onFeatures),
-          const SizedBox(width: 10),
-          _TopLink(text: "Flow", onTap: onHowItWorks),
-          const SizedBox(width: 10),
-          _TopLink(text: "Testimonials", onTap: onTestimonials),
-          const SizedBox(width: 12),
-        ],
-
-        _MiniPillButton(
-          text: "Masuk / Daftar",
-          onTap: onAuth,
-        ),
-      ],
+      ),
     );
   }
 }
@@ -566,16 +621,13 @@ class _TopLink extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        child: Text(
-          text,
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.82),
-            fontWeight: FontWeight.w700,
-            fontSize: 12.5,
-          ),
+      child: Text(
+        text.toUpperCase(),
+        style: TextStyle(
+          color: Colors.white.withOpacity(0.9),
+          fontWeight: FontWeight.w700,
+          fontSize: 12,
+          letterSpacing: 0.5,
         ),
       ),
     );
@@ -592,20 +644,17 @@ class _MiniPillButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 40,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
+          color: _kWhite, // Tombol putih solid biar kontras
           borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.75), width: 1.3),
-          color: Colors.white.withValues(alpha: 0.06),
         ),
         child: Text(
           text,
           style: const TextStyle(
-            color: Colors.white,
+            color: _kSlate,
             fontWeight: FontWeight.w900,
-            fontSize: 12.8,
+            fontSize: 12,
           ),
         ),
       ),
@@ -613,8 +662,7 @@ class _MiniPillButton extends StatelessWidget {
   }
 }
 
-// ======================= HERO =======================
-
+// 2. HERO LEFT (Teks Dirapikan)
 class _HeroLeft extends StatelessWidget {
   const _HeroLeft({
     required this.fade,
@@ -635,40 +683,54 @@ class _HeroLeft extends StatelessWidget {
       child: SlideTransition(
         position: slide,
         child: _NeoCard(
-          fill: Colors.white.withValues(alpha: 0.92),
-          borderColor: const Color(0xFF0F172A),
-          shadowColor: Colors.black.withValues(alpha: 0.18),
-          shadowOffset: const Offset(0, 10),
+          fill: _kWhite,
+          borderColor: _kSlate,
+          shadowColor: Colors.black.withOpacity(0.2),
+          shadowOffset: const Offset(8, 8), // Shadow lebih tegas
           child: Padding(
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.all(32), // Padding lebih besar
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _TagChip(text: "Platform Olahraga Terpadu"),
-                const SizedBox(height: 14),
+                const SizedBox(height: 24),
 
-                const Text(
-                  "BOOK VENUES.\nHIRE COACHES.\nPLAY SPORTS.",
-                  style: TextStyle(
-                    fontSize: 34,
-                    height: 1.05,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.6,
-                    color: Color(0xFF0F172A),
+                RichText(
+                  text: const TextSpan(
+                    style: TextStyle(
+                      fontSize: 42,
+                      height: 1.1,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -1.0,
+                      color: _kSlate,
+                      fontFamily: 'Roboto',
+                    ),
+                    children: [
+                      TextSpan(text: "BOOK VENUES.\n"),
+                      TextSpan(text: "HIRE COACHES.\n"),
+                      TextSpan(
+                        text: "PLAY ",
+                        style: TextStyle(color: _kTeal),
+                      ),
+                      TextSpan(
+                        text: "SPORTS.",
+                        style: TextStyle(color: _kTeal),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 16),
 
                 const Text(
-                  "Satu platform untuk semua kebutuhan olahraga. Sederhana, cepat, dan efisien. [v.2025]",
+                  "Satu aplikasi untuk semua kebutuhan olahraga. Booking lapangan, cari pelatih, hingga gabung komunitas. Simple & Cepat.",
                   style: TextStyle(
                     color: Color(0xFF475569),
-                    fontWeight: FontWeight.w700,
-                    height: 1.35,
-                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                    height: 1.5,
+                    fontSize: 15,
                   ),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 32),
 
                 Row(
                   children: [
@@ -679,7 +741,7 @@ class _HeroLeft extends StatelessWidget {
                         inverted: false,
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 16),
                     Expanded(
                       child: _PrimaryCTA(
                         text: "MASUK",
@@ -698,6 +760,7 @@ class _HeroLeft extends StatelessWidget {
   }
 }
 
+// 3. HERO RIGHT (Grid lebih rapi)
 class _HeroRight extends StatelessWidget {
   const _HeroRight({required this.fade, required this.slide});
   final Animation<double> fade;
@@ -710,13 +773,13 @@ class _HeroRight extends StatelessWidget {
       child: SlideTransition(
         position: slide,
         child: _NeoCard(
-          fill: Colors.white.withValues(alpha: 0.08),
-          borderColor: Colors.white.withValues(alpha: 0.18),
-          shadowColor: Colors.black.withValues(alpha: 0.22),
-          shadowOffset: const Offset(0, 10),
+          fill: Colors.white.withOpacity(0.05),
+          borderColor: Colors.white.withOpacity(0.2),
+          shadowColor: Colors.black.withOpacity(0.3),
+          shadowOffset: const Offset(8, 8),
           blur: true,
           child: Padding(
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.all(24),
             child: Column(
               children: [
                 Row(
@@ -728,7 +791,7 @@ class _HeroRight extends StatelessWidget {
                         filled: true,
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: _SportTile(
                         title: "BASKET",
@@ -738,7 +801,7 @@ class _HeroRight extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 Row(
                   children: const [
                     Expanded(
@@ -748,7 +811,7 @@ class _HeroRight extends StatelessWidget {
                         filled: false,
                       ),
                     ),
-                    SizedBox(width: 10),
+                    SizedBox(width: 12),
                     Expanded(
                       child: _SportTile(
                         title: "MINI SOCCER",
@@ -758,15 +821,15 @@ class _HeroRight extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 14),
-                const Divider(height: 18, color: Colors.white24),
+                const SizedBox(height: 24),
+                const Divider(height: 1, color: Colors.white24),
+                const SizedBox(height: 24),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: const [
-                    Expanded(child: _StatMini(number: "500+", label: "Venues")),
-                    SizedBox(width: 10),
-                    Expanded(child: _StatMini(number: "200+", label: "Coaches")),
-                    SizedBox(width: 10),
-                    Expanded(child: _StatMini(number: "10K+", label: "Users")),
+                    _StatMini(number: "500+", label: "Venues"),
+                    _StatMini(number: "200+", label: "Coaches"),
+                    _StatMini(number: "10K+", label: "Users"),
                   ],
                 ),
               ],
@@ -785,32 +848,25 @@ class _TagChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: const Color(0xFF0F172A), width: 2),
+        color: _kAmber, // Pakai kuning biar mencolok
+        border: Border.all(color: _kSlate, width: 2),
+        boxShadow: const [BoxShadow(color: _kSlate, offset: Offset(2, 2))],
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text("•", style: TextStyle(color: Color(0xFF0D9488), fontWeight: FontWeight.w900)),
-          const SizedBox(width: 8),
-          Text(
-            text.toUpperCase(),
-            style: const TextStyle(
-              color: Color(0xFF0F172A),
-              fontWeight: FontWeight.w900,
-              fontSize: 11.5,
-              letterSpacing: 0.3,
-            ),
-          ),
-        ],
+      child: Text(
+        text.toUpperCase(),
+        style: const TextStyle(
+          color: _kSlate,
+          fontWeight: FontWeight.w900,
+          fontSize: 11,
+          letterSpacing: 0.5,
+        ),
       ),
     );
   }
 }
 
-// ======================= SECTION TITLE =======================
 class _SectionTitle extends StatelessWidget {
   const _SectionTitle({
     required this.eyebrow,
@@ -822,13 +878,14 @@ class _SectionTitle extends StatelessWidget {
   final String eyebrow;
   final String title;
   final String subtitle;
-  final bool dark;
+  final bool dark; // Mempertahankan parameter dark
 
   @override
   Widget build(BuildContext context) {
-    final titleColor = Colors.white;
-    final subColor = const Color(0xFF5EEAD4);
-    final eyebrowColor = Colors.white.withValues(alpha: 0.78);
+    // Logic warna sederhana berdasarkan background section
+    final titleColor = dark ? Colors.white : Colors.white;
+    final subColor = dark ? Colors.white70 : _kTeal;
+    final eyebrowColor = _kAmber;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -838,28 +895,31 @@ class _SectionTitle extends StatelessWidget {
           style: TextStyle(
             color: eyebrowColor,
             fontWeight: FontWeight.w900,
-            letterSpacing: 1.2,
+            letterSpacing: 1.5,
             fontSize: 12,
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
         Text(
           title,
           style: TextStyle(
             color: titleColor,
             fontWeight: FontWeight.w900,
-            letterSpacing: -0.6,
-            fontSize: 34,
-            height: 1.05,
+            letterSpacing: -1.0,
+            fontSize: 36,
+            height: 1.1,
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
+        Container(width: 60, height: 4, color: _kTeal),
+        const SizedBox(height: 12),
         Text(
           subtitle,
           style: TextStyle(
             color: subColor,
-            fontWeight: FontWeight.w800,
-            fontSize: 13.5,
+            fontWeight: FontWeight.w700,
+            fontSize: 14,
+            letterSpacing: 0.5,
           ),
         ),
       ],
@@ -867,7 +927,419 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
-// ======================= CARDS =======================
+// 4. FEATURE CARD (Dirapikan)
+class _FeatureCard extends StatelessWidget {
+  const _FeatureCard({
+    required this.icon,
+    required this.title,
+    required this.desc,
+  });
+
+  final IconData icon;
+  final String title;
+  final String desc;
+
+  @override
+  Widget build(BuildContext context) {
+    return _NeoCard(
+      fill: _kWhite,
+      borderColor: _kSlate,
+      shadowColor: Colors.black.withOpacity(0.15),
+      shadowOffset: const Offset(6, 6),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: _kTeal,
+                border: Border.all(color: _kSlate, width: 2),
+                boxShadow: const [
+                  BoxShadow(color: _kSlate, offset: Offset(3, 3)),
+                ],
+              ),
+              child: Icon(icon, color: Colors.white, size: 24),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              title,
+              style: const TextStyle(
+                color: _kSlate,
+                fontWeight: FontWeight.w900,
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              desc,
+              style: const TextStyle(
+                color: Color(0xFF475569),
+                fontWeight: FontWeight.w600,
+                height: 1.5,
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// 5. STEP CARD (Dirapikan)
+class _StepCard extends StatelessWidget {
+  const _StepCard({
+    required this.number,
+    required this.title,
+    required this.desc,
+  });
+
+  final String number;
+  final String title;
+  final String desc;
+
+  @override
+  Widget build(BuildContext context) {
+    return _NeoCard(
+      fill: Colors.white.withOpacity(0.05),
+      borderColor: Colors.white.withOpacity(0.2),
+      shadowColor: Colors.black.withOpacity(0.3),
+      shadowOffset: const Offset(6, 6),
+      blur: true,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              number,
+              style: const TextStyle(
+                color: _kAmber,
+                fontWeight: FontWeight.w900,
+                fontSize: 32,
+                height: 1.0,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    desc,
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.8),
+                      fontWeight: FontWeight.w500,
+                      height: 1.4,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// 6. TESTIMONIAL CARD
+class _TestimonialCard extends StatelessWidget {
+  const _TestimonialCard({
+    required this.name,
+    required this.role,
+    required this.quote,
+  });
+
+  final String name;
+  final String role;
+  final String quote;
+
+  @override
+  Widget build(BuildContext context) {
+    return _NeoCard(
+      fill: _kWhite,
+      borderColor: _kSlate,
+      shadowColor: Colors.black.withOpacity(0.15),
+      shadowOffset: const Offset(6, 6),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.format_quote, color: _kTeal, size: 32),
+            const SizedBox(height: 12),
+            Text(
+              quote,
+              style: const TextStyle(
+                color: _kSlate,
+                fontWeight: FontWeight.w600,
+                height: 1.5,
+                fontSize: 14,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 18,
+                  backgroundColor: _kSlate,
+                  child: Text(
+                    name[0],
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: const TextStyle(
+                        color: _kSlate,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 13,
+                      ),
+                    ),
+                    Text(
+                      role,
+                      style: const TextStyle(
+                        color: Color(0xFF64748B),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BigCtaCard extends StatelessWidget {
+  const _BigCtaCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return _NeoCard(
+      fill: _kTeal,
+      borderColor: _kSlate,
+      shadowColor: Colors.black.withOpacity(0.2),
+      shadowOffset: const Offset(8, 8),
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          children: [
+            const Text(
+              "SIAP MEMULAI?",
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w900,
+                fontSize: 24,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              "Gabung sekarang dan rasakan kemudahan booking venue.",
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 24),
+            _NeoButton(
+              text: "DAFTAR SEKARANG",
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AuthPage()),
+              ),
+              color: _kAmber,
+              textColor: _kSlate,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// HELPERS
+class _NeoButton extends StatelessWidget {
+  final String text;
+  final VoidCallback onTap;
+  final Color color;
+  final Color textColor;
+
+  const _NeoButton({
+    required this.text,
+    required this.onTap,
+    required this.color,
+    required this.textColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 50,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: color,
+          border: Border.all(color: _kSlate, width: 2.5),
+          boxShadow: const [BoxShadow(color: _kSlate, offset: Offset(4, 4))],
+        ),
+        child: Text(
+          text,
+          style: TextStyle(
+            color: textColor,
+            fontWeight: FontWeight.w900,
+            fontSize: 13,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PrimaryCTA extends StatelessWidget {
+  const _PrimaryCTA({
+    required this.text,
+    required this.onTap,
+    required this.inverted,
+  });
+
+  final String text;
+  final VoidCallback onTap;
+  final bool inverted;
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = inverted ? _kWhite : _kTeal;
+    final fg = inverted ? _kSlate : _kWhite;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 54,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: bg,
+          border: Border.all(color: _kSlate, width: 2.5),
+          boxShadow: const [BoxShadow(color: _kSlate, offset: Offset(5, 5))],
+        ),
+        child: Text(
+          text,
+          style: TextStyle(
+            color: fg,
+            fontWeight: FontWeight.w900,
+            fontSize: 14,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SportTile extends StatelessWidget {
+  const _SportTile({
+    required this.title,
+    required this.icon,
+    required this.filled,
+  });
+
+  final String title;
+  final IconData icon;
+  final bool filled; // Tetap mempertahankan nama parameter filled
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = filled ? _kTeal : Colors.white.withOpacity(0.05);
+    final border = filled ? _kSlate : Colors.white.withOpacity(0.2);
+    final fg = Colors.white;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+      decoration: BoxDecoration(
+        color: bg,
+        border: Border.all(color: border, width: 2),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: fg, size: 28),
+          const SizedBox(height: 10),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: fg,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatMini extends StatelessWidget {
+  const _StatMini({required this.number, required this.label});
+  final String number;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          number,
+          style: const TextStyle(
+            color: _kAmber,
+            fontWeight: FontWeight.w900,
+            fontSize: 20,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label.toUpperCase(),
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.7),
+            fontWeight: FontWeight.bold,
+            fontSize: 10,
+          ),
+        ),
+      ],
+    );
+  }
+}
 
 class _NeoCard extends StatelessWidget {
   const _NeoCard({
@@ -891,11 +1363,11 @@ class _NeoCard extends StatelessWidget {
     final card = Container(
       decoration: BoxDecoration(
         color: fill,
-        border: Border.all(color: borderColor, width: 2.6),
+        border: Border.all(color: borderColor, width: 2.5),
         boxShadow: [
           BoxShadow(
             color: shadowColor,
-            blurRadius: 18,
+            blurRadius: 0, // Hard shadow (Neo Brutalism)
             offset: shadowOffset,
           ),
         ],
@@ -907,71 +1379,8 @@ class _NeoCard extends StatelessWidget {
 
     return ClipRect(
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: card,
-      ),
-    );
-  }
-}
-
-class _FeatureCard extends StatelessWidget {
-  const _FeatureCard({
-    required this.icon,
-    required this.title,
-    required this.desc,
-  });
-
-  final IconData icon;
-  final String title;
-  final String desc;
-
-  @override
-  Widget build(BuildContext context) {
-    return _NeoCard(
-      fill: Colors.white.withValues(alpha: 0.92),
-      borderColor: const Color(0xFF0F172A),
-      shadowColor: Colors.black.withValues(alpha: 0.16),
-      shadowOffset: const Offset(6, 6),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 52,
-              height: 52,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: const Color(0xFF0D9488),
-                border: Border.all(color: const Color(0xFF0F172A), width: 2.4),
-                boxShadow: const [
-                  BoxShadow(color: Color(0xFF0F172A), offset: Offset(4, 4)),
-                ],
-              ),
-              child: Icon(icon, color: Colors.white, size: 28),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: const TextStyle(
-                color: Color(0xFF0F172A),
-                fontWeight: FontWeight.w900,
-                letterSpacing: -0.3,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              desc,
-              style: const TextStyle(
-                color: Color(0xFF475569),
-                fontWeight: FontWeight.w700,
-                height: 1.35,
-                fontSize: 12.8,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -984,9 +1393,9 @@ class _DarkBand extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _NeoCard(
-      fill: const Color(0xFF081A28).withValues(alpha: 0.78),
-      borderColor: const Color(0xFF0F172A),
-      shadowColor: Colors.black.withValues(alpha: 0.22),
+      fill: Colors.black.withOpacity(0.5),
+      borderColor: Colors.white12,
+      shadowColor: Colors.black.withOpacity(0.3),
       shadowOffset: const Offset(8, 8),
       blur: true,
       child: child,
@@ -994,367 +1403,7 @@ class _DarkBand extends StatelessWidget {
   }
 }
 
-class _StepCard extends StatelessWidget {
-  const _StepCard({
-    required this.number,
-    required this.title,
-    required this.desc,
-  });
-
-  final String number;
-  final String title;
-  final String desc;
-
-  @override
-  Widget build(BuildContext context) {
-    return _NeoCard(
-      fill: Colors.white.withValues(alpha: 0.08),
-      borderColor: Colors.white.withValues(alpha: 0.18),
-      shadowColor: Colors.black.withValues(alpha: 0.25),
-      shadowOffset: const Offset(6, 6),
-      blur: true,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: const Color(0xFF0D9488),
-                border: Border.all(color: const Color(0xFF0F172A), width: 2.4),
-                boxShadow: const [
-                  BoxShadow(color: Color(0xFF0F172A), offset: Offset(4, 4)),
-                ],
-              ),
-              child: Text(
-                number,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 22,
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w900,
-                fontSize: 16,
-                letterSpacing: -0.3,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              desc,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.78),
-                fontWeight: FontWeight.w700,
-                height: 1.35,
-                fontSize: 12.8,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _TestimonialCard extends StatelessWidget {
-  const _TestimonialCard({
-    required this.name,
-    required this.role,
-    required this.quote,
-  });
-
-  final String name;
-  final String role;
-  final String quote;
-
-  @override
-  Widget build(BuildContext context) {
-    return _NeoCard(
-      fill: Colors.white.withValues(alpha: 0.92),
-      borderColor: const Color(0xFF0F172A),
-      shadowColor: Colors.black.withValues(alpha: 0.16),
-      shadowOffset: const Offset(6, 6),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "“",
-              style: TextStyle(
-                color: Color(0xFF0D9488),
-                fontWeight: FontWeight.w900,
-                fontSize: 42,
-                height: 0.9,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              quote,
-              style: const TextStyle(
-                color: Color(0xFF0F172A),
-                fontWeight: FontWeight.w800,
-                height: 1.25,
-                fontSize: 14.2,
-              ),
-            ),
-            const SizedBox(height: 12),
-            const Divider(height: 18, color: Color(0xFF0F172A)),
-            Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF0D9488),
-                    border: Border.all(color: const Color(0xFF0F172A), width: 2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.person, color: Colors.white),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        name,
-                        style: const TextStyle(
-                          color: Color(0xFF0F172A),
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      Text(
-                        role,
-                        style: const TextStyle(
-                          color: Color(0xFF475569),
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12.2,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _BigCtaCard extends StatelessWidget {
-  const _BigCtaCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return _NeoCard(
-      fill: const Color(0xFF0D9488),
-      borderColor: const Color(0xFF0F172A),
-      shadowColor: Colors.black.withValues(alpha: 0.18),
-      shadowOffset: const Offset(8, 8),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: LayoutBuilder(
-          builder: (context, c) {
-            final isNarrow = c.maxWidth < 700;
-            final text = const Text(
-              "Siap jadi bagian dari panggung utama olahraga?\nMulai sekarang!",
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w900,
-                fontSize: 18,
-                height: 1.15,
-              ),
-            );
-
-            final btn = GestureDetector(
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const AuthPage()),
-              ),
-              child: Container(
-                height: 48,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: Colors.transparent,
-                  border: Border.all(color: Colors.white, width: 2.4),
-                ),
-                child: const Text(
-                  "Mulai Sekarang!",
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900),
-                ),
-              ),
-            );
-
-            if (isNarrow) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  text,
-                  const SizedBox(height: 12),
-                  btn,
-                ],
-              );
-            }
-
-            return Row(
-              children: [
-                Expanded(flex: 5, child: text),
-                const SizedBox(width: 12),
-                btn,
-              ],
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
-
-// ======================= CTA BUTTONS =======================
-
-class _PrimaryCTA extends StatelessWidget {
-  const _PrimaryCTA({
-    required this.text,
-    required this.onTap,
-    required this.inverted,
-  });
-
-  final String text;
-  final VoidCallback onTap;
-  final bool inverted;
-
-  @override
-  Widget build(BuildContext context) {
-    final bg = inverted ? Colors.white : const Color(0xFF0D9488);
-    final fg = inverted ? const Color(0xFF0F172A) : Colors.white;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 52,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: bg,
-          border: Border.all(color: const Color(0xFF0F172A), width: 3),
-          boxShadow: const [
-            BoxShadow(color: Color(0xFF0F172A), offset: Offset(6, 6)),
-          ],
-        ),
-        child: Text(
-          text,
-          style: TextStyle(
-            color: fg,
-            fontWeight: FontWeight.w900,
-            fontSize: 14.5,
-            letterSpacing: 0.2,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ======================= HERO WIDGETS =======================
-
-class _SportTile extends StatelessWidget {
-  const _SportTile({
-    required this.title,
-    required this.icon,
-    required this.filled,
-  });
-
-  final String title;
-  final IconData icon;
-  final bool filled;
-
-  @override
-  Widget build(BuildContext context) {
-    final bg = filled ? const Color(0xFF0D9488) : Colors.white.withValues(alpha: 0.08);
-    final fg = Colors.white;
-    final border = filled ? const Color(0xFF0F172A) : Colors.white.withValues(alpha: 0.18);
-
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: bg,
-        border: Border.all(color: border, width: 2.2),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: fg, size: 28),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: fg,
-              fontWeight: FontWeight.w900,
-              fontSize: 11.5,
-              letterSpacing: 0.6,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatMini extends StatelessWidget {
-  const _StatMini({required this.number, required this.label});
-  final String number;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.06),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.18), width: 1.8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            number,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w900,
-              fontSize: 18,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label.toUpperCase(),
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.78),
-              fontWeight: FontWeight.w800,
-              fontSize: 11,
-              letterSpacing: 0.6,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ======================= BACKGROUND =======================
-
+// PAINTER TETAP SAMA
 class _SportBgPainter extends CustomPainter {
   _SportBgPainter({required this.t});
   final double t;
@@ -1378,7 +1427,7 @@ class _SportBgPainter extends CustomPainter {
       size,
       Offset(size.width * 0.22, size.height * 0.26),
       size.width * 0.28,
-      _teal.withValues(alpha: 0.20),
+      _teal.withOpacity(0.15),
       0.0,
     );
     _blob(
@@ -1386,7 +1435,7 @@ class _SportBgPainter extends CustomPainter {
       size,
       Offset(size.width * 0.78, size.height * 0.22),
       size.width * 0.24,
-      _mint.withValues(alpha: 0.16),
+      _mint.withOpacity(0.12),
       1.2,
     );
     _blob(
@@ -1394,23 +1443,33 @@ class _SportBgPainter extends CustomPainter {
       size,
       Offset(size.width * 0.68, size.height * 0.86),
       size.width * 0.30,
-      Colors.white.withValues(alpha: 0.08),
+      Colors.white.withOpacity(0.05),
       2.4,
     );
 
     final vignette = Paint()
-      ..shader = RadialGradient(
-        colors: [Colors.transparent, Colors.black.withValues(alpha: 0.55)],
-        stops: const [0.55, 1.0],
-      ).createShader(Rect.fromCircle(
-        center: Offset(size.width * 0.5, size.height * 0.35),
-        radius: max(size.width, size.height) * 0.9,
-      ));
+      ..shader =
+          RadialGradient(
+            colors: [Colors.transparent, Colors.black.withOpacity(0.6)],
+            stops: const [0.55, 1.0],
+          ).createShader(
+            Rect.fromCircle(
+              center: Offset(size.width * 0.5, size.height * 0.35),
+              radius: max(size.width, size.height) * 0.9,
+            ),
+          );
 
     canvas.drawRect(Offset.zero & size, vignette);
   }
 
-  void _blob(Canvas canvas, Size size, Offset c, double r, Color color, double phase) {
+  void _blob(
+    Canvas canvas,
+    Size size,
+    Offset c,
+    double r,
+    Color color,
+    double phase,
+  ) {
     final paint = Paint()..color = color;
     final k = sin((t * 2 * pi) + phase) * 0.04;
 
@@ -1418,7 +1477,8 @@ class _SportBgPainter extends CustomPainter {
     const n = 12;
     for (int i = 0; i <= n; i++) {
       final a = (i / n) * 2 * pi;
-      final wob = (sin(a * 3 + t * 2 * pi + phase) * 0.10) +
+      final wob =
+          (sin(a * 3 + t * 2 * pi + phase) * 0.10) +
           (cos(a * 2 - t * 2 * pi + phase) * 0.08);
       final rr = r * (0.88 + wob + k);
       final x = c.dx + cos(a) * rr;
@@ -1434,5 +1494,6 @@ class _SportBgPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _SportBgPainter oldDelegate) => oldDelegate.t != t;
+  bool shouldRepaint(covariant _SportBgPainter oldDelegate) =>
+      oldDelegate.t != t;
 }
