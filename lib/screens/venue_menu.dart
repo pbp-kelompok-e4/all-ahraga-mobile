@@ -1,5 +1,3 @@
-// lib/screens/venue_menu.dart
-
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
@@ -7,238 +5,343 @@ import 'package:all_ahraga/widgets/left_drawer.dart';
 import 'package:all_ahraga/screens/venue/venue_revenue.dart';
 import 'package:all_ahraga/screens/venue/venue_dashboard.dart';
 
-// --- DESIGN SYSTEM CONSTANTS & WIDGETS ---
-
-class NeoColors {
+// --- Design System Constants (Sama persis dengan Coach Menu) ---
+class NeoBrutalism {
   static const Color primary = Color(0xFF0D9488); // Tosca
-  static const Color text = Color(0xFF0F172A);    // Slate
-  static const Color muted = Color(0xFF64748B);   // Grey
-  static const Color danger = Color(0xFFDC2626);  // Red
-  static const Color background = Colors.white;
+  static const Color slate = Color(0xFF0F172A); // Dark Slate
+  static const Color grey = Color(0xFF64748B);
+  static const Color danger = Color(0xFFDC2626);
+  static const Color white = Colors.white;
+
+  static const double borderWidth = 2.0;
+  static const double borderRadius = 8.0;
+  static const Offset shadowOffset = Offset(4, 4);
 }
 
-// 1. Neo Container (Base Box)
-class NeoContainer extends StatelessWidget {
-  final Widget child;
-  final Color? color;
-  final EdgeInsetsGeometry? padding;
-  final double? width;
-  final double? height;
-  final VoidCallback? onTap;
-  final bool hasShadow;
-
-  const NeoContainer({
-    super.key,
-    required this.child,
-    this.color = NeoColors.background,
-    this.padding,
-    this.width,
-    this.height,
-    this.onTap,
-    this.hasShadow = true,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: width,
-        height: height,
-        padding: padding,
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: NeoColors.text, width: 2),
-          boxShadow: hasShadow
-              ? const [
-                  BoxShadow(
-                    color: NeoColors.text,
-                    offset: Offset(4, 4),
-                    blurRadius: 0,
-                  ),
-                ]
-              : null,
-        ),
-        child: child,
-      ),
-    );
-  }
-}
-
-// --- MAIN PAGE ---
-
-class VenueHomePage extends StatelessWidget {
+class VenueHomePage extends StatefulWidget {
   const VenueHomePage({super.key});
 
   @override
+  State<VenueHomePage> createState() => _VenueHomePageState();
+}
+
+class _VenueHomePageState extends State<VenueHomePage> {
+  @override
   Widget build(BuildContext context) {
-    // Context watch tidak digunakan untuk logout disini karena tombol dihapus,
-    // tapi tetap disimpan jika dibutuhkan logic lain.
-    // final request = context.watch<CookieRequest>(); 
+    final request = context.watch<CookieRequest>();
+    String userName = 'Venue Owner';
+
+    // Logika pengambilan nama user (Sama seperti Coach)
+    if (request.jsonData.isNotEmpty &&
+        request.jsonData.containsKey('username')) {
+      userName = request.jsonData['username'] ?? 'Venue Owner';
+    }
 
     return Scaffold(
-      backgroundColor: NeoColors.background,
-      // Menggunakan AppBar bawaan tapi di-style Neo-Brutalism agar Drawer tetap jalan
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        shape: const Border(
-          bottom: BorderSide(color: NeoColors.text, width: 2),
-        ),
-        iconTheme: const IconThemeData(color: NeoColors.text),
-        title: const Text(
-          'ALL-AHRAGA',
-          style: TextStyle(
-            color: NeoColors.text,
-            fontWeight: FontWeight.w900,
-            letterSpacing: -0.5,
-          ),
-        ),
-      ),
+      backgroundColor: NeoBrutalism.white,
       drawer: const LeftDrawer(),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 1. WELCOME BANNER
-            NeoContainer(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              color: NeoColors.primary, // Tosca Background
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'HALO, VENUE OWNER! 🏟️',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Kelola fasilitas dan pantau pendapatan Anda di sini.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white.withOpacity(0.9),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 32),
-
-            const Text(
-              'MENU MANAJEMEN',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w900,
-                color: NeoColors.text,
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // 2. MENU GRID
-            GridView.count(
-              primary: false,
-              shrinkWrap: true,
-              crossAxisCount: 2,
-              crossAxisSpacing: 20,
-              mainAxisSpacing: 20,
-              childAspectRatio: 0.85, // Mengatur rasio tinggi/lebar kartu
+      body: Builder(
+        builder: (scaffoldContext) {
+          return SafeArea(
+            child: Column(
               children: [
-                // --- VENUE DASHBOARD CARD ---
-                _buildNeoMenuCard(
-                  context,
-                  icon: Icons.dashboard_outlined,
-                  title: 'DASHBOARD',
-                  subtitle: 'Statistik & Booking',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const VenueDashboardPage(),
+                _buildCustomHeader(scaffoldContext),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildWelcomeBanner(userName),
+                          const SizedBox(height: 24),
+                          const Text(
+                            'MENU MANAJEMEN',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                              color: NeoBrutalism.slate,
+                              letterSpacing: 1.5,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          _buildMenuGrid(context),
+                        ],
                       ),
-                    );
-                  },
-                ),
-
-                // --- VENUE REVENUE CARD ---
-                _buildNeoMenuCard(
-                  context,
-                  icon: Icons.monetization_on_outlined,
-                  title: 'REVENUE',
-                  subtitle: 'Laporan Pendapatan',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const VenueRevenuePage()),
-                    );
-                  },
+                    ),
+                  ),
                 ),
               ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildNeoMenuCard(
+  // Header Custom (Sama persis dengan Coach)
+  Widget _buildCustomHeader(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: const BoxDecoration(
+        color: NeoBrutalism.primary,
+        border: Border(
+          bottom: BorderSide(
+            color: NeoBrutalism.slate,
+            width: NeoBrutalism.borderWidth,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          // Menu Icon (Drawer Trigger)
+          GestureDetector(
+            onTap: () {
+              Scaffold.of(context).openDrawer();
+            },
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: NeoBrutalism.white,
+                borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+                border: Border.all(
+                  color: NeoBrutalism.slate,
+                  width: NeoBrutalism.borderWidth,
+                ),
+                boxShadow: const [
+                  BoxShadow(
+                    color: NeoBrutalism.slate,
+                    offset: Offset(2, 2),
+                    blurRadius: 0,
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.menu,
+                color: NeoBrutalism.slate,
+                size: 20,
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "VENUE DASHBOARD",
+                style: TextStyle(
+                  color: NeoBrutalism.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              Text(
+                "ALL-AHRAGA",
+                style: TextStyle(
+                  color: NeoBrutalism.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Welcome Banner (Sama persis dengan Coach)
+  Widget _buildWelcomeBanner(String userName) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: NeoBrutalism.white,
+        borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+        border: Border.all(
+          color: NeoBrutalism.slate,
+          width: NeoBrutalism.borderWidth,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: NeoBrutalism.slate,
+            offset: NeoBrutalism.shadowOffset,
+            blurRadius: 0,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: NeoBrutalism.primary,
+                  borderRadius: BorderRadius.circular(
+                    NeoBrutalism.borderRadius,
+                  ),
+                  border: Border.all(
+                    color: NeoBrutalism.slate,
+                    width: NeoBrutalism.borderWidth,
+                  ),
+                ),
+                child: const Icon(
+                  Icons.stadium_outlined, // Icon diganti sesuai konteks Venue
+                  color: NeoBrutalism.white,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'HALO, ${userName.toUpperCase()}!',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                        color: NeoBrutalism.slate,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Kelola fasilitas dan pendapatan venue Anda',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: NeoBrutalism.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Menu Grid (Layout sama, isi disesuaikan Venue)
+  Widget _buildMenuGrid(BuildContext context) {
+    return GridView.count(
+      primary: false,
+      shrinkWrap: true,
+      crossAxisCount: 2,
+      crossAxisSpacing: 16,
+      mainAxisSpacing: 16,
+      childAspectRatio: 0.85,
+      children: [
+        // DASHBOARD CARD
+        _buildMenuCard(
+          context,
+          icon: Icons.dashboard_outlined,
+          title: 'DASHBOARD',
+          subtitle: 'Statistik & Booking',
+          color: NeoBrutalism.primary,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const VenueDashboardPage(),
+              ),
+            );
+          },
+        ),
+
+        // REVENUE CARD
+        _buildMenuCard(
+          context,
+          icon: Icons.monetization_on_outlined,
+          title: 'REVENUE',
+          subtitle: 'Laporan Pendapatan',
+          color: const Color(0xFF16a34a), // Green shade like Coach
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const VenueRevenuePage()),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  // Card Builder (Sama persis dengan Coach)
+  Widget _buildMenuCard(
     BuildContext context, {
     required IconData icon,
     required String title,
     required String subtitle,
+    required Color color,
     required VoidCallback onTap,
   }) {
-    return NeoContainer(
+    return GestureDetector(
       onTap: onTap,
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Icon Box
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF0FDFA), // Light Tosca bg
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: NeoColors.text, width: 2),
-            ),
-            child: Icon(icon, color: NeoColors.primary, size: 32),
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: NeoBrutalism.white,
+          borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+          border: Border.all(
+            color: NeoBrutalism.slate,
+            width: NeoBrutalism.borderWidth,
           ),
-          const SizedBox(height: 16),
-          
-          // Title
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w900,
-              color: NeoColors.text,
+          boxShadow: const [
+            BoxShadow(
+              color: NeoBrutalism.slate,
+              offset: NeoBrutalism.shadowOffset,
+              blurRadius: 0,
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          
-          // Subtitle
-          Text(
-            subtitle,
-            style: const TextStyle(
-              fontSize: 12,
-              color: NeoColors.muted,
-              fontWeight: FontWeight.bold,
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+                border: Border.all(
+                  color: NeoBrutalism.slate,
+                  width: NeoBrutalism.borderWidth,
+                ),
+              ),
+              child: Icon(icon, size: 24, color: NeoBrutalism.white),
             ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+            const SizedBox(height: 10),
+            Flexible(
+              child: Text(
+                title,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900,
+                  color: NeoBrutalism.slate,
+                  height: 1.1,
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              style: const TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+                color: NeoBrutalism.grey,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

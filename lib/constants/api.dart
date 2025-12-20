@@ -44,8 +44,7 @@ class ApiConstants {
   static const String sportCategories = '$baseUrl/api/sport-categories/';
   static const String locationAreas = '$baseUrl/api/location-areas/';
   static const String coachList = '$baseUrl/api/coaches/';
-  static String coachDetail(int coachId) =>
-      '$baseUrl/api/coach/$coachId/';
+  static String coachDetail(int coachId) => '$baseUrl/api/coach/$coachId/';
   static const String coachProfileSave = '$baseUrl/coach/profile/save/';
   static const String coachProfileJson = '$baseUrl/coach/profile/json/';
   static const String coachProfileDelete = '$baseUrl/coach/profile/delete/';
