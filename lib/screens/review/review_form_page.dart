@@ -183,8 +183,11 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
       _error = null;
     });
 
+    if (!mounted) return;
+
     try {
       final request = context.read<CookieRequest>();
+      final scaffoldMessenger = ScaffoldMessenger.of(context);
       
       final isLoggedIn = request.loggedIn;
       
@@ -204,7 +207,7 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
           
           if (success) {
             if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
+            scaffoldMessenger.showSnackBar(
               SnackBar(content: Text(message), backgroundColor: Colors.green),
             );
             Navigator.pop(context, 'deleted');

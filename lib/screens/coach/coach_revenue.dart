@@ -5,6 +5,21 @@ import 'package:intl/intl.dart';
 import '/models/coach_revenue_model.dart';
 import 'package:all_ahraga/screens/coach/coach_profile.dart';
 
+// Design System Constants
+class NeoBrutalism {
+  static const Color primary = Color(0xFF0D9488);
+  static const Color slate = Color(0xFF0F172A);
+  static const Color grey = Color(0xFF64748B);
+  static const Color danger = Color(0xFFDC2626);
+  static const Color white = Colors.white;
+  static const Color success = Color(0xFF16a34a);
+  static const Color warning = Color(0xFFf59e0b);
+  
+  static const double borderWidth = 2.0;
+  static const double borderRadius = 8.0;
+  static const Offset shadowOffset = Offset(4, 4);
+}
+
 class CoachRevenuePage extends StatefulWidget {
   const CoachRevenuePage({Key? key}) : super(key: key);
 
@@ -67,16 +82,24 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
 
     if (method.contains('Credit') || method.contains('Card')) {
       icon = Icons.credit_card;
-      color = Colors.blue.shade600;
+      color = NeoBrutalism.primary;
     } else if (method.contains('Transfer')) {
       icon = Icons.account_balance;
-      color = Colors.green.shade600;
+      color = NeoBrutalism.success;
     } else {
       icon = Icons.wallet;
-      color = Colors.purple.shade600;
+      color = NeoBrutalism.warning;
     }
 
-    return Icon(icon, color: color, size: 20);
+    return Container(
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: NeoBrutalism.white,
+        borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+        border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+      ),
+      child: Icon(icon, color: color, size: 16),
+    );
   }
 
   Widget _buildStatusBadge(String status) {
@@ -87,41 +110,43 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
 
     switch (status) {
       case 'CONFIRMED':
-        bgColor = Colors.green.shade50;
-        textColor = Colors.green.shade800;
+        bgColor = NeoBrutalism.success;
+        textColor = NeoBrutalism.white;
         icon = Icons.check_circle;
-        displayText = 'Berhasil';
+        displayText = 'BERHASIL';
         break;
       case 'PENDING':
-        bgColor = Colors.yellow.shade50;
-        textColor = Colors.yellow.shade800;
+        bgColor = NeoBrutalism.warning;
+        textColor = NeoBrutalism.white;
         icon = Icons.access_time;
-        displayText = 'Menunggu';
+        displayText = 'MENUNGGU';
         break;
       default:
-        bgColor = Colors.red.shade50;
-        textColor = Colors.red.shade800;
+        bgColor = NeoBrutalism.danger;
+        textColor = NeoBrutalism.white;
         icon = Icons.cancel;
-        displayText = 'Gagal';
+        displayText = 'GAGAL';
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+        border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: textColor),
+          Icon(icon, size: 12, color: textColor),
           const SizedBox(width: 4),
           Text(
             displayText,
             style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
               color: textColor,
+              letterSpacing: 0.5,
             ),
           ),
         ],
@@ -135,13 +160,14 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
         margin: const EdgeInsets.all(24),
         padding: const EdgeInsets.all(32),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
+          color: NeoBrutalism.white,
+          borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+          border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+          boxShadow: const [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: NeoBrutalism.slate,
+              offset: NeoBrutalism.shadowOffset,
+              blurRadius: 0,
             ),
           ],
         ),
@@ -151,78 +177,68 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.teal.shade50,
+                color: NeoBrutalism.white,
                 shape: BoxShape.circle,
+                border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.assignment_late_outlined,
                 size: 60,
-                color: Colors.teal.shade600,
+                color: NeoBrutalism.primary,
               ),
             ),
             const SizedBox(height: 24),
             const Text(
-              'Profil Belum Lengkap',
+              'PROFIL BELUM LENGKAP',
               style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+                color: NeoBrutalism.slate,
+                letterSpacing: 0.5,
               ),
             ),
             const SizedBox(height: 12),
-            Text(
+            const Text(
               'Anda perlu melengkapi profil pelatih untuk melihat laporan pendapatan dan mulai menerima klien.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey.shade700,
+                fontWeight: FontWeight.w500,
+                color: NeoBrutalism.grey,
                 height: 1.5,
               ),
             ),
             const SizedBox(height: 24),
-            ElevatedButton.icon(
+            _buildNeoButton(
               onPressed: () {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (context) => const CoachProfilePage()),
                 );
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Navigasi ke Coach Profile - Implementasikan sesuai routing Anda'),
-                    backgroundColor: Colors.teal,
-                  ),
-                );
               },
-              icon: const Icon(Icons.edit),
-              label: const Text('Kelola Profil Sekarang'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.teal.shade700,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 2,
-              ),
+              label: 'KELOLA PROFIL',
+              icon: Icons.edit,
             ),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.amber.shade50,
-                borderRadius: BorderRadius.circular(8),
+                color: NeoBrutalism.white,
+                borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+                border: Border.all(color: NeoBrutalism.warning, width: NeoBrutalism.borderWidth),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.lightbulb, size: 18, color: Colors.amber.shade700),
+                  const Icon(Icons.lightbulb, size: 18, color: NeoBrutalism.warning),
                   const SizedBox(width: 8),
                   Flexible(
                     child: Text(
                       'Setelah profil lengkap, laporan pendapatan akan muncul di sini.',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.amber.shade900,
+                        fontWeight: FontWeight.w600,
+                        color: NeoBrutalism.slate,
                       ),
                     ),
                   ),
@@ -240,17 +256,14 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.teal.shade700, Colors.teal.shade900],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
+        color: NeoBrutalism.primary,
+        borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+        border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+        boxShadow: const [
           BoxShadow(
-            color: Colors.teal.withOpacity(0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
+            color: NeoBrutalism.slate,
+            offset: NeoBrutalism.shadowOffset,
+            blurRadius: 0,
           ),
         ],
       ),
@@ -261,12 +274,12 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'TOTAL PENDAPATAN',
                   style: TextStyle(
-                    color: Colors.teal.shade100,
+                    color: NeoBrutalism.white,
                     fontSize: 12,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w900,
                     letterSpacing: 1.2,
                   ),
                 ),
@@ -274,17 +287,18 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
                 Text(
                   _formatCurrency(data.totalRevenue),
                   style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
+                    color: NeoBrutalism.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Dari ${data.transactionsCount} transaksi',
-                  style: TextStyle(
-                    color: Colors.teal.shade100,
+                  style: const TextStyle(
+                    color: NeoBrutalism.white,
                     fontSize: 13,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
@@ -293,13 +307,14 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(12),
+              color: NeoBrutalism.white,
+              borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+              border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
             ),
-            child: Icon(
+            child: const Icon(
               Icons.account_balance_wallet,
-              size: 48,
-              color: Colors.teal.shade100,
+              size: 40,
+              color: NeoBrutalism.primary,
             ),
           ),
         ],
@@ -312,14 +327,14 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [
+        color: NeoBrutalism.white,
+        borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+        border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: NeoBrutalism.slate,
+            offset: NeoBrutalism.shadowOffset,
+            blurRadius: 0,
           ),
         ],
       ),
@@ -327,39 +342,34 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Ringkasan',
+            'RINGKASAN',
             style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              fontSize: 16,
+              fontWeight: FontWeight.w900,
+              color: NeoBrutalism.slate,
+              letterSpacing: 0.5,
             ),
           ),
           const SizedBox(height: 16),
           _buildSummaryItem(
             icon: Icons.check_circle,
-            iconColor: Colors.green.shade600,
-            iconBgColor: Colors.green.shade50,
+            iconColor: NeoBrutalism.success,
             label: 'TRANSAKSI BERHASIL',
             value: '${data.transactionsCount}',
-            borderColor: Colors.green.shade500,
           ),
           const SizedBox(height: 12),
           _buildSummaryItem(
             icon: Icons.account_balance_wallet,
-            iconColor: Colors.teal.shade600,
-            iconBgColor: Colors.teal.shade50,
+            iconColor: NeoBrutalism.primary,
             label: 'TOTAL PENDAPATAN',
             value: _formatCurrency(data.totalRevenue),
-            borderColor: Colors.teal.shade500,
           ),
           const SizedBox(height: 12),
           _buildSummaryItem(
             icon: Icons.calendar_today,
-            iconColor: Colors.blue.shade600,
-            iconBgColor: Colors.blue.shade50,
+            iconColor: NeoBrutalism.warning,
             label: 'PERIODE',
             value: 'Semua Waktu',
-            borderColor: Colors.blue.shade500,
           ),
         ],
       ),
@@ -369,30 +379,26 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
   Widget _buildSummaryItem({
     required IconData icon,
     required Color iconColor,
-    required Color iconBgColor,
     required String label,
     required String value,
-    required Color borderColor,
   }) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        border: Border(left: BorderSide(color: borderColor, width: 3)),
-        color: Colors.grey.shade50,
-        borderRadius: const BorderRadius.only(
-          topRight: Radius.circular(8),
-          bottomRight: Radius.circular(8),
-        ),
+        color: NeoBrutalism.white,
+        borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+        border: Border(left: BorderSide(color: iconColor, width: 4)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: iconBgColor,
-              borderRadius: BorderRadius.circular(8),
+              color: NeoBrutalism.white,
+              borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+              border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
             ),
-            child: Icon(icon, color: iconColor, size: 24),
+            child: Icon(icon, color: iconColor, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -401,10 +407,10 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
               children: [
                 Text(
                   label,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.w700,
+                    color: NeoBrutalism.grey,
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -412,9 +418,9 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
                 Text(
                   value,
                   style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                    color: NeoBrutalism.slate,
                   ),
                 ),
               ],
@@ -431,32 +437,49 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
         margin: const EdgeInsets.all(16),
         padding: const EdgeInsets.all(48),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade200),
+          color: NeoBrutalism.white,
+          borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+          border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+          boxShadow: const [
+            BoxShadow(
+              color: NeoBrutalism.slate,
+              offset: NeoBrutalism.shadowOffset,
+              blurRadius: 0,
+            ),
+          ],
         ),
         child: Column(
           children: [
-            Icon(
-              Icons.receipt_long_outlined,
-              size: 64,
-              color: Colors.grey.shade300,
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: NeoBrutalism.white,
+                shape: BoxShape.circle,
+                border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+              ),
+              child: const Icon(
+                Icons.receipt_long_outlined,
+                size: 48,
+                color: NeoBrutalism.grey,
+              ),
             ),
             const SizedBox(height: 16),
-            Text(
-              'Belum ada transaksi',
+            const Text(
+              'BELUM ADA TRANSAKSI',
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700,
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+                color: NeoBrutalism.slate,
+                letterSpacing: 0.5,
               ),
             ),
             const SizedBox(height: 8),
-            Text(
+            const Text(
               'Transaksi akan muncul di sini.',
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey.shade500,
+                fontWeight: FontWeight.w500,
+                color: NeoBrutalism.grey,
               ),
             ),
           ],
@@ -467,14 +490,14 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
     return Container(
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [
+        color: NeoBrutalism.white,
+        borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+        border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: NeoBrutalism.slate,
+            offset: NeoBrutalism.shadowOffset,
+            blurRadius: 0,
           ),
         ],
       ),
@@ -485,25 +508,40 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
             padding: const EdgeInsets.all(20),
             child: Row(
               children: [
-                Icon(Icons.receipt, color: Colors.teal.shade600, size: 22),
-                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: NeoBrutalism.white,
+                    borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+                    border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+                  ),
+                  child: const Icon(Icons.receipt, color: NeoBrutalism.primary, size: 18),
+                ),
+                const SizedBox(width: 12),
                 const Text(
-                  'Riwayat Transaksi',
+                  'RIWAYAT TRANSAKSI',
                   style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                    color: NeoBrutalism.slate,
+                    letterSpacing: 0.5,
                   ),
                 ),
               ],
             ),
           ),
-          const Divider(height: 1),
+          Container(
+            height: NeoBrutalism.borderWidth,
+            color: NeoBrutalism.slate,
+          ),
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: transactions.length,
-            separatorBuilder: (context, index) => const Divider(height: 1),
+            separatorBuilder: (context, index) => Container(
+              height: NeoBrutalism.borderWidth,
+              color: NeoBrutalism.slate,
+            ),
             itemBuilder: (context, index) {
               final transaction = transactions[index];
               return _buildTransactionItem(transaction);
@@ -517,6 +555,7 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
   Widget _buildTransactionItem(TransactionItem transaction) {
     return Container(
       padding: const EdgeInsets.all(16),
+      color: NeoBrutalism.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -527,9 +566,9 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
                 '#${transaction.id}',
                 style: const TextStyle(
                   fontFamily: 'monospace',
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w900,
                   fontSize: 13,
-                  color: Colors.black87,
+                  color: NeoBrutalism.slate,
                 ),
               ),
               _buildStatusBadge(transaction.status),
@@ -540,12 +579,14 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
             children: [
               _buildPaymentMethodIcon(transaction.paymentMethod),
               const SizedBox(width: 8),
-              Text(
-                transaction.paymentMethod,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black87,
+              Expanded(
+                child: Text(
+                  transaction.paymentMethod,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: NeoBrutalism.slate,
+                  ),
                 ),
               ),
             ],
@@ -556,17 +597,18 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
             children: [
               Text(
                 transaction.formattedDate,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 13,
-                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
+                  color: NeoBrutalism.grey,
                 ),
               ),
               Text(
                 transaction.formattedRevenue,
                 style: const TextStyle(
                   fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  fontWeight: FontWeight.w900,
+                  color: NeoBrutalism.primary,
                 ),
               ),
             ],
@@ -576,73 +618,205 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
     );
   }
 
+  Widget _buildNeoButton({
+    required VoidCallback? onPressed,
+    required String label,
+    required IconData icon,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+        boxShadow: onPressed != null
+            ? const [
+                BoxShadow(
+                  color: NeoBrutalism.slate,
+                  offset: Offset(3, 3),
+                  blurRadius: 0,
+                ),
+              ]
+            : null,
+      ),
+      child: ElevatedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, size: 18),
+        label: Text(label),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: NeoBrutalism.primary,
+          foregroundColor: NeoBrutalism.white,
+          disabledBackgroundColor: NeoBrutalism.grey,
+          disabledForegroundColor: NeoBrutalism.white,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+            side: BorderSide(
+              color: onPressed != null ? NeoBrutalism.slate : NeoBrutalism.grey,
+              width: NeoBrutalism.borderWidth,
+            ),
+          ),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 14,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Laporan Pendapatan',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.teal.shade700,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _fetchRevenueData,
-            tooltip: 'Refresh',
-          ),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.teal),
-              ),
-            )
-          : _errorMessage != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
-                      const SizedBox(height: 16),
-                      Text(
-                        _errorMessage!,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.red.shade700),
+      backgroundColor: NeoBrutalism.white,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildCustomHeader(),
+            Expanded(
+              child: _isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(NeoBrutalism.primary),
                       ),
-                      const SizedBox(height: 16),
-                      ElevatedButton.icon(
-                        onPressed: _fetchRevenueData,
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('Coba Lagi'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.teal,
-                          foregroundColor: Colors.white,
-                        ),
+                    )
+                  : _errorMessage != null
+                      ? _buildErrorView()
+                      : _revenueData == null
+                          ? const Center(child: Text('Tidak ada data'))
+                          : !_revenueData!.hasProfile
+                              ? _buildNoProfileView()
+                              : RefreshIndicator(
+                                  onRefresh: _fetchRevenueData,
+                                  color: NeoBrutalism.primary,
+                                  child: ListView(
+                                    children: [
+                                      _buildRevenueHeader(_revenueData!),
+                                      _buildTransactionsList(_revenueData!.transactions),
+                                      if (_revenueData!.transactions.isNotEmpty)
+                                        _buildSummaryCards(_revenueData!),
+                                      const SizedBox(height: 24),
+                                    ],
+                                  ),
+                                ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCustomHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      decoration: const BoxDecoration(
+        color: NeoBrutalism.white,
+        border: Border(
+          bottom: BorderSide(
+            color: NeoBrutalism.slate,
+            width: NeoBrutalism.borderWidth,
+          ),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: NeoBrutalism.white,
+                    borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+                    border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: NeoBrutalism.slate,
+                        offset: Offset(2, 2),
+                        blurRadius: 0,
                       ),
                     ],
                   ),
-                )
-              : _revenueData == null
-                  ? const Center(child: Text('Tidak ada data'))
-                  : !_revenueData!.hasProfile
-                      ? _buildNoProfileView()
-                      : RefreshIndicator(
-                          onRefresh: _fetchRevenueData,
-                          color: Colors.teal,
-                          child: ListView(
-                            children: [
-                              _buildRevenueHeader(_revenueData!),
-                              _buildTransactionsList(_revenueData!.transactions),
-                              if (_revenueData!.transactions.isNotEmpty)
-                                _buildSummaryCards(_revenueData!),
-                              const SizedBox(height: 24),
-                            ],
-                          ),
-                        ),
+                  child: const Icon(Icons.arrow_back, color: NeoBrutalism.slate, size: 20),
+                ),
+              ),
+              const SizedBox(width: 16),
+              const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "COACH REVENUE",
+                    style: TextStyle(
+                      color: NeoBrutalism.primary,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  Text(
+                    "LAPORAN PENDAPATAN",
+                    style: TextStyle(
+                      color: NeoBrutalism.slate,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          GestureDetector(
+            onTap: _fetchRevenueData,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: NeoBrutalism.white,
+                borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+                border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+                boxShadow: const [
+                  BoxShadow(
+                    color: NeoBrutalism.slate,
+                    offset: Offset(2, 2),
+                    blurRadius: 0,
+                  ),
+                ],
+              ),
+              child: const Icon(Icons.refresh, color: NeoBrutalism.slate, size: 20),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorView() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 64, color: NeoBrutalism.danger),
+            const SizedBox(height: 16),
+            Text(
+              _errorMessage!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: NeoBrutalism.slate,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 24),
+            _buildNeoButton(
+              onPressed: _fetchRevenueData,
+              label: 'COBA LAGI',
+              icon: Icons.refresh,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -8,8 +8,14 @@ class ApiConstants {
       '$baseUrl/api/booking/$venueId/form/';
   static String createBooking(int venueId) =>
       '$baseUrl/api/booking/$venueId/create/';
-  static String scheduledCoaches(int scheduleId) =>
-      '$baseUrl/api/schedule/$scheduleId/coaches/';
+  static String scheduledCoaches(int scheduleId, {int? editingBookingId}) {
+    String url = '$baseUrl/api/schedule/$scheduleId/coaches/';
+    if (editingBookingId != null) {
+      url += '?editing_booking_id=$editingBookingId';
+    }
+    return url;
+  }
+
   static String cancelBooking(int bookingId) =>
       '$baseUrl/api/booking/$bookingId/cancel/';
   static String updateBooking(int bookingId) =>
@@ -33,7 +39,7 @@ class ApiConstants {
       '$baseUrl/venue/$venueId/schedules/delete/';
 
   // Coach endpoints
-  static const String coachSchedule = '$baseUrl/coach/schedule/'; 
+  static const String coachSchedule = '$baseUrl/coach/schedule/';
   static const String coachScheduleDelete = '$baseUrl/coach/schedule/delete/';
 
   // Review endpoints

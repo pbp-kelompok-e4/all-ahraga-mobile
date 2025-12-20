@@ -7,6 +7,7 @@ import 'package:all_ahraga/screens/coach/coach_revenue.dart';
 import 'package:all_ahraga/screens/coach/coach_manage_schedule.dart';
 import 'package:all_ahraga/screens/coach/coach_profile.dart';
 import 'package:all_ahraga/screens/venue_menu.dart';
+import 'package:all_ahraga/screens/auth_page.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 
@@ -209,19 +210,7 @@ class LeftDrawer extends StatelessWidget {
                 );
               },
             ),
-          ] else if (!isCoach)
-            ListTile(
-              leading: const Icon(Icons.person_outline, color: Color(0xFF0D9488)),
-              title: const Text("Profile Kamu"),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const CoachProfilePage(),
-                  ),
-                );
-              },
-            ),
+          ],
           if (isVenueOwner) ...[
           const Divider(),
           Padding(
@@ -249,7 +238,37 @@ class LeftDrawer extends StatelessWidget {
               );
             },
           ), 
-          ]     
+          ],
+          
+          // Logout Button
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.logout_outlined, color: Color(0xFFEA580C)),
+            title: const Text("Logout"),
+            onTap: () async {
+              final response = await request.logout(
+                  "http://localhost:8000/auth/logout/");
+              String message = response["message"];
+              if (context.mounted) {
+                if (response['status']) {
+                  String uname = response["username"];
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text("$message See you again, $uname."),
+                  ));
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const AuthPage()),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(message),
+                    ),
+                  );
+                }
+              }
+            },
+          ),
         ],
       ),
     );

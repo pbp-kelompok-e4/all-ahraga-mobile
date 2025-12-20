@@ -7,6 +7,19 @@ import 'dart:async';
 import '/models/coach_list_models.dart';
 import 'coach_detail.dart';
 
+// Design System Constants
+class NeoBrutalism {
+  static const Color primary = Color(0xFF0D9488);
+  static const Color slate = Color(0xFF0F172A);
+  static const Color grey = Color(0xFF64748B);
+  static const Color danger = Color(0xFFDC2626);
+  static const Color white = Colors.white;
+
+  static const double borderWidth = 2.0;
+  static const double borderRadius = 8.0;
+  static const Offset shadowOffset = Offset(4, 4);
+}
+
 class CoachListPage extends StatefulWidget {
   const CoachListPage({Key? key}) : super(key: key);
 
@@ -20,14 +33,12 @@ class _CoachListPageState extends State<CoachListPage> {
   CoachListResponse? _coachData;
   String? _errorMessage;
 
-  // Filter state
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   int? _selectedSportId;
   int? _selectedAreaId;
   int _currentPage = 1;
 
-  // Dropdown data
   List<SportCategory> _sportCategories = [];
   List<ServiceArea> _locationAreas = [];
 
@@ -47,18 +58,17 @@ class _CoachListPageState extends State<CoachListPage> {
   }
 
   Future<void> _loadInitialData() async {
-    await Future.wait([
-      _fetchSportCategories(),
-      _fetchLocationAreas(),
-    ]);
+    await Future.wait([_fetchSportCategories(), _fetchLocationAreas()]);
     await _fetchCoaches();
   }
 
   Future<void> _fetchSportCategories() async {
     try {
       final request = context.read<CookieRequest>();
-      final response = await request.get('http://localhost:8000/api/sport-categories/');
-      
+      final response = await request.get(
+        'http://localhost:8000/api/sport-categories/',
+      );
+
       if (response['success'] == true) {
         final categoriesResponse = SportCategoriesResponse.fromJson(response);
         setState(() {
@@ -73,8 +83,10 @@ class _CoachListPageState extends State<CoachListPage> {
   Future<void> _fetchLocationAreas() async {
     try {
       final request = context.read<CookieRequest>();
-      final response = await request.get('http://localhost:8000/api/location-areas/');
-      
+      final response = await request.get(
+        'http://localhost:8000/api/location-areas/',
+      );
+
       if (response['success'] == true) {
         final areasResponse = LocationAreasResponse.fromJson(response);
         setState(() {
@@ -98,28 +110,28 @@ class _CoachListPageState extends State<CoachListPage> {
 
     try {
       final request = context.read<CookieRequest>();
-      
-      // Build query parameters
-      final params = <String, String>{
-        'page': _currentPage.toString(),
-      };
-      
+
+      final params = <String, String>{'page': _currentPage.toString()};
+
       if (_searchQuery.isNotEmpty) {
         params['q'] = _searchQuery;
       }
-      
+
       if (_selectedSportId != null) {
         params['sport'] = _selectedSportId.toString();
       }
-      
+
       if (_selectedAreaId != null) {
         params['area'] = _selectedAreaId.toString();
       }
-      
+
       final queryString = params.entries
-          .map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
+          .map(
+            (e) =>
+                '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}',
+          )
           .join('&');
-      
+
       final url = 'http://localhost:8000/api/coaches/?$queryString';
       final response = await request.get(url);
 
@@ -147,7 +159,7 @@ class _CoachListPageState extends State<CoachListPage> {
 
   void _onSearchChanged(String value) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
-    
+
     _debounce = Timer(const Duration(milliseconds: 500), () {
       setState(() {
         _searchQuery = value;
@@ -180,11 +192,6 @@ class _CoachListPageState extends State<CoachListPage> {
       _currentPage = page;
     });
     _fetchCoaches();
-    
-    // Scroll to top
-    if (mounted) {
-      // Optional: scroll to top smoothly
-    }
   }
 
   void _viewCoachDetail(CoachProfile coach) {
@@ -199,30 +206,102 @@ class _CoachListPageState extends State<CoachListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Daftar Pelatih',
-          style: TextStyle(fontWeight: FontWeight.bold),
+      backgroundColor: NeoBrutalism.white,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildCustomHeader(),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  setState(() => _currentPage = 1);
+                  await _fetchCoaches();
+                },
+                color: NeoBrutalism.primary,
+                child: _isLoading
+                    ? const Center(
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            NeoBrutalism.primary,
+                          ),
+                        ),
+                      )
+                    : _errorMessage != null
+                    ? _buildErrorView()
+                    : _buildContent(),
+              ),
+            ),
+          ],
         ),
-        backgroundColor: Colors.teal.shade700,
-        foregroundColor: Colors.white,
-        elevation: 0,
       ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          setState(() => _currentPage = 1);
-          await _fetchCoaches();
-        },
-        color: Colors.teal,
-        child: _isLoading
-            ? const Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.teal),
+    );
+  }
+
+  Widget _buildCustomHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      decoration: const BoxDecoration(
+        color: NeoBrutalism.white,
+        border: Border(
+          bottom: BorderSide(
+            color: NeoBrutalism.slate,
+            width: NeoBrutalism.borderWidth,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          // TOMBOL BACK
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: NeoBrutalism.white,
+                borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+                border: Border.all(
+                  color: NeoBrutalism.slate,
+                  width: NeoBrutalism.borderWidth,
                 ),
-              )
-            : _errorMessage != null
-                ? _buildErrorView()
-                : _buildContent(),
+                boxShadow: const [
+                  BoxShadow(
+                    color: NeoBrutalism.slate,
+                    offset: Offset(2, 2),
+                    blurRadius: 0,
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.arrow_back,
+                color: NeoBrutalism.slate,
+                size: 20,
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "COACH LIST",
+                style: TextStyle(
+                  color: NeoBrutalism.primary,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              const Text(
+                "DAFTAR PELATIH",
+                style: TextStyle(
+                  color: NeoBrutalism.slate,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -234,26 +313,29 @@ class _CoachListPageState extends State<CoachListPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
+            const Icon(
+              Icons.error_outline,
+              size: 64,
+              color: NeoBrutalism.danger,
+            ),
             const SizedBox(height: 16),
             Text(
               _errorMessage!,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.red.shade700, fontSize: 16),
+              style: const TextStyle(
+                color: NeoBrutalism.slate,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: 24),
-            ElevatedButton.icon(
+            _buildNeoButton(
               onPressed: () {
                 setState(() => _currentPage = 1);
                 _fetchCoaches();
               },
-              icon: const Icon(Icons.refresh),
-              label: const Text('Coba Lagi'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.teal,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
+              label: 'COBA LAGI',
+              icon: Icons.refresh,
             ),
           ],
         ),
@@ -278,179 +360,204 @@ class _CoachListPageState extends State<CoachListPage> {
 
   Widget _buildFilterSection() {
     return Container(
-      margin: const EdgeInsets.all(16),
+      // Gunakan margin simetris saja, hilangkan margin bawah agar rapat dengan list
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
+        color: NeoBrutalism.white,
+        borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+        border: Border.all(
+          color: NeoBrutalism.slate,
+          width: NeoBrutalism.borderWidth,
+        ),
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            color: NeoBrutalism.slate,
+            offset: NeoBrutalism.shadowOffset,
+            blurRadius: 0,
           ),
         ],
       ),
+      // Menghindari kebocoran warna di sudut border
+      clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
-          // Search field
           TextField(
             controller: _searchController,
             onChanged: _onSearchChanged,
+            style: const TextStyle(
+              color: NeoBrutalism.slate,
+              fontWeight: FontWeight.w600,
+            ),
             decoration: InputDecoration(
               hintText: 'Cari nama pelatih...',
-              prefixIcon: const Icon(Icons.search, color: Colors.teal),
-              suffixIcon: _searchController.text.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear, color: Colors.grey),
-                      onPressed: () {
-                        _searchController.clear();
-                        _onSearchChanged('');
-                      },
-                    )
-                  : null,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey.shade300),
+              hintStyle: const TextStyle(
+                color: NeoBrutalism.grey,
+                fontWeight: FontWeight.w500,
               ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey.shade300),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Colors.teal, width: 2),
-              ),
+              prefixIcon: const Icon(Icons.search, color: NeoBrutalism.slate),
+              // ... sisa decoration sama
               filled: true,
-              fillColor: Colors.grey.shade50,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              fillColor: NeoBrutalism.white,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
+              border: _buildOutlineBorder(),
+              enabledBorder: _buildOutlineBorder(),
+              focusedBorder: _buildOutlineBorder(isFocused: true),
             ),
           ),
           const SizedBox(height: 12),
-          
-          // Sport and Area filters
           Row(
             children: [
-              Expanded(
-                child: _buildSportDropdown(),
-              ),
+              Expanded(child: _buildSportDropdown()),
               const SizedBox(width: 12),
-              Expanded(
-                child: _buildAreaDropdown(),
-              ),
+              Expanded(child: _buildAreaDropdown()),
             ],
           ),
           const SizedBox(height: 12),
-          
-          // Reset button
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: _resetFilters,
-              icon: const Icon(Icons.refresh, size: 18),
-              label: const Text('Reset Filter'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.grey.shade700,
-                side: BorderSide(color: Colors.grey.shade300),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
+          _buildNeoButton(
+            onPressed: _resetFilters,
+            label: 'RESET FILTER',
+            icon: Icons.refresh,
+            isPrimary: false,
           ),
         ],
+      ),
+    );
+  }
+
+  // Helper untuk merapikan border agar konsisten
+  OutlineInputBorder _buildOutlineBorder({bool isFocused = false}) {
+    return OutlineInputBorder(
+      borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+      borderSide: BorderSide(
+        color: isFocused ? NeoBrutalism.primary : NeoBrutalism.slate,
+        width: NeoBrutalism.borderWidth,
       ),
     );
   }
 
   Widget _buildSportDropdown() {
-    return DropdownButtonFormField<int>(
-      value: _selectedSportId,
-      decoration: InputDecoration(
-        labelText: 'Olahraga',
-        prefixIcon: const Icon(Icons.sports_basketball, color: Colors.teal, size: 20),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+    return Container(
+      decoration: BoxDecoration(
+        color: NeoBrutalism.white,
+        borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+        border: Border.all(
+          color: NeoBrutalism.slate,
+          width: NeoBrutalism.borderWidth,
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.teal, width: 2),
-        ),
-        filled: true,
-        fillColor: Colors.grey.shade50,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       ),
-      items: [
-        const DropdownMenuItem(
-          value: null,
-          child: Text('Semua Olahraga', style: TextStyle(fontSize: 14)),
+      child: DropdownButtonFormField<int>(
+        value: _selectedSportId,
+        decoration: InputDecoration(
+          labelText: 'OLAHRAGA',
+          labelStyle: const TextStyle(
+            color: NeoBrutalism.grey,
+            fontWeight: FontWeight.w700,
+            fontSize: 11,
+          ),
+          prefixIcon: const Icon(
+            Icons.sports_basketball,
+            color: NeoBrutalism.slate,
+            size: 20,
+          ),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 10,
+          ),
         ),
-        ..._sportCategories.map((sport) {
-          return DropdownMenuItem(
-            value: sport.id,
-            child: Text(sport.name, style: const TextStyle(fontSize: 14)),
-          );
-        }).toList(),
-      ],
-      onChanged: (value) {
-        setState(() {
-          _selectedSportId = value;
-        });
-        _onFilterChanged();
-      },
-      isExpanded: true,
-      isDense: true,
+        items: [
+          const DropdownMenuItem(
+            value: null,
+            child: Text(
+              'Semua',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+          ),
+          ..._sportCategories.map((sport) {
+            return DropdownMenuItem(
+              value: sport.id,
+              child: Text(
+                sport.name,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            );
+          }).toList(),
+        ],
+        onChanged: (value) {
+          setState(() => _selectedSportId = value);
+          _onFilterChanged();
+        },
+        isExpanded: true,
+        isDense: true,
+      ),
     );
   }
 
   Widget _buildAreaDropdown() {
-    return DropdownButtonFormField<int>(
-      value: _selectedAreaId,
-      decoration: InputDecoration(
-        labelText: 'Area',
-        prefixIcon: const Icon(Icons.location_on, color: Colors.teal, size: 20),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+    return Container(
+      decoration: BoxDecoration(
+        color: NeoBrutalism.white,
+        borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+        border: Border.all(
+          color: NeoBrutalism.slate,
+          width: NeoBrutalism.borderWidth,
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.teal, width: 2),
-        ),
-        filled: true,
-        fillColor: Colors.grey.shade50,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       ),
-      items: [
-        const DropdownMenuItem(
-          value: null,
-          child: Text('Semua Area', style: TextStyle(fontSize: 14)),
+      child: DropdownButtonFormField<int>(
+        value: _selectedAreaId,
+        decoration: InputDecoration(
+          labelText: 'AREA',
+          labelStyle: const TextStyle(
+            color: NeoBrutalism.grey,
+            fontWeight: FontWeight.w700,
+            fontSize: 11,
+          ),
+          prefixIcon: const Icon(
+            Icons.location_on,
+            color: NeoBrutalism.slate,
+            size: 20,
+          ),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 10,
+          ),
         ),
-        ..._locationAreas.map((area) {
-          return DropdownMenuItem(
-            value: area.id,
-            child: Text(area.name, style: const TextStyle(fontSize: 14)),
-          );
-        }).toList(),
-      ],
-      onChanged: (value) {
-        setState(() {
-          _selectedAreaId = value;
-        });
-        _onFilterChanged();
-      },
-      isExpanded: true,
-      isDense: true,
+        items: [
+          const DropdownMenuItem(
+            value: null,
+            child: Text(
+              'Semua',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+          ),
+          ..._locationAreas.map((area) {
+            return DropdownMenuItem(
+              value: area.id,
+              child: Text(
+                area.name,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            );
+          }).toList(),
+        ],
+        onChanged: (value) {
+          setState(() => _selectedAreaId = value);
+          _onFilterChanged();
+        },
+        isExpanded: true,
+        isDense: true,
+      ),
     );
   }
 
@@ -464,30 +571,42 @@ class _CoachListPageState extends State<CoachListPage> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                shape: BoxShape.circle,
+                color: NeoBrutalism.white,
+                borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+                border: Border.all(
+                  color: NeoBrutalism.slate,
+                  width: NeoBrutalism.borderWidth,
+                ),
+                boxShadow: const [
+                  BoxShadow(
+                    color: NeoBrutalism.slate,
+                    offset: NeoBrutalism.shadowOffset,
+                    blurRadius: 0,
+                  ),
+                ],
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.group_off,
                 size: 64,
-                color: Colors.grey.shade400,
+                color: NeoBrutalism.grey,
               ),
             ),
             const SizedBox(height: 24),
-            Text(
-              'Belum ada pelatih ditemukan',
+            const Text(
+              'BELUM ADA PELATIH',
               style: TextStyle(
                 fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade700,
+                fontWeight: FontWeight.w900,
+                color: NeoBrutalism.slate,
               ),
             ),
             const SizedBox(height: 8),
-            Text(
-              'Coba ubah filter pencarian Anda',
+            const Text(
+              'Coba ubah filter pencarian',
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey.shade500,
+                fontWeight: FontWeight.w500,
+                color: NeoBrutalism.grey,
               ),
             ),
           ],
@@ -508,120 +627,94 @@ class _CoachListPageState extends State<CoachListPage> {
   }
 
   Widget _buildCoachCard(CoachProfile coach) {
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+      decoration: BoxDecoration(
+        color: NeoBrutalism.white,
+        borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+        border: Border.all(
+          color: NeoBrutalism.slate,
+          width: NeoBrutalism.borderWidth,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: NeoBrutalism.slate,
+            offset: NeoBrutalism.shadowOffset,
+            blurRadius: 0,
+          ),
+        ],
       ),
       child: InkWell(
         onTap: () => _viewCoachDetail(coach),
-        borderRadius: BorderRadius.circular(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Profile Picture
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(NeoBrutalism.borderRadius - 2),
+              ),
               child: coach.profilePicture != null
                   ? Image.network(
                       coach.profilePicture!,
                       height: 200,
                       width: double.infinity,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return _buildPlaceholderImage();
-                      },
+                      errorBuilder: (context, error, stackTrace) =>
+                          _buildPlaceholderImage(),
                     )
                   : _buildPlaceholderImage(),
             ),
-            
-            // Coach Info
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Name
                   Text(
-                    coach.user.fullName,
+                    coach.user.fullName.toUpperCase(),
                     style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                      color: NeoBrutalism.slate,
+                      letterSpacing: 0.5,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 12),
-                  
-                  // Age
                   _buildInfoRow(
-                    icon: Icons.person,
-                    label: 'Umur',
-                    value: '${coach.age ?? '-'} tahun',
+                    Icons.person,
+                    'Umur: ${coach.age ?? '-'} tahun',
                   ),
-                  const SizedBox(height: 8),
-                  
-                  // Sport
+                  const SizedBox(height: 6),
                   _buildInfoRow(
-                    icon: Icons.sports_basketball,
-                    label: 'Olahraga',
-                    value: coach.mainSportTrained?.name ?? '-',
-                    valueColor: Colors.teal.shade700,
-                    isBold: true,
+                    Icons.sports_basketball,
+                    coach.mainSportTrained?.name ?? '-',
                   ),
-                  const SizedBox(height: 8),
-                  
-                  // Rate
+                  const SizedBox(height: 6),
                   _buildInfoRow(
-                    icon: Icons.attach_money,
-                    label: 'Tarif',
-                    value: coach.formattedRate,
-                    valueColor: Colors.green.shade700,
-                    isBold: true,
+                    Icons.attach_money,
+                    coach.formattedRate,
+                    isHighlight: true,
                   ),
-                  const SizedBox(height: 8),
-                  
-                  // Service Areas
-                  _buildInfoRow(
-                    icon: Icons.location_on,
-                    label: 'Area',
-                    value: coach.serviceAreasText,
-                    maxLines: 2,
-                  ),
+                  const SizedBox(height: 6),
+                  _buildInfoRow(Icons.location_on, coach.serviceAreasText),
                   const SizedBox(height: 12),
-                  
-                  // Experience Description
                   Text(
                     coach.displayExperience,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 13,
-                      color: Colors.grey.shade600,
+                      color: NeoBrutalism.grey,
+                      fontWeight: FontWeight.w500,
                       height: 1.4,
                     ),
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 16),
-                  
-                  // View Detail Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () => _viewCoachDetail(coach),
-                      icon: const Icon(Icons.visibility, size: 18),
-                      label: const Text('Lihat Detail'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.teal.shade700,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 2,
-                      ),
-                    ),
+                  _buildNeoButton(
+                    onPressed: () => _viewCoachDetail(coach),
+                    label: 'LIHAT DETAIL',
+                    icon: Icons.arrow_forward,
                   ),
                 ],
               ),
@@ -636,69 +729,28 @@ class _CoachListPageState extends State<CoachListPage> {
     return Container(
       height: 200,
       width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Colors.grey.shade200, Colors.grey.shade300],
-        ),
-      ),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.person, size: 64, color: Colors.grey.shade400),
-            const SizedBox(height: 8),
-            Text(
-              'Tidak ada gambar',
-              style: TextStyle(
-                color: Colors.grey.shade500,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
+      color: NeoBrutalism.grey,
+      child: const Center(
+        child: Icon(Icons.person, size: 64, color: NeoBrutalism.white),
       ),
     );
   }
 
-  Widget _buildInfoRow({
-    required IconData icon,
-    required String label,
-    required String value,
-    Color? valueColor,
-    bool isBold = false,
-    int maxLines = 1,
-  }) {
+  Widget _buildInfoRow(IconData icon, String text, {bool isHighlight = false}) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 18, color: Colors.grey.shade600),
+        Icon(icon, size: 16, color: NeoBrutalism.slate),
         const SizedBox(width: 8),
         Expanded(
-          child: RichText(
-            maxLines: maxLines,
-            overflow: TextOverflow.ellipsis,
-            text: TextSpan(
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade700,
-              ),
-              children: [
-                TextSpan(
-                  text: '$label: ',
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                TextSpan(
-                  text: value,
-                  style: TextStyle(
-                    color: valueColor ?? Colors.grey.shade700,
-                    fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-                  ),
-                ),
-              ],
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: 13,
+              color: isHighlight ? NeoBrutalism.primary : NeoBrutalism.slate,
+              fontWeight: isHighlight ? FontWeight.w800 : FontWeight.w600,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],
@@ -707,85 +759,116 @@ class _CoachListPageState extends State<CoachListPage> {
 
   Widget _buildPagination() {
     final pagination = _coachData!.pagination;
-    
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
+      padding: const EdgeInsets.all(16),
+      decoration: const BoxDecoration(
+        color: NeoBrutalism.white,
+        border: Border(
+          top: BorderSide(
+            color: NeoBrutalism.slate,
+            width: NeoBrutalism.borderWidth,
           ),
-        ],
+        ),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Previous Button
           Expanded(
-            child: ElevatedButton.icon(
+            child: _buildNeoButton(
               onPressed: pagination.hasPrevious && !_isLoadingMore
                   ? () => _goToPage(pagination.previousPage!)
                   : null,
-              icon: const Icon(Icons.chevron_left, size: 20),
-              label: const Text('Sebelumnya'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.teal.shade600,
-                foregroundColor: Colors.white,
-                disabledBackgroundColor: Colors.grey.shade300,
-                disabledForegroundColor: Colors.grey.shade500,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
+              label: 'PREV',
+              icon: Icons.chevron_left,
+              isSmall: true,
             ),
           ),
-          
-          // Page Info
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.teal.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.teal.shade200),
+                color: NeoBrutalism.white,
+                borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+                border: Border.all(
+                  color: NeoBrutalism.slate,
+                  width: NeoBrutalism.borderWidth,
+                ),
               ),
               child: Text(
-                'Hal ${pagination.currentPage} / ${pagination.totalPages}',
-                style: TextStyle(
+                '${pagination.currentPage}/${pagination.totalPages}',
+                style: const TextStyle(
                   fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.teal.shade800,
+                  fontWeight: FontWeight.w900,
+                  color: NeoBrutalism.slate,
                 ),
               ),
             ),
           ),
-          
-          // Next Button
           Expanded(
-            child: ElevatedButton.icon(
+            child: _buildNeoButton(
               onPressed: pagination.hasNext && !_isLoadingMore
                   ? () => _goToPage(pagination.nextPage!)
                   : null,
-              icon: const Icon(Icons.chevron_right, size: 20),
-              label: const Text('Berikutnya'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.teal.shade600,
-                foregroundColor: Colors.white,
-                disabledBackgroundColor: Colors.grey.shade300,
-                disabledForegroundColor: Colors.grey.shade500,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
+              label: 'NEXT',
+              icon: Icons.chevron_right,
+              isSmall: true,
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildNeoButton({
+    required VoidCallback? onPressed,
+    required String label,
+    required IconData icon,
+    bool isPrimary = true,
+    bool isSmall = false,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+        boxShadow: onPressed != null
+            ? const [
+                BoxShadow(
+                  color: NeoBrutalism.slate,
+                  offset: Offset(3, 3),
+                  blurRadius: 0,
+                ),
+              ]
+            : null,
+      ),
+      child: ElevatedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, size: isSmall ? 16 : 18),
+        label: Text(label),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: isPrimary
+              ? NeoBrutalism.primary
+              : NeoBrutalism.white,
+          foregroundColor: isPrimary ? NeoBrutalism.white : NeoBrutalism.slate,
+          disabledBackgroundColor: NeoBrutalism.grey,
+          disabledForegroundColor: NeoBrutalism.white,
+          elevation: 0,
+          padding: EdgeInsets.symmetric(
+            vertical: isSmall ? 10 : 12,
+            horizontal: isSmall ? 16 : 20,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+            side: BorderSide(
+              color: onPressed != null ? NeoBrutalism.slate : NeoBrutalism.grey,
+              width: NeoBrutalism.borderWidth,
+            ),
+          ),
+          textStyle: TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: isSmall ? 12 : 14,
+            letterSpacing: 0.5,
+          ),
+        ),
       ),
     );
   }

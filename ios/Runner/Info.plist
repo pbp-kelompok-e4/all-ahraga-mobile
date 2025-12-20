@@ -45,5 +45,10 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- Permissions untuk Camera dan Photo Library -->
+	<key>NSCameraUsageDescription</key>
+	<string>Aplikasi memerlukan akses kamera untuk mengambil foto venue dan profil coach.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Aplikasi memerlukan akses galeri untuk memilih foto dari perangkat Anda.</string>
 </dict>
 </plist>

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
@@ -5,6 +6,17 @@ import 'package:all_ahraga/widgets/left_drawer.dart';
 import 'package:all_ahraga/screens/booking/create_booking.dart';
 import 'package:all_ahraga/screens/coach_menu.dart';
 import 'package:all_ahraga/constants/api.dart';
+
+// --- DESIGN CONSTANTS & PALETTE ---
+const Color _kBg = Colors.white;
+const Color _kTosca = Color(0xFF0D9488); // Primary Brand
+const Color _kYellow = Color(0xFFFBBF24); // Accent for Rating/Buttons
+const Color _kSlate = Color(0xFF0F172A); // Text & Borders
+const Color _kMuted = Color(0xFF64748B); // Secondary Text
+const Color _kRed = Color(0xFFDC2626); // Danger
+
+const double _kBorderWidth = 2.0;
+const double _kRadius = 8.0;
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
@@ -14,13 +26,19 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  // --- LOGIC VARIABLES ---
   List<dynamic> _venues = [];
   bool _isLoading = true;
   String? _error;
+
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
+
   String? _selectedLocation;
   String? _selectedCategory;
+
   final List<String> _allLocations = [
     'Bekasi',
     'Bogor',
@@ -35,14 +53,10 @@ class _MyHomePageState extends State<MyHomePage> {
     'Padel',
     'Tenis',
   ];
-  late List<String> _availableLocations;
-  late List<String> _availableCategories;
 
   @override
   void initState() {
     super.initState();
-    _availableLocations = _allLocations;
-    _availableCategories = _allCategories;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkUserRoleAndRoute();
       _fetchVenues();
@@ -51,21 +65,19 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _checkUserRoleAndRoute() {
     final request = context.read<CookieRequest>();
-    String userRole = 'CUSTOMER';
-    if (request.jsonData.isNotEmpty && request.jsonData.containsKey('role_type')) {
+    String userRole = 'CUSTOMER'; // Default
+    if (request.jsonData.isNotEmpty &&
+        request.jsonData.containsKey('role_type')) {
       userRole = request.jsonData['role_type'];
     }
-    
-    // Jika user adalah Coach, redirect ke Coach Menu
+
     if (userRole == 'COACH') {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const CoachHomePage()),
-          );
-        }
-      });
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const CoachHomePage()),
+        );
+      }
     }
   }
 
@@ -77,8 +89,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
   List<dynamic> get _filteredVenues {
     return _venues.where((venue) {
-      final bool locationMatches = _selectedLocation == null || (venue['location'] ?? '') == _selectedLocation;
-      final bool categoryMatches = _selectedCategory == null || (venue['sport_category'] ?? '') == _selectedCategory;
+      final bool locationMatches =
+          _selectedLocation == null ||
+          (venue['location'] ?? '') == _selectedLocation;
+      final bool categoryMatches =
+          _selectedCategory == null ||
+          (venue['sport_category'] ?? '') == _selectedCategory;
       return locationMatches && categoryMatches;
     }).toList();
   }
@@ -98,26 +114,570 @@ class _MyHomePageState extends State<MyHomePage> {
 
       if (response['success'] == true) {
         final List<dynamic> fetchedVenues = response['venues'] ?? [];
-        setState(() {
-          _venues = fetchedVenues;
-          _isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            _venues = fetchedVenues;
+            _isLoading = false;
+          });
+        }
       } else {
+        if (mounted) {
+          setState(() {
+            _error = response['message'] ?? 'Gagal memuat venue';
+            _isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
         setState(() {
-          _error = response['message'] ?? 'Gagal memuat venue';
+          _error = 'Error: $e';
           _isLoading = false;
         });
       }
-    } catch (e) {
-      setState(() {
-        _error = 'Error: $e';
-        _isLoading = false;
-      });
     }
   }
 
-  String _formatPrice(double price) {
-    return price.toStringAsFixed(0).replaceAllMapped(
+  // --- UI BUILDER ---
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      key: _scaffoldKey,
+      backgroundColor: _kBg,
+      drawer: const LeftDrawer(),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // 1. APP BAR (UPDATED: Tanpa Notifikasi)
+            _buildDecoratedAppBar(),
+
+            // 2. SCROLLABLE CONTENT
+            Expanded(
+              child: RefreshIndicator(
+                color: _kTosca,
+                backgroundColor: _kBg,
+                onRefresh: _fetchVenues,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 3. HERO BANNER
+                      _buildHeroBanner(),
+
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 20),
+                            _buildFilterSection(),
+                            const SizedBox(height: 24),
+
+                            // Section Title
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.flash_on,
+                                  color: _kTosca,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  "AVAILABLE VENUES",
+                                  style: TextStyle(
+                                    color: _kSlate,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: -0.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+
+                            _buildContentList(),
+                            const SizedBox(height: 40),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // --- WIDGETS ---
+
+  Widget _buildDecoratedAppBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      decoration: const BoxDecoration(
+        color: _kBg,
+        border: Border(
+          bottom: BorderSide(color: _kSlate, width: _kBorderWidth),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Kiri: Menu Button
+          _NeoIconButton(
+            icon: Icons.menu,
+            onTap: () => _scaffoldKey.currentState?.openDrawer(),
+            bgColor: Colors.white,
+          ),
+
+          // Tengah: Logo dengan Ornamen
+          Row(
+            children: const [
+              Icon(Icons.sports_soccer, color: _kTosca, size: 24),
+              SizedBox(width: 8),
+              Text(
+                "ALL-AHRAGA",
+                style: TextStyle(
+                  color: _kSlate,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 18,
+                  letterSpacing: 0.5,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+
+          // Kanan: Kosong (Sesuai Request)
+          const SizedBox(width: 40), // Placeholder agar Title tetap di tengah
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeroBanner() {
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        color: _kTosca,
+        border: Border(
+          bottom: BorderSide(color: _kSlate, width: _kBorderWidth),
+        ),
+      ),
+      child: Stack(
+        children: [
+          // ORNAMEN 1: Lingkaran Besar
+          Positioned(
+            right: -20,
+            top: -20,
+            child: Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: _kSlate.withOpacity(0.2), width: 2),
+                color: Colors.white.withOpacity(0.1),
+              ),
+            ),
+          ),
+          // ORNAMEN 2: Lingkaran Kecil
+          Positioned(
+            right: 60,
+            bottom: -10,
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: _kYellow,
+              ),
+              child: Container(
+                margin: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: _kSlate, width: 1.5),
+                ),
+              ),
+            ),
+          ),
+
+          // KONTEN
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "LET'S GET SWEATY!",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 24,
+                    letterSpacing: 1.0,
+                    shadows: [
+                      Shadow(
+                        offset: Offset(2, 2),
+                        color: _kSlate,
+                        blurRadius: 0,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  "Temukan lapangan terbaik di sekitarmu.",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Search Bar
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(_kRadius),
+                    border: Border.all(color: _kSlate, width: _kBorderWidth),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: _kSlate,
+                        offset: Offset(4, 4),
+                        blurRadius: 0,
+                      ),
+                    ],
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (value) => _searchQuery = value,
+                    onSubmitted: (_) {
+                      setState(() {
+                        _selectedLocation = null;
+                        _selectedCategory = null;
+                      });
+                      _fetchVenues();
+                    },
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: _kSlate,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Cari Lapangan (ex: Futsal)...',
+                      hintStyle: const TextStyle(
+                        color: _kMuted,
+                        fontWeight: FontWeight.normal,
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                      prefixIcon: const Icon(Icons.search, color: _kSlate),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear, color: _kRed),
+                              onPressed: () {
+                                _searchController.clear();
+                                _searchQuery = '';
+                                _fetchVenues();
+                              },
+                            )
+                          : null,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterSection() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      clipBehavior: Clip.none,
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: _kSlate,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: const Icon(Icons.filter_list, color: Colors.white, size: 20),
+          ),
+          const SizedBox(width: 12),
+
+          _NeoDropdown(
+            hint: "LOKASI",
+            value: _selectedLocation,
+            items: _allLocations,
+            onChanged: (val) => setState(() => _selectedLocation = val),
+          ),
+          const SizedBox(width: 12),
+          _NeoDropdown(
+            hint: "KATEGORI",
+            value: _selectedCategory,
+            items: _allCategories,
+            onChanged: (val) => setState(() => _selectedCategory = val),
+          ),
+
+          if (_selectedLocation != null || _selectedCategory != null) ...[
+            const SizedBox(width: 12),
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  _selectedLocation = null;
+                  _selectedCategory = null;
+                });
+              },
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: _kRed,
+                  borderRadius: BorderRadius.circular(_kRadius),
+                  border: Border.all(color: _kSlate, width: _kBorderWidth),
+                  boxShadow: const [
+                    BoxShadow(color: _kSlate, offset: Offset(2, 2)),
+                  ],
+                ),
+                child: const Icon(Icons.refresh, color: Colors.white, size: 20),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContentList() {
+    if (_isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(40),
+          child: CircularProgressIndicator(color: _kTosca),
+        ),
+      );
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          children: [
+            const Icon(Icons.error_outline, size: 48, color: _kRed),
+            const SizedBox(height: 12),
+            Text(
+              _error!,
+              style: const TextStyle(color: _kRed, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            _NeoButton(
+              text: "COBA LAGI",
+              onTap: _fetchVenues,
+              color: _kBg,
+              textColor: _kSlate,
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_filteredVenues.isEmpty) {
+      return Center(
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            border: Border.all(color: _kSlate, width: 2),
+            borderRadius: BorderRadius.circular(_kRadius),
+            color: const Color(0xFFF1F5F9),
+          ),
+          child: Column(
+            children: const [
+              Icon(Icons.search_off, size: 48, color: _kMuted),
+              SizedBox(height: 12),
+              Text(
+                "TIDAK DITEMUKAN",
+                style: TextStyle(fontWeight: FontWeight.w900, color: _kSlate),
+              ),
+              Text(
+                "Coba kata kunci atau filter lain.",
+                style: TextStyle(color: _kMuted),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: _filteredVenues.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 20),
+      itemBuilder: (context, index) {
+        return _VenueCard(
+          venue: _filteredVenues[index],
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    CreateBookingPage(venueId: _filteredVenues[index]['id']),
+              ),
+            ).then((result) {
+              if (result == true) _fetchVenues();
+            });
+          },
+        );
+      },
+    );
+  }
+}
+
+// --- NEO COMPONENTS ---
+
+class _NeoIconButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  final Color bgColor;
+
+  const _NeoIconButton({
+    required this.icon,
+    required this.onTap,
+    required this.bgColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: bgColor,
+          border: Border.all(color: _kSlate, width: _kBorderWidth),
+          borderRadius: BorderRadius.circular(_kRadius),
+          boxShadow: const [BoxShadow(color: _kSlate, offset: Offset(2, 2))],
+        ),
+        child: Icon(icon, color: _kSlate, size: 22),
+      ),
+    );
+  }
+}
+
+class _NeoDropdown extends StatelessWidget {
+  final String hint;
+  final String? value;
+  final List<String> items;
+  final Function(String?) onChanged;
+
+  const _NeoDropdown({
+    required this.hint,
+    required this.value,
+    required this.items,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+      decoration: BoxDecoration(
+        color: value != null ? const Color(0xFFE0F2F1) : Colors.white,
+        borderRadius: BorderRadius.circular(_kRadius),
+        border: Border.all(color: _kSlate, width: _kBorderWidth),
+        boxShadow: const [BoxShadow(color: _kSlate, offset: Offset(2, 2))],
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: value,
+          hint: Text(
+            hint,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: _kMuted,
+              fontSize: 13,
+            ),
+          ),
+          icon: const Icon(Icons.keyboard_arrow_down, color: _kSlate),
+          dropdownColor: Colors.white,
+          borderRadius: BorderRadius.circular(_kRadius),
+          style: const TextStyle(
+            color: _kSlate,
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
+          ),
+          onChanged: onChanged,
+          items: items.map((String item) {
+            return DropdownMenuItem<String>(
+              value: item,
+              child: Text(item.toUpperCase()),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+}
+
+class _NeoButton extends StatelessWidget {
+  final String text;
+  final VoidCallback onTap;
+  final Color color;
+  final Color textColor;
+
+  const _NeoButton({
+    required this.text,
+    required this.onTap,
+    this.color = _kTosca,
+    this.textColor = Colors.white,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(_kRadius),
+          border: Border.all(color: _kSlate, width: _kBorderWidth),
+          boxShadow: const [BoxShadow(color: _kSlate, offset: Offset(2, 2))],
+        ),
+        child: Text(
+          text,
+          style: TextStyle(
+            color: textColor,
+            fontWeight: FontWeight.w900,
+            fontSize: 13,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _VenueCard extends StatelessWidget {
+  final Map<String, dynamic> venue;
+  final VoidCallback onTap;
+
+  const _VenueCard({required this.venue, required this.onTap});
+
+  String _formatPrice(dynamic price) {
+    double p = 0;
+    if (price is int) p = price.toDouble();
+    if (price is double) p = price;
+    return p
+        .toStringAsFixed(0)
+        .replaceAllMapped(
           RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
           (Match m) => '${m[1]}.',
         );
@@ -125,514 +685,118 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'ALL-AHRAGA',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: const Color(0xFF0D9488),
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      drawer: const LeftDrawer(),
-      body: RefreshIndicator(
-        onRefresh: _fetchVenues,
-        color: const Color(0xFF0D9488),
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeaderBanner(),
-              _buildFilterOptions(),
+    final imageUrl =
+        venue['image'] != null && venue['image'].toString().isNotEmpty
+        ? 'http://localhost:8000${venue['image']}'
+        : null;
 
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Daftar Lapangan',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey.shade800,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-
-                    _buildVenueList(),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 30),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFilterOptions() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            _buildDropdownFilter(
-              hint: "Semua Lokasi",
-              value: _selectedLocation,
-              items: _availableLocations,
-              icon: Icons.location_on_outlined,
-              onChanged: (val) {
-                setState(() {
-                  _selectedLocation = val;
-                });
-              },
-            ),
-            
-            const SizedBox(width: 12),
-
-            _buildDropdownFilter(
-              hint: "Semua Olahraga",
-              value: _selectedCategory,
-              items: _availableCategories,
-              icon: Icons.sports_soccer_outlined,
-              onChanged: (val) {
-                setState(() {
-                  _selectedCategory = val;
-                });
-              },
-            ),
-
-            if (_selectedLocation != null || _selectedCategory != null) ...[
-              const SizedBox(width: 12),
-              InkWell(
-                onTap: () {
-                  setState(() {
-                    _selectedLocation = null;
-                    _selectedCategory = null;
-                  });
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.red.shade50,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.close, size: 20, color: Colors.red),
-                ),
-              )
-            ]
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(_kRadius),
+          border: Border.all(color: _kSlate, width: _kBorderWidth),
+          boxShadow: const [
+            BoxShadow(color: _kSlate, offset: Offset(4, 4), blurRadius: 0),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildDropdownFilter({
-    required String hint,
-    required String? value,
-    required List<String> items,
-    required IconData icon,
-    required Function(String?) onChanged,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey.shade300),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          )
-        ],
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: value,
-          hint: Row(
-            children: [
-              Icon(icon, size: 16, color: const Color(0xFF0D9488)),
-              const SizedBox(width: 8),
-              Text(
-                hint,
-                style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
-              ),
-            ],
-          ),
-          icon: const Icon(Icons.arrow_drop_down, color: Colors.grey),
-          style: TextStyle(fontSize: 13, color: Colors.grey.shade800),
-          onChanged: onChanged,
-          items: <DropdownMenuItem<String>>[
-            DropdownMenuItem<String>(
-              value: null,
-              child: Row(
-                children: [
-                  Icon(icon, size: 16, color: Colors.grey),
-                  const SizedBox(width: 8),
-                  Text(hint),
-                ],
-              ),
-            ),
-            
-            for (final item in items)
-              DropdownMenuItem<String>(
-                value: item,
-                child: Row(
-                  children: [
-                    const SizedBox(width: 24), 
-                    Text(item),
-                  ],
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeaderBanner() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF0D9488), Color(0xFF0891B2)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Temukan Lapangan Olahraga 🏟️',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Cari dan booking lapangan favorit Anda dengan mudah',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.white.withOpacity(0.9),
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Search Bar
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (value) {
-                _searchQuery = value;
-              },
-              onSubmitted: (_) {
-                setState(() {
-                  _selectedLocation = null;
-                  _selectedCategory = null;
-                });
-                _fetchVenues();
-              },
-              decoration: InputDecoration(
-                hintText: 'Cari lapangan berdasarkan nama...',
-                hintStyle: TextStyle(color: Colors.grey.shade400),
-                prefixIcon: const Icon(
-                  Icons.search,
-                  color: Color(0xFF0D9488),
-                ),
-                suffixIcon: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (_searchController.text.isNotEmpty)
-                      IconButton(
-                        icon: const Icon(Icons.clear, color: Colors.grey),
-                        onPressed: () {
-                          _searchController.clear();
-                          _searchQuery = '';
-                          _fetchVenues();
-                        },
-                      ),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.search,
-                        color: Color(0xFF0D9488),
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _selectedLocation = null;
-                          _selectedCategory = null;
-                        });
-                        _fetchVenues();
-                      },
-                    ),
-                  ],
-                ),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildVenueList() {
-    if (_isLoading) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(48),
-          child: Column(
-            children: [
-              CircularProgressIndicator(color: Color(0xFF0D9488)),
-              SizedBox(height: 16),
-              Text('Memuat venue...'),
-            ],
-          ),
-        ),
-      );
-    }
-
-    if (_error != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            children: [
-              Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Colors.red.shade300,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                _error!,
-                style: const TextStyle(color: Colors.red),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: _fetchVenues,
-                icon: const Icon(Icons.refresh),
-                label: const Text('Coba Lagi'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0D9488),
-                  foregroundColor: Colors.white,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    if (_filteredVenues.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(48),
-          child: Column(
-            children: [
-              Icon(
-                Icons.mood_bad,
-                size: 80,
-                color: Colors.grey.shade300,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Tidak Ditemukan.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Tidak ada lapangan yang sesuai dengan pencarian Anda',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey,
-                ),
-              )
-            ],
-          ),
-        ),
-      );
-    }
-
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: _filteredVenues.length,
-      itemBuilder: (context, index) {
-        final venue = _filteredVenues[index];
-        return _buildVenueCard(venue);
-      },
-    );
-  }
-
-  Widget _buildVenueCard(Map<String, dynamic> venue) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => CreateBookingPage(venueId: venue['id']),
-            ),
-          ).then((result) {
-            if (result == true) {
-              _fetchVenues(); 
-            }
-          });
-        },
-        borderRadius: BorderRadius.circular(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(16),
-                  ),
-                  child: venue['image'] != null &&
-                          venue['image'].toString().isNotEmpty
-                      ? Image.network(
-                          'http://localhost:8000${venue['image']}',
-                          height: 160,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return _buildPlaceholderImage();
-                          },
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return Container(
-                              height: 160,
-                              color: Colors.grey.shade200,
-                              child: const Center(
-                                child: CircularProgressIndicator(
-                                  color: Color(0xFF0D9488),
-                                ),
-                              ),
-                            );
-                          },
-                        )
-                      : _buildPlaceholderImage(),
+            // IMAGE SECTION
+            Container(
+              height: 140,
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(color: _kSlate, width: _kBorderWidth),
                 ),
-
-                Positioned(
-                  top: 12,
-                  right: 12,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 4,
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.star,
-                          color: Colors.amber,
-                          size: 16,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${venue['rating'] ?? 5.0}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+              ),
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(_kRadius - 2),
                 ),
-              ],
+                child: imageUrl != null
+                    ? Image.network(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => _PlaceholderImage(),
+                      )
+                    : _PlaceholderImage(),
+              ),
             ),
 
-            // Venue Info
+            // INFO SECTION
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    venue['name'] ?? 'Venue',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-
-                  const SizedBox(height: 8),
-
+                  // TAGS ROW (UPDATED: Rating bersebelahan)
                   Row(
                     children: [
-                      Icon(
-                        Icons.location_on,
-                        size: 16,
-                        color: Colors.grey.shade600,
+                      _Tag(
+                        text: venue['sport_category'] ?? 'SPORTS',
+                        color: _kTosca,
                       ),
+                      const SizedBox(width: 8),
+                      // RATING BOX (YELLOW)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _kYellow,
+                          border: Border.all(color: _kSlate, width: 1.5),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.star, size: 12, color: _kSlate),
+                            const SizedBox(width: 4),
+                            Text(
+                              "${venue['rating'] ?? 5.0}",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w900,
+                                color: _kSlate,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Title
+                  Text(
+                    (venue['name'] ?? 'Venue Name').toString().toUpperCase(),
+                    style: const TextStyle(
+                      color: _kSlate,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                      height: 1.1,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+
+                  // Location
+                  Row(
+                    children: [
+                      const Icon(Icons.location_on, size: 14, color: _kMuted),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          venue['location'] ?? '-',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey.shade600,
+                          venue['location'] ?? 'Unknown Location',
+                          style: const TextStyle(
+                            color: _kMuted,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -641,109 +805,55 @@ class _MyHomePageState extends State<MyHomePage> {
                     ],
                   ),
 
+                  const SizedBox(height: 16),
+                  const Divider(color: _kSlate, thickness: 1),
                   const SizedBox(height: 12),
 
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0D9488).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: const Color(0xFF0D9488).withOpacity(0.3),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.sports_soccer,
-                          size: 14,
-                          color: Color(0xFF0D9488),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          venue['sport_category'] ?? '-',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF0D9488),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  if (venue['description'] != null &&
-                      venue['description'].toString().isNotEmpty)
-                    Text(
-                      venue['description'],
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey.shade600,
-                        height: 1.4,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-
-                  const Divider(height: 24),
-
+                  // Footer: Price & Button
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Rp ${_formatPrice((venue['price_per_hour'] ?? 0).toDouble())}',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF0D9488),
+                          const Text(
+                            "HARGA / JAM",
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                              color: _kMuted,
                             ),
                           ),
                           Text(
-                            '/jam',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade500,
+                            "RP ${_formatPrice(venue['price_per_hour'])}",
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: _kTosca,
                             ),
                           ),
                         ],
                       ),
-
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  CreateBookingPage(venueId: venue['id']),
-                            ),
-                          ).then((result) {
-                            if (result == true) {
-                              _fetchVenues();
-                            }
-                          });
-                        },
-                        icon: const Icon(Icons.calendar_today, size: 18),
-                        label: const Text('Booking'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0D9488),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 12,
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _kSlate,
+                          borderRadius: BorderRadius.circular(_kRadius),
+                          boxShadow: const [
+                            BoxShadow(color: _kMuted, offset: Offset(2, 2)),
+                          ],
+                        ),
+                        child: const Text(
+                          "BOOK NOW",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 12,
                           ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          elevation: 0,
                         ),
                       ),
                     ],
@@ -756,35 +866,61 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
+}
 
-  Widget _buildPlaceholderImage() {
+class _PlaceholderImage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      height: 160,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.grey.shade200, Colors.grey.shade300],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+      color: const Color(0xFFF1F5F9),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(Icons.image_not_supported_outlined, color: _kMuted, size: 32),
+            SizedBox(height: 4),
+            Text(
+              "NO IMAGE",
+              style: TextStyle(
+                color: _kMuted,
+                fontWeight: FontWeight.bold,
+                fontSize: 10,
+              ),
+            ),
+          ],
         ),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.stadium,
-            size: 48,
-            color: Colors.grey.shade400,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'No Image',
-            style: TextStyle(
-              color: Colors.grey.shade500,
-              fontSize: 12,
-            ),
-          ),
-        ],
+    );
+  }
+}
+
+class _Tag extends StatelessWidget {
+  final String text;
+  final Color color;
+  final Color textColor;
+
+  const _Tag({
+    required this.text,
+    required this.color,
+    this.textColor = Colors.white,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color,
+        border: Border.all(color: _kSlate, width: 1.5),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        text.toUpperCase(),
+        style: TextStyle(
+          color: textColor,
+          fontWeight: FontWeight.w900,
+          fontSize: 10,
+        ),
       ),
     );
   }
