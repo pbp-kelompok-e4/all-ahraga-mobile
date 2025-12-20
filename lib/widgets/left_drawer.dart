@@ -7,6 +7,7 @@ import 'package:all_ahraga/screens/coach/coach_revenue.dart';
 import 'package:all_ahraga/screens/coach/coach_manage_schedule.dart';
 import 'package:all_ahraga/screens/coach/coach_profile.dart';
 import 'package:all_ahraga/screens/venue_menu.dart';
+import 'package:all_ahraga/screens/venue/venue_revenue.dart';
 import 'package:all_ahraga/screens/auth_page.dart';
 import 'package:all_ahraga/constants/api.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
@@ -166,8 +167,7 @@ class LeftDrawer extends StatelessWidget {
                 Icons.monetization_on_outlined,
                 color: Color(0xFF0D9488),
               ),
-              title: const Text("Pendapatan"),
-              subtitle: const Text("Laporan Pelatih"),
+              title: const Text("Laporan Pendapatan"),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
@@ -238,7 +238,22 @@ class LeftDrawer extends StatelessWidget {
                 ),
               );
             },
-          ), 
+          ),
+
+          // Venue Revenue
+          ListTile(
+            leading: const Icon(Icons.monetization_on_outlined, color: Color(0xFF0D9488)),
+            title: const Text("Laporan Pendapatan"),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const VenueRevenuePage(),
+                ),
+              );
+            },
+          ),
           ],
           
           // Logout Button
