@@ -1,8 +1,22 @@
+// lib/screens/coach/coach_profile.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import '/models/coach_entry.dart';
 import 'coach_profile_form.dart';
+
+// Design System Constants
+class NeoBrutalism {
+  static const Color primary = Color(0xFF0D9488);
+  static const Color slate = Color(0xFF0F172A);
+  static const Color grey = Color(0xFF64748B);
+  static const Color danger = Color(0xFFDC2626);
+  static const Color white = Colors.white;
+  
+  static const double borderWidth = 2.0;
+  static const double borderRadius = 8.0;
+  static const Offset shadowOffset = Offset(4, 4);
+}
 
 class CoachProfilePage extends StatefulWidget {
   const CoachProfilePage({super.key});
@@ -33,9 +47,8 @@ class _CoachProfilePageState extends State<CoachProfilePage> {
     final request = context.read<CookieRequest>();
     
     try {
-      // Sesuaikan URL dengan Django Anda
       final response = await request.get(
-        'http://localhost:8000/coach/profile/json/', // Ganti dengan URL Anda
+        'http://localhost:8000/coach/profile/json/',
       );
 
       if (response['success'] == true) {
@@ -65,21 +78,26 @@ class _CoachProfilePageState extends State<CoachProfilePage> {
   }
 
   Future<void> _deleteProfile() async {
-    // Konfirmasi dulu
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Konfirmasi Hapus'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+          side: const BorderSide(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+        ),
+        title: const Text(
+          'KONFIRMASI HAPUS',
+          style: TextStyle(fontWeight: FontWeight.w900, color: NeoBrutalism.slate),
+        ),
         content: const Text('Apakah Anda yakin ingin menghapus profil pelatih?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal'),
+            child: const Text('Batal', style: TextStyle(color: NeoBrutalism.grey)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Hapus'),
+            child: const Text('Hapus', style: TextStyle(color: NeoBrutalism.danger, fontWeight: FontWeight.w700)),
           ),
         ],
       ),
@@ -91,7 +109,7 @@ class _CoachProfilePageState extends State<CoachProfilePage> {
     
     try {
       final response = await request.post(
-        'http://localhost:8000/coach/profile/delete/', // Sesuaikan URL
+        'http://localhost:8000/coach/profile/delete/',
         {},
       );
 
@@ -100,15 +118,15 @@ class _CoachProfilePageState extends State<CoachProfilePage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(response['message'] ?? 'Profil berhasil dihapus'),
-              backgroundColor: Colors.green,
+              backgroundColor: NeoBrutalism.primary,
             ),
           );
-          _loadCoachProfile(); // Reload
+          _loadCoachProfile();
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(response['message'] ?? 'Gagal menghapus profil'),
-              backgroundColor: Colors.red,
+              backgroundColor: NeoBrutalism.danger,
             ),
           );
         }
@@ -118,7 +136,7 @@ class _CoachProfilePageState extends State<CoachProfilePage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Terjadi kesalahan: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: NeoBrutalism.danger,
           ),
         );
       }
@@ -128,30 +146,88 @@ class _CoachProfilePageState extends State<CoachProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF0D9488),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+      backgroundColor: NeoBrutalism.white,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildCustomHeader(),
+            Expanded(
+              child: _isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(NeoBrutalism.primary),
+                      ),
+                    )
+                  : _errorMessage != null
+                      ? _buildErrorView()
+                      : !_hasProfile
+                          ? _buildEmptyState()
+                          : _buildProfileView(),
+            ),
+          ],
         ),
-        title: const Text(
-          'Profil Pelatih',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
+      ),
+    );
+  }
+
+  Widget _buildCustomHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      decoration: const BoxDecoration(
+        color: NeoBrutalism.white,
+        border: Border(
+          bottom: BorderSide(
+            color: NeoBrutalism.slate,
+            width: NeoBrutalism.borderWidth,
           ),
         ),
-        centerTitle: true,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _errorMessage != null
-              ? _buildErrorView()
-              : !_hasProfile
-                  ? _buildEmptyState()
-                  : _buildProfileView(),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: NeoBrutalism.white,
+                borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+                border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+                boxShadow: const [
+                  BoxShadow(
+                    color: NeoBrutalism.slate,
+                    offset: Offset(2, 2),
+                    blurRadius: 0,
+                  ),
+                ],
+              ),
+              child: const Icon(Icons.arrow_back, color: NeoBrutalism.slate, size: 20),
+            ),
+          ),
+          const SizedBox(width: 16),
+          const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "MY PROFILE",
+                style: TextStyle(
+                  color: NeoBrutalism.primary,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              Text(
+                "PROFIL PELATIH",
+                style: TextStyle(
+                  color: NeoBrutalism.slate,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -162,22 +238,22 @@ class _CoachProfilePageState extends State<CoachProfilePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 64, color: Colors.red),
+            const Icon(Icons.error_outline, size: 64, color: NeoBrutalism.danger),
             const SizedBox(height: 16),
             Text(
               _errorMessage ?? 'Terjadi kesalahan',
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: NeoBrutalism.slate,
+              ),
             ),
             const SizedBox(height: 24),
-            ElevatedButton.icon(
+            _buildNeoButton(
               onPressed: _loadCoachProfile,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Coba Lagi'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0D9488),
-                foregroundColor: Colors.white,
-              ),
+              label: 'COBA LAGI',
+              icon: Icons.refresh,
             ),
           ],
         ),
@@ -194,122 +270,94 @@ class _CoachProfilePageState extends State<CoachProfilePage> {
       child: Column(
         children: [
           const SizedBox(height: 32),
-          
-          // Centered Profile Box
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
+              color: NeoBrutalism.white,
+              borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+              border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+              boxShadow: const [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
+                  color: NeoBrutalism.slate,
+                  offset: NeoBrutalism.shadowOffset,
+                  blurRadius: 0,
                 ),
               ],
             ),
             child: Column(
               children: [
-                // Foto Profile dengan border
                 Container(
-                  padding: const EdgeInsets.all(3),
+                  padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
+                    color: NeoBrutalism.white,
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: const Color(0xFF0D9488),
-                      width: 3,
+                      color: NeoBrutalism.slate,
+                      width: NeoBrutalism.borderWidth,
                     ),
                   ),
-                  child: Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0D9488).withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.person_outline,
-                      size: 80,
-                      color: Color(0xFF0D9488),
-                    ),
+                  child: const Icon(
+                    Icons.person_outline,
+                    size: 80,
+                    color: NeoBrutalism.primary,
                   ),
                 ),
                 const SizedBox(height: 24),
-                
-                // Nama
                 Text(
-                  userName,
+                  userName.toUpperCase(),
                   style: const TextStyle(
                     fontSize: 24,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w900,
+                    color: NeoBrutalism.slate,
                   ),
                 ),
                 const SizedBox(height: 8),
-                
-                // Username
                 Text(
                   '@${_userData?['username'] ?? 'coach'}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 14,
-                    color: Colors.grey.shade600,
+                    color: NeoBrutalism.grey,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 32),
-                
-                // Title
                 const Text(
-                  'Profil Belum Lengkap',
+                  'PROFIL BELUM LENGKAP',
                   style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: NeoBrutalism.slate,
+                    letterSpacing: 0.5,
                   ),
                 ),
                 const SizedBox(height: 12),
-                
-                // Description
-                Text(
+                const Text(
                   'Anda belum menambahkan detail profil pelatih. Lengkapi profil untuk mulai menerima klien.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey.shade700,
+                    fontSize: 14,
+                    color: NeoBrutalism.grey,
+                    fontWeight: FontWeight.w500,
                     height: 1.5,
                   ),
                 ),
                 const SizedBox(height: 32),
-                
-                // Button Lengkapi Profile
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () async {
-                      final result = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const CoachProfileFormPage(),
-                        ),
-                      );
-                      
-                      // Reload profile jika berhasil save
-                      if (result == true) {
-                        _loadCoachProfile();
-                      }
-                    },
-                    icon: const Icon(Icons.edit),
-                    label: const Text(
-                      'Lengkapi Profil',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0D9488),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                _buildNeoButton(
+                  onPressed: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const CoachProfileFormPage(),
                       ),
-                    ),
-                  ),
+                    );
+                    
+                    if (result == true) {
+                      _loadCoachProfile();
+                    }
+                  },
+                  label: 'LENGKAPI PROFIL',
+                  icon: Icons.edit,
                 ),
               ],
             ),
@@ -325,80 +373,77 @@ class _CoachProfilePageState extends State<CoachProfilePage> {
     
     return RefreshIndicator(
       onRefresh: _loadCoachProfile,
+      color: NeoBrutalism.primary,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         child: Column(
           children: [
-            // Centered Profile Box
+            // Profile Header Card
             Container(
               width: double.infinity,
               margin: const EdgeInsets.all(16),
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
+                color: NeoBrutalism.white,
+                borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+                border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+                boxShadow: const [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+                    color: NeoBrutalism.slate,
+                    offset: NeoBrutalism.shadowOffset,
+                    blurRadius: 0,
                   ),
                 ],
               ),
               child: Column(
                 children: [
-                  // Profile Picture
                   Container(
                     padding: const EdgeInsets.all(3),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: const Color(0xFF0D9488),
-                        width: 3,
+                        color: NeoBrutalism.slate,
+                        width: NeoBrutalism.borderWidth,
                       ),
                     ),
                     child: CircleAvatar(
                       radius: 60,
-                      backgroundColor: const Color(0xFF0D9488).withOpacity(0.1),
+                      backgroundColor: NeoBrutalism.primary,
                       backgroundImage: _coachProfile!.profilePicture != null
                           ? NetworkImage(_coachProfile!.profilePicture!)
                           : null,
                       child: _coachProfile!.profilePicture == null
                           ? const Icon(
-                              Icons.person_outline,
+                              Icons.person,
                               size: 60,
-                              color: Color(0xFF0D9488),
+                              color: NeoBrutalism.white,
                             )
                           : null,
                     ),
                   ),
                   const SizedBox(height: 20),
-                  
-                  // Name
                   Text(
-                    _coachProfile!.fullName.isNotEmpty 
+                    (_coachProfile!.fullName.isNotEmpty 
                         ? _coachProfile!.fullName 
-                        : _coachProfile!.username ?? 'Coach',
+                        : _coachProfile!.username ?? 'Coach').toUpperCase(),
                     style: const TextStyle(
                       fontSize: 24,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w900,
+                      color: NeoBrutalism.slate,
                     ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
-                  
-                  // Username
                   Text(
                     '@${_coachProfile!.username ?? ''}',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16,
-                      color: Colors.grey.shade600,
+                      fontWeight: FontWeight.w600,
+                      color: NeoBrutalism.grey,
                     ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
-                  
-                  // Verified Badge
                   if (_coachProfile!.isVerified == true)
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -406,20 +451,22 @@ class _CoachProfilePageState extends State<CoachProfilePage> {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0D9488).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFF0D9488)),
+                        color: NeoBrutalism.primary,
+                        borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+                        border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
                       ),
-                      child: Row(
+                      child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.verified, size: 16, color: Color(0xFF0D9488)),
-                          const SizedBox(width: 6),
+                          Icon(Icons.verified, size: 16, color: NeoBrutalism.white),
+                          SizedBox(width: 6),
                           Text(
-                            'Terverifikasi',
+                            'TERVERIFIKASI',
                             style: TextStyle(
-                              color: const Color(0xFF0D9488),
-                              fontWeight: FontWeight.w600,
+                              color: NeoBrutalism.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 12,
+                              letterSpacing: 0.5,
                             ),
                           ),
                         ],
@@ -430,84 +477,106 @@ class _CoachProfilePageState extends State<CoachProfilePage> {
             ),
             
             // Detail Information Card
-            Card(
+            Container(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: NeoBrutalism.white,
+                borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+                border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+                boxShadow: const [
+                  BoxShadow(
+                    color: NeoBrutalism.slate,
+                    offset: NeoBrutalism.shadowOffset,
+                    blurRadius: 0,
+                  ),
+                ],
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Informasi Detail',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'INFORMASI DETAIL',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      color: NeoBrutalism.slate,
+                      letterSpacing: 0.5,
                     ),
-                    const SizedBox(height: 16),
-                    
-                    _buildInfoRow(Icons.cake, 'Usia', 
-                        _coachProfile!.age != null ? '${_coachProfile!.age} tahun' : '-'),
-                    const Divider(height: 24),
-                    
-                    _buildInfoRow(Icons.sports, 'Olahraga Utama', 
-                        _coachProfile!.mainSportTrained ?? '-'),
-                    const Divider(height: 24),
-                    
-                    _buildInfoRow(Icons.attach_money, 'Tarif per Jam', 
-                        _coachProfile!.ratePerHour != null 
-                            ? 'Rp ${_coachProfile!.ratePerHour!.toStringAsFixed(0)}' 
-                            : '-'),
-                    const Divider(height: 24),
-                    
-                    _buildInfoRow(Icons.location_on, 'Area Layanan', 
-                        _coachProfile!.serviceAreas?.join(', ') ?? '-'),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildInfoRow(Icons.cake, 'Usia', 
+                      _coachProfile!.age != null ? '${_coachProfile!.age} tahun' : '-'),
+                  _buildDivider(),
+                  _buildInfoRow(Icons.sports, 'Olahraga Utama', 
+                      _coachProfile!.mainSportTrained ?? '-'),
+                  _buildDivider(),
+                  _buildInfoRow(Icons.attach_money, 'Tarif per Jam', 
+                      _coachProfile!.ratePerHour != null 
+                          ? 'Rp ${_coachProfile!.ratePerHour!.toStringAsFixed(0)}' 
+                          : '-'),
+                  _buildDivider(),
+                  _buildInfoRow(Icons.location_on, 'Area Layanan', 
+                      _coachProfile!.serviceAreas?.join(', ') ?? '-'),
+                ],
               ),
             ),
             
             // Experience Card
             if (_coachProfile!.experienceDesc != null && 
                 _coachProfile!.experienceDesc!.isNotEmpty)
-              Card(
+              Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: NeoBrutalism.white,
+                  borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+                  border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: NeoBrutalism.slate,
+                      offset: NeoBrutalism.shadowOffset,
+                      blurRadius: 0,
+                    ),
+                  ],
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Row(
-                        children: [
-                          Icon(Icons.description, color: Color(0xFF0D9488)),
-                          SizedBox(width: 8),
-                          Text(
-                            'Pengalaman',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: NeoBrutalism.white,
+                            borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+                            border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        _coachProfile!.experienceDesc!,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          height: 1.5,
+                          child: const Icon(Icons.description, color: NeoBrutalism.primary, size: 20),
                         ),
+                        const SizedBox(width: 12),
+                        const Text(
+                          'PENGALAMAN',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                            color: NeoBrutalism.slate,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      _coachProfile!.experienceDesc!,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: NeoBrutalism.slate,
+                        height: 1.5,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             
@@ -517,7 +586,7 @@ class _CoachProfilePageState extends State<CoachProfilePage> {
               child: Row(
                 children: [
                   Expanded(
-                    child: OutlinedButton.icon(
+                    child: _buildNeoButton(
                       onPressed: () async {
                         final result = await Navigator.push(
                           context,
@@ -528,31 +597,22 @@ class _CoachProfilePageState extends State<CoachProfilePage> {
                           ),
                         );
                         
-                        // Reload profile jika berhasil save
                         if (result == true) {
                           _loadCoachProfile();
                         }
                       },
-                      icon: const Icon(Icons.edit),
-                      label: const Text('Edit Profil'),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        side: const BorderSide(color: Color(0xFF0D9488)),
-                        foregroundColor: const Color(0xFF0D9488),
-                      ),
+                      label: 'EDIT',
+                      icon: Icons.edit,
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: OutlinedButton.icon(
+                    child: _buildNeoButton(
                       onPressed: _deleteProfile,
-                      icon: const Icon(Icons.delete),
-                      label: const Text('Hapus'),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        side: const BorderSide(color: Colors.red),
-                        foregroundColor: Colors.red,
-                      ),
+                      label: 'HAPUS',
+                      icon: Icons.delete,
+                      isPrimary: false,
+                      isDanger: true,
                     ),
                   ),
                 ],
@@ -564,36 +624,105 @@ class _CoachProfilePageState extends State<CoachProfilePage> {
     );
   }
 
+  Widget _buildDivider() {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 12),
+      height: NeoBrutalism.borderWidth,
+      color: NeoBrutalism.slate,
+    );
+  }
+
   Widget _buildInfoRow(IconData icon, String label, String value) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 20, color: const Color(0xFF0D9488)),
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: NeoBrutalism.white,
+            borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+            border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+          ),
+          child: Icon(icon, size: 16, color: NeoBrutalism.slate),
+        ),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                  fontWeight: FontWeight.w500,
+                label.toUpperCase(),
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: NeoBrutalism.grey,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 2),
               Text(
                 value,
                 style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: NeoBrutalism.slate,
                 ),
               ),
             ],
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildNeoButton({
+    required VoidCallback? onPressed,
+    required String label,
+    required IconData icon,
+    bool isPrimary = true,
+    bool isDanger = false,
+  }) {
+    final bgColor = isDanger ? NeoBrutalism.danger : (isPrimary ? NeoBrutalism.primary : NeoBrutalism.white);
+    final fgColor = isDanger ? NeoBrutalism.white : (isPrimary ? NeoBrutalism.white : NeoBrutalism.slate);
+    
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+        boxShadow: onPressed != null
+            ? const [
+                BoxShadow(
+                  color: NeoBrutalism.slate,
+                  offset: Offset(3, 3),
+                  blurRadius: 0,
+                ),
+              ]
+            : null,
+      ),
+      child: ElevatedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, size: 18),
+        label: Text(label),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: bgColor,
+          foregroundColor: fgColor,
+          disabledBackgroundColor: NeoBrutalism.grey,
+          disabledForegroundColor: NeoBrutalism.white,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+            side: BorderSide(
+              color: onPressed != null ? NeoBrutalism.slate : NeoBrutalism.grey,
+              width: NeoBrutalism.borderWidth,
+            ),
+          ),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 14,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ),
     );
   }
 }
