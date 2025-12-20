@@ -1,7 +1,8 @@
-import 'package:all_ahraga/screens/login.dart';
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
+import 'package:all_ahraga/screens/landing_page.dart';
+
 
 void main() {
   runApp(const MyApp());
@@ -18,12 +19,16 @@ class MyApp extends StatelessWidget {
         return request;
       },
       child: MaterialApp(
-      title: 'All-ahraga',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSwatch(primarySwatch: Colors.blue)
-        .copyWith(secondary: Colors.blueAccent[400]),
-      ),
-      home: const LoginPage()
+        debugShowCheckedModeBanner: false,
+        title: 'All-ahraga',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSwatch(
+            primarySwatch: Colors.teal,
+          ).copyWith(
+            secondary: Colors.tealAccent[400],
+          ),
+        ),
+        home: const LandingPage(),
       ),
     );
   }
