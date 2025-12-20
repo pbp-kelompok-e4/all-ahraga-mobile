@@ -1,23 +1,19 @@
 import 'dart:convert';
-import 'dart:io'; 
-import 'package:flutter/foundation.dart'; 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart'; 
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:all_ahraga/constants/api.dart';
 
 // --- DESIGN SYSTEM CONSTANTS & WIDGETS ---
-
 class NeoColors {
-  static const Color primary = Color(0xFF0D9488); // Tosca
-  static const Color text = Color(0xFF0F172A);    // Slate
-  static const Color muted = Color(0xFF64748B);   // Grey
-  static const Color danger = Color(0xFFDC2626);  // Red
+  static const Color primary = Color(0xFF0D9488);
+  static const Color text = Color(0xFF0F172A);
+  static const Color muted = Color(0xFF64748B);
+  static const Color danger = Color(0xFFDC2626);
   static const Color background = Colors.white;
 }
 
-// 1. Neo Container (Base Box)
 class NeoContainer extends StatelessWidget {
   final Widget child;
   final Color? color;
@@ -66,7 +62,6 @@ class NeoContainer extends StatelessWidget {
   }
 }
 
-// 2. Neo Button
 class NeoButton extends StatelessWidget {
   final String label;
   final VoidCallback onPressed;
@@ -111,7 +106,6 @@ class NeoButton extends StatelessWidget {
   }
 }
 
-// 3. Neo Input Wrapper
 class NeoInputWrapper extends StatelessWidget {
   final String label;
   final Widget child;
@@ -157,23 +151,17 @@ class _VenueFormPageState extends State<VenueFormPage> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
+  final TextEditingController _imageController = TextEditingController();
 
   List<dynamic> _locations = [];
   List<dynamic> _categories = [];
-  
+
   int? _selectedLocation;
   int? _selectedCategory;
-  String? _selectedPaymentOption = 'TRANSFER'; 
-  
-  final List<Map<String, String>> _paymentOptionsList = [
-    {'value': 'CASH', 'label': 'Bayar di Tempat (Cash)'},
-    {'value': 'TRANSFER', 'label': 'Transfer Manual'},
-  ];
+
+  // _selectedPaymentOption dihapus karena default backend sudah menghandle Cash & Transfer
 
   bool _isLoading = true;
-  
-  XFile? _imageFile; 
-  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -214,7 +202,10 @@ class _VenueFormPageState extends State<VenueFormPage> {
       SnackBar(
         content: Text(
           message,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         backgroundColor: isError ? NeoColors.danger : NeoColors.text,
         behavior: SnackBarBehavior.floating,
@@ -226,32 +217,12 @@ class _VenueFormPageState extends State<VenueFormPage> {
     );
   }
 
-  Future<void> _pickImage() async {
-    final XFile? pickedFile = await _picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 50, 
-      maxWidth: 800,
-    );
-
-    if (pickedFile != null) {
-      setState(() {
-        _imageFile = pickedFile;
-      });
-    }
-  }
-
   Future<void> _submitVenue() async {
     if (!_formKey.currentState!.validate()) return;
-    
-    if (_selectedLocation == null || _selectedCategory == null || _selectedPaymentOption == null) {
+
+    if (_selectedLocation == null || _selectedCategory == null) {
       _showSnack("Mohon lengkapi semua pilihan dropdown", isError: true);
       return;
-    }
-
-    String? base64Image;
-    if (_imageFile != null) {
-      final bytes = await _imageFile!.readAsBytes();
-      base64Image = "data:image/jpeg;base64,${base64Encode(bytes)}";
     }
 
     final request = context.read<CookieRequest>();
@@ -266,8 +237,8 @@ class _VenueFormPageState extends State<VenueFormPage> {
           'price_per_hour': int.tryParse(_priceController.text) ?? 0,
           'location': _selectedLocation,
           'sport_category': _selectedCategory,
-          'payment_options': _selectedPaymentOption,
-          'image': base64Image,
+          // 'payment_options' dihapus, backend akan set default (TRANSFER/CASH)
+          'image': _imageController.text,
         }),
       );
 
@@ -300,7 +271,9 @@ class _VenueFormPageState extends State<VenueFormPage> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               decoration: const BoxDecoration(
                 color: Colors.white,
-                border: Border(bottom: BorderSide(color: NeoColors.text, width: 2)),
+                border: Border(
+                  bottom: BorderSide(color: NeoColors.text, width: 2),
+                ),
               ),
               child: Row(
                 children: [
@@ -312,7 +285,10 @@ class _VenueFormPageState extends State<VenueFormPage> {
                         border: Border.all(color: NeoColors.text, width: 2),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.arrow_back, color: NeoColors.text),
+                      child: const Icon(
+                        Icons.arrow_back,
+                        color: NeoColors.text,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -331,7 +307,9 @@ class _VenueFormPageState extends State<VenueFormPage> {
             // --- FORM BODY ---
             Expanded(
               child: _isLoading
-                  ? const Center(child: CircularProgressIndicator(color: NeoColors.text))
+                  ? const Center(
+                      child: CircularProgressIndicator(color: NeoColors.text),
+                    )
                   : SingleChildScrollView(
                       padding: const EdgeInsets.all(20),
                       child: Form(
@@ -339,45 +317,92 @@ class _VenueFormPageState extends State<VenueFormPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // 1. IMAGE UPLOAD ZONE
-                            Center(
-                              child: NeoContainer(
-                                width: double.infinity,
-                                height: 200,
-                                onTap: _pickImage,
-                                padding: EdgeInsets.zero,
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(6),
-                                  child: _imageFile != null
-                                      ? (kIsWeb
-                                          ? Image.network(
-                                              _imageFile!.path,
-                                              fit: BoxFit.cover,
-                                            )
-                                          : Image.file(
-                                              File(_imageFile!.path),
-                                              fit: BoxFit.cover,
-                                            ))
-                                      : Column(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Icon(Icons.add_a_photo, size: 48, color: Colors.grey[600]),
-                                            const SizedBox(height: 8),
-                                            Text(
-                                              "TAP TO UPLOAD PHOTO",
-                                              style: TextStyle(
-                                                color: Colors.grey[600],
-                                                fontWeight: FontWeight.w900,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
+                            // 1. INPUT URL GAMBAR
+                            NeoInputWrapper(
+                              label: "URL Foto Venue",
+                              child: TextFormField(
+                                controller: _imageController,
+                                decoration: const InputDecoration(
+                                  border: InputBorder.none,
+                                  hintText: "Tempel link gambar (https://...)",
                                 ),
+                                onChanged: (value) {
+                                  setState(() {});
+                                },
                               ),
                             ),
+                            const SizedBox(height: 16),
+
+                            // 2. IMAGE PREVIEW
+                            if (_imageController.text.isNotEmpty)
+                              Center(
+                                child: NeoContainer(
+                                  width: double.infinity,
+                                  height: 200,
+                                  padding: EdgeInsets.zero,
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(6),
+                                    child: Image.network(
+                                      _imageController.text,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                            return Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Icon(
+                                                  Icons.broken_image,
+                                                  size: 48,
+                                                  color: Colors.grey[400],
+                                                ),
+                                                const SizedBox(height: 8),
+                                                Text(
+                                                  "URL Gambar Tidak Valid",
+                                                  style: TextStyle(
+                                                    color: Colors.grey[600],
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                    ),
+                                  ),
+                                ),
+                              )
+                            else
+                              Center(
+                                child: NeoContainer(
+                                  width: double.infinity,
+                                  height: 100,
+                                  padding: EdgeInsets.zero,
+                                  child: Center(
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.image_search,
+                                          size: 32,
+                                          color: Colors.grey[400],
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          "Masukkan URL untuk melihat preview",
+                                          style: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
                             const SizedBox(height: 24),
 
-                            // 2. INPUT FIELDS
+                            // 3. INPUT FIELDS
                             NeoInputWrapper(
                               label: "Nama Venue",
                               child: TextFormField(
@@ -386,11 +411,12 @@ class _VenueFormPageState extends State<VenueFormPage> {
                                   border: InputBorder.none,
                                   hintText: "Contoh: GOR Sudirman",
                                 ),
-                                validator: (value) => value!.isEmpty ? "Wajib diisi" : null,
+                                validator: (value) =>
+                                    value!.isEmpty ? "Wajib diisi" : null,
                               ),
                             ),
                             const SizedBox(height: 16),
-                            
+
                             NeoInputWrapper(
                               label: "Deskripsi",
                               child: TextFormField(
@@ -400,11 +426,12 @@ class _VenueFormPageState extends State<VenueFormPage> {
                                   hintText: "Fasilitas apa saja yang tersedia?",
                                 ),
                                 maxLines: 3,
-                                validator: (value) => value!.isEmpty ? "Wajib diisi" : null,
+                                validator: (value) =>
+                                    value!.isEmpty ? "Wajib diisi" : null,
                               ),
                             ),
                             const SizedBox(height: 16),
-                            
+
                             NeoInputWrapper(
                               label: "Harga per Jam (Rp)",
                               child: TextFormField(
@@ -414,24 +441,37 @@ class _VenueFormPageState extends State<VenueFormPage> {
                                   hintText: "0",
                                 ),
                                 keyboardType: TextInputType.number,
-                                validator: (value) => value!.isEmpty ? "Wajib diisi" : null,
+                                validator: (value) =>
+                                    value!.isEmpty ? "Wajib diisi" : null,
                               ),
                             ),
                             const SizedBox(height: 16),
-                            
-                            // 3. DROPDOWNS
+
+                            // 4. DROPDOWNS
                             NeoInputWrapper(
                               label: "Lokasi / Area",
                               child: DropdownButtonFormField<int>(
                                 value: _selectedLocation,
-                                decoration: const InputDecoration(border: InputBorder.none),
+                                decoration: const InputDecoration(
+                                  border: InputBorder.none,
+                                ),
                                 isExpanded: true,
-                                icon: const Icon(Icons.keyboard_arrow_down, color: NeoColors.text),
-                                items: _locations.map<DropdownMenuItem<int>>((item) {
-                                  return DropdownMenuItem<int>(value: item['id'], child: Text(item['name']));
+                                icon: const Icon(
+                                  Icons.keyboard_arrow_down,
+                                  color: NeoColors.text,
+                                ),
+                                items: _locations.map<DropdownMenuItem<int>>((
+                                  item,
+                                ) {
+                                  return DropdownMenuItem<int>(
+                                    value: item['id'],
+                                    child: Text(item['name']),
+                                  );
                                 }).toList(),
-                                onChanged: (val) => setState(() => _selectedLocation = val),
-                                validator: (val) => val == null ? "Pilih lokasi" : null,
+                                onChanged: (val) =>
+                                    setState(() => _selectedLocation = val),
+                                validator: (val) =>
+                                    val == null ? "Pilih lokasi" : null,
                               ),
                             ),
                             const SizedBox(height: 16),
@@ -440,36 +480,33 @@ class _VenueFormPageState extends State<VenueFormPage> {
                               label: "Kategori Olahraga",
                               child: DropdownButtonFormField<int>(
                                 value: _selectedCategory,
-                                decoration: const InputDecoration(border: InputBorder.none),
+                                decoration: const InputDecoration(
+                                  border: InputBorder.none,
+                                ),
                                 isExpanded: true,
-                                icon: const Icon(Icons.keyboard_arrow_down, color: NeoColors.text),
-                                items: _categories.map<DropdownMenuItem<int>>((item) {
-                                  return DropdownMenuItem<int>(value: item['id'], child: Text(item['name']));
+                                icon: const Icon(
+                                  Icons.keyboard_arrow_down,
+                                  color: NeoColors.text,
+                                ),
+                                items: _categories.map<DropdownMenuItem<int>>((
+                                  item,
+                                ) {
+                                  return DropdownMenuItem<int>(
+                                    value: item['id'],
+                                    child: Text(item['name']),
+                                  );
                                 }).toList(),
-                                onChanged: (val) => setState(() => _selectedCategory = val),
-                                validator: (val) => val == null ? "Pilih kategori" : null,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-
-                            NeoInputWrapper(
-                              label: "Opsi Pembayaran",
-                              child: DropdownButtonFormField<String>(
-                                value: _selectedPaymentOption,
-                                decoration: const InputDecoration(border: InputBorder.none),
-                                isExpanded: true,
-                                icon: const Icon(Icons.keyboard_arrow_down, color: NeoColors.text),
-                                items: _paymentOptionsList.map((item) {
-                                  return DropdownMenuItem<String>(value: item['value'], child: Text(item['label']!));
-                                }).toList(),
-                                onChanged: (val) => setState(() => _selectedPaymentOption = val),
-                                validator: (val) => val == null ? "Pilih opsi" : null,
+                                onChanged: (val) =>
+                                    setState(() => _selectedCategory = val),
+                                validator: (val) =>
+                                    val == null ? "Pilih kategori" : null,
                               ),
                             ),
 
+                            // Opsi Pembayaran sudah dihapus
                             const SizedBox(height: 32),
-                            
-                            // 4. SUBMIT BUTTON
+
+                            // 5. SUBMIT BUTTON
                             SizedBox(
                               width: double.infinity,
                               child: NeoButton(
