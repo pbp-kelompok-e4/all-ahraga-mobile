@@ -312,7 +312,7 @@ class _MyHomePageState extends State<MyHomePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  "LET'S GET SWEATY!",
+                  "Temukan Lapangan Olahraga",
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w900,
@@ -329,7 +329,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  "Temukan lapangan terbaik di sekitarmu.",
+                  "Cari dan booking lapangan favorit Anda dengan mudah",
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -338,7 +338,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
                 const SizedBox(height: 20),
 
-                // Search Bar
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -367,7 +366,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       color: _kSlate,
                     ),
                     decoration: InputDecoration(
-                      hintText: 'Cari Lapangan (ex: Futsal)...',
+                      hintText: 'Cari Lapangan berdasarkan nama...',
                       hintStyle: const TextStyle(
                         color: _kMuted,
                         fontWeight: FontWeight.normal,
@@ -541,7 +540,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-// --- NEO COMPONENTS ---
 
 class _NeoIconButton extends StatelessWidget {
   final IconData icon;
@@ -733,7 +731,6 @@ class _VenueCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // TAGS ROW (UPDATED: Rating bersebelahan)
                   Row(
                     children: [
                       _Tag(
