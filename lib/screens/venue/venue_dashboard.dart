@@ -517,7 +517,7 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
                                                 image: NetworkImage(
                                                   imageUrl.startsWith('http')
                                                       ? imageUrl
-                                                      : "http://10.0.2.2:8000$imageUrl",
+                                                      : "${ApiConstants.baseUrl}$imageUrl",
                                                 ),
                                                 fit: BoxFit.cover,
                                               )
