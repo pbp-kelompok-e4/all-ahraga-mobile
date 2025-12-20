@@ -51,6 +51,11 @@ class ApiConstants {
   static const String coachProfileDelete = '$baseUrl/coach/profile/delete/';
   static const String coachRevenue = '$baseUrl/api/coach/revenue/';
 
+  // Auth endpoints
+  static const String authLogin = '$baseUrl/auth/login/';
+  static const String authRegister = '$baseUrl/auth/register/';
+  static const String authLogout = '$baseUrl/auth/logout/';
+
   // Review endpoints
   static String upsertReview(int bookingId, {required String target}) =>
       '$baseUrl/review/$bookingId/new/?target=$target';

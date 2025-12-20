@@ -560,7 +560,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
                             Expanded(
                               child: _buildReviewButton(
                                 label: reviews.any((r) => r.fields.targetType == 'venue')
-                                    ? 'EDIT VENUE'
+                                    ? 'EDIT REVIEW'
                                     : 'REVIEW VENUE',
                                 icon: Icons.location_on,
                                 color: primaryColor,
@@ -593,7 +593,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
                               Expanded(
                                 child: _buildReviewButton(
                                   label: reviews.any((r) => r.fields.targetType == 'coach')
-                                      ? 'EDIT COACH'
+                                      ? 'EDIT REVIEW'
                                       : 'REVIEW COACH',
                                   icon: Icons.person,
                                   color: Colors.blue.shade600,
