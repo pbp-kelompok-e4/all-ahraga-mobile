@@ -15,6 +15,7 @@ class ApiConstants {
     }
     return url;
   }
+
   static String cancelBooking(int bookingId) =>
       '$baseUrl/api/booking/$bookingId/cancel/';
   static String updateBooking(int bookingId) =>
@@ -38,7 +39,7 @@ class ApiConstants {
       '$baseUrl/venue/$venueId/schedules/delete/';
 
   // Coach endpoints
-  static const String coachSchedule = '$baseUrl/coach/schedule/'; 
+  static const String coachSchedule = '$baseUrl/coach/schedule/';
   static const String coachScheduleDelete = '$baseUrl/coach/schedule/delete/';
 
   // Review endpoints
