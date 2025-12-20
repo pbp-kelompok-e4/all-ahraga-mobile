@@ -149,7 +149,7 @@ class _MyHomePageState extends State<MyHomePage> {
       body: SafeArea(
         child: Column(
           children: [
-            // 1. APP BAR (UPDATED: Tanpa Notifikasi)
+            // 1. APP BAR
             _buildDecoratedAppBar(),
 
             // 2. SCROLLABLE CONTENT
@@ -540,7 +540,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-
 class _NeoIconButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
@@ -683,10 +682,18 @@ class _VenueCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final imageUrl =
-        venue['image'] != null && venue['image'].toString().isNotEmpty
-        ? '${ApiConstants.baseUrl}${venue['image']}'
-        : null;
+    // --- [LOGIC FIX] Handle Image URL ---
+    String? rawImage = venue['image'];
+    String? imageUrl;
+    if (rawImage != null && rawImage.toString().isNotEmpty) {
+      if (rawImage.startsWith('http')) {
+        imageUrl = rawImage; // Pakai langsung kalau sudah URL lengkap
+      } else {
+        imageUrl =
+            '${ApiConstants.baseUrl}$rawImage'; // Tambah base kalau path relative
+      }
+    }
+    // ------------------------------------
 
     return GestureDetector(
       onTap: onTap,
