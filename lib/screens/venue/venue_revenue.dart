@@ -3,6 +3,112 @@ import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:all_ahraga/constants/api.dart';
 
+// --- DESIGN SYSTEM CONSTANTS & WIDGETS ---
+
+class NeoColors {
+  static const Color primary = Color(0xFF0D9488); // Tosca
+  static const Color text = Color(0xFF0F172A);    // Slate
+  static const Color muted = Color(0xFF64748B);   // Grey
+  static const Color danger = Color(0xFFDC2626);  // Red
+  static const Color background = Colors.white;
+}
+
+// 1. Neo Container (Base Box)
+class NeoContainer extends StatelessWidget {
+  final Widget child;
+  final Color? color;
+  final EdgeInsetsGeometry? padding;
+  final double? width;
+  final double? height;
+  final VoidCallback? onTap;
+  final bool hasShadow;
+
+  const NeoContainer({
+    super.key,
+    required this.child,
+    this.color = NeoColors.background,
+    this.padding,
+    this.width,
+    this.height,
+    this.onTap,
+    this.hasShadow = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: width,
+        height: height,
+        padding: padding,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: NeoColors.text, width: 2),
+          boxShadow: hasShadow
+              ? const [
+                  BoxShadow(
+                    color: NeoColors.text,
+                    offset: Offset(4, 4),
+                    blurRadius: 0,
+                  ),
+                ]
+              : null,
+        ),
+        child: child,
+      ),
+    );
+  }
+}
+
+// 2. Neo Button
+class NeoButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onPressed;
+  final Color backgroundColor;
+  final Color textColor;
+  final IconData? icon;
+
+  const NeoButton({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.backgroundColor = NeoColors.primary,
+    this.textColor = Colors.white,
+    this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return NeoContainer(
+      onTap: onPressed,
+      color: backgroundColor,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, color: textColor, size: 20),
+            const SizedBox(width: 8),
+          ],
+          Text(
+            label,
+            style: TextStyle(
+              color: textColor,
+              fontWeight: FontWeight.w800,
+              fontSize: 16,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// --- MAIN PAGE LOGIC ---
+
 class VenueRevenuePage extends StatefulWidget {
   const VenueRevenuePage({super.key});
 
@@ -22,7 +128,6 @@ class _VenueRevenuePageState extends State<VenueRevenuePage> {
 
   String _formatCurrency(num amount) {
     return "Rp ${amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}";
-
   }
 
   Future<Map<String, dynamic>> _fetchRevenue(CookieRequest request) async {
@@ -51,205 +156,338 @@ class _VenueRevenuePageState extends State<VenueRevenuePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Laporan Pendapatan", style: TextStyle(color: Colors.white)),
-        backgroundColor: const Color(0xFF0D9488),
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      body: RefreshIndicator(
-        onRefresh: _refreshData,
-        child: FutureBuilder(
-          future: _revenueFuture,
-          builder: (context, AsyncSnapshot<Map<String, dynamic>> snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (snapshot.hasError) {
-              return Center(
-                child: ListView(
-                  shrinkWrap: true,
-                  children: [
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.error_outline, color: Colors.red, size: 50),
-                        const SizedBox(height: 10),
-                        Text("${snapshot.error}", textAlign: TextAlign.center),
-                        const SizedBox(height: 10),
-                        ElevatedButton(
-                          onPressed: _refreshData,
-                          child: const Text("Coba Lagi"),
-                        )
-                      ],
-                    ),
-                  ],
-                ),
-              );
-            } else if (!snapshot.hasData) {
-              return const Center(child: Text("Tidak ada data."));
-            } else {
-              final data = snapshot.data!;
-              final double totalRevenue = (data['total_revenue'] ?? 0).toDouble();
-              final List<dynamic> venuesData = data['venue_revenue_data'] ?? [];
-
-              return ListView(
-                padding: const EdgeInsets.all(16.0),
+      backgroundColor: NeoColors.background,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // --- CUSTOM HEADER ---
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                border: Border(bottom: BorderSide(color: NeoColors.text, width: 2)),
+              ),
+              child: Row(
                 children: [
-                  Card(
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    color: const Color(0xFF0D9488),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16.0),
-                      child: Column(
-                        children: [
-                          const Text(
-                            "Total Pendapatan Keseluruhan",
-                            style: TextStyle(color: Colors.white70, fontSize: 16),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _formatCurrency(totalRevenue),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: NeoColors.text, width: 2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.arrow_back, color: NeoColors.text),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  const Expanded(
+                    child: Text(
+                      "LAPORAN PENDAPATAN",
+                      style: TextStyle(
+                        color: NeoColors.text,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ),
-                  
-                  const SizedBox(height: 24),
-                  const Text(
-                    "Rincian per Venue",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
-                  ),
-                  const SizedBox(height: 12),
+                ],
+              ),
+            ),
 
-                  if (venuesData.isEmpty)
-                    const Center(child: Padding(
-                      padding: EdgeInsets.all(20.0),
-                      child: Text("Belum ada venue yang terdaftar."),
-                    ))
-                  else
-                    ...venuesData.map((venue) {
-                      final venueName = venue['venue_name'];
-                      final venueRevenue = venue['total_revenue'];
-                      final bookingCount = venue['booking_count'];
-                      final List<dynamic> bookings = venue['bookings'] ?? [];
-
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 16),
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        child: ExpansionTile(
-                          shape: const Border(),
-                          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          leading: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF0FDFA),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(Icons.stadium, color: Color(0xFF0D9488)),
-                          ),
-                          title: Text(
-                            venueName,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SizedBox(height: 4),
-                              Text("Revenue: ${_formatCurrency(venueRevenue)}"),
-                              Text("$bookingCount Booking Confirmed"),
-                            ],
-                          ),
+            // --- CONTENT BODY ---
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: _refreshData,
+                color: NeoColors.text,
+                backgroundColor: NeoColors.primary,
+                child: FutureBuilder(
+                  future: _revenueFuture,
+                  builder: (context, AsyncSnapshot<Map<String, dynamic>> snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                        child: CircularProgressIndicator(color: NeoColors.text),
+                      );
+                    } else if (snapshot.hasError) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Container(
-                              color: Colors.grey[50],
-                              padding: const EdgeInsets.all(16),
-                              width: double.infinity,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    "Riwayat Transaksi",
-                                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black54),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  if (bookings.isEmpty)
-                                    const Text("- Belum ada booking terkonfirmasi -", style: TextStyle(fontStyle: FontStyle.italic, fontSize: 13))
-                                  else
-                                    ...bookings.map((booking) {
-                                      return Padding(
-                                        padding: const EdgeInsets.only(bottom: 12.0),
-                                        child: Row(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Expanded(
-                                              flex: 3,
-                                              child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    booking['date'],
-                                                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-                                                  ),
-                                                  Text(
-                                                    "${booking['start_time']} - ${booking['end_time']}",
-                                                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            Expanded(
-                                              flex: 4,
-                                              child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    booking['customer_username'],
-                                                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-                                                    overflow: TextOverflow.ellipsis,
-                                                  ),
-                                                  if (booking['coach'] != null)
-                                                    Text(
-                                                      "Coach: ${booking['coach']}",
-                                                      style: const TextStyle(fontSize: 11, color: Colors.blueGrey),
-                                                      overflow: TextOverflow.ellipsis,
-                                                    ),
-                                                ],
-                                              ),
-                                            ),
-                                            Expanded(
-                                              flex: 3,
-                                              child: Text(
-                                                _formatCurrency(booking['revenue']),
-                                                textAlign: TextAlign.end,
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.bold, 
-                                                  color: Color(0xFF0D9488),
-                                                  fontSize: 13
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    }),
-                                ],
+                            const Icon(Icons.error_outline, color: NeoColors.text, size: 60),
+                            const SizedBox(height: 16),
+                            const Text(
+                              "GAGAL MEMUAT DATA",
+                              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+                            ),
+                            const SizedBox(height: 8),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 32),
+                              child: Text(
+                                "${snapshot.error}",
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(color: NeoColors.muted),
                               ),
                             ),
+                            const SizedBox(height: 24),
+                            NeoButton(
+                              label: "COBA LAGI",
+                              onPressed: _refreshData,
+                              backgroundColor: NeoColors.text,
+                            )
                           ],
                         ),
                       );
-                    }),
-                ],
-              );
-            }
-          },
+                    } else if (!snapshot.hasData) {
+                      return const Center(
+                        child: Text("TIDAK ADA DATA", style: TextStyle(fontWeight: FontWeight.bold)),
+                      );
+                    } else {
+                      final data = snapshot.data!;
+                      final double totalRevenue = (data['total_revenue'] ?? 0).toDouble();
+                      final List<dynamic> venuesData = data['venue_revenue_data'] ?? [];
+
+                      return ListView(
+                        padding: const EdgeInsets.all(20),
+                        children: [
+                          // 1. TOTAL REVENUE CARD
+                          NeoContainer(
+                            color: NeoColors.primary,
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
+                              children: [
+                                const Text(
+                                  "TOTAL PENDAPATAN",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  _formatCurrency(totalRevenue),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 36,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          
+                          const SizedBox(height: 32),
+                          const Text(
+                            "RINCIAN PER VENUE",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: NeoColors.text,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          if (venuesData.isEmpty)
+                            NeoContainer(
+                              padding: const EdgeInsets.all(20),
+                              child: const Center(
+                                child: Text(
+                                  "Belum ada venue terdaftar.",
+                                  style: TextStyle(color: NeoColors.muted),
+                                ),
+                              ),
+                            )
+                          else
+                            ...venuesData.map((venue) {
+                              final venueName = venue['venue_name'];
+                              final venueRevenue = venue['total_revenue'];
+                              final bookingCount = venue['booking_count'];
+                              final List<dynamic> bookings = venue['bookings'] ?? [];
+
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 16),
+                                child: NeoContainer(
+                                  padding: EdgeInsets.zero, // Padding handled internally
+                                  child: Theme(
+                                    data: Theme.of(context).copyWith(
+                                      dividerColor: Colors.transparent, // Hide default expansion divider
+                                    ),
+                                    child: ExpansionTile(
+                                      tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                      iconColor: NeoColors.text,
+                                      collapsedIconColor: NeoColors.text,
+                                      leading: Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFF0FDFA),
+                                          border: Border.all(color: NeoColors.text, width: 2),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: const Icon(Icons.stadium, color: NeoColors.primary),
+                                      ),
+                                      title: Text(
+                                        venueName.toString().toUpperCase(),
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 16,
+                                          color: NeoColors.text,
+                                        ),
+                                      ),
+                                      subtitle: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            _formatCurrency(venueRevenue),
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: NeoColors.primary,
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                          Text(
+                                            "$bookingCount BOOKING",
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                              color: NeoColors.muted,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      children: [
+                                        Container(
+                                          width: double.infinity,
+                                          decoration: const BoxDecoration(
+                                            border: Border(
+                                              top: BorderSide(color: NeoColors.text, width: 2),
+                                            ),
+                                            color: Color(0xFFF8FAFC), // Slight grey for inner area
+                                          ),
+                                          padding: const EdgeInsets.all(16),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                "RIWAYAT TRANSAKSI",
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.w900,
+                                                  color: NeoColors.muted,
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 12),
+                                              if (bookings.isEmpty)
+                                                const Padding(
+                                                  padding: EdgeInsets.symmetric(vertical: 8.0),
+                                                  child: Text(
+                                                    "- Belum ada booking terkonfirmasi -",
+                                                    style: TextStyle(
+                                                      fontStyle: FontStyle.italic,
+                                                      color: NeoColors.muted,
+                                                    ),
+                                                  ),
+                                                )
+                                              else
+                                                ...bookings.map((booking) {
+                                                  return Container(
+                                                    margin: const EdgeInsets.only(bottom: 12),
+                                                    padding: const EdgeInsets.all(12),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.white,
+                                                      border: Border.all(color: Colors.grey.shade300),
+                                                      borderRadius: BorderRadius.circular(6),
+                                                    ),
+                                                    child: Row(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        // DATE & TIME
+                                                        Expanded(
+                                                          flex: 3,
+                                                          child: Column(
+                                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                                            children: [
+                                                              Text(
+                                                                booking['date'],
+                                                                style: const TextStyle(
+                                                                  fontWeight: FontWeight.bold,
+                                                                  fontSize: 13,
+                                                                  color: NeoColors.text,
+                                                                ),
+                                                              ),
+                                                              Text(
+                                                                "${booking['start_time']} - ${booking['end_time']}",
+                                                                style: const TextStyle(fontSize: 11, color: NeoColors.muted),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                        const SizedBox(width: 8),
+                                                        // CUSTOMER INFO
+                                                        Expanded(
+                                                          flex: 4,
+                                                          child: Column(
+                                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                                            children: [
+                                                              Text(
+                                                                booking['customer_username'],
+                                                                style: const TextStyle(
+                                                                  fontSize: 13,
+                                                                  fontWeight: FontWeight.bold,
+                                                                  color: NeoColors.text,
+                                                                ),
+                                                                overflow: TextOverflow.ellipsis,
+                                                              ),
+                                                              if (booking['coach'] != null)
+                                                                Text(
+                                                                  "Coach: ${booking['coach']}",
+                                                                  style: const TextStyle(
+                                                                    fontSize: 11,
+                                                                    color: NeoColors.primary,
+                                                                    fontWeight: FontWeight.w600,
+                                                                  ),
+                                                                  overflow: TextOverflow.ellipsis,
+                                                                ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                        const SizedBox(width: 8),
+                                                        // PRICE
+                                                        Expanded(
+                                                          flex: 3,
+                                                          child: Text(
+                                                            _formatCurrency(booking['revenue']),
+                                                            textAlign: TextAlign.end,
+                                                            style: const TextStyle(
+                                                              fontWeight: FontWeight.w900, 
+                                                              color: NeoColors.primary,
+                                                              fontSize: 13
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  );
+                                                }),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }),
+                        ],
+                      );
+                    }
+                  },
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

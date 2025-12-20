@@ -6,6 +6,108 @@ import 'package:all_ahraga/screens/venue/venue_form.dart';
 import 'package:all_ahraga/constants/api.dart';
 import 'dart:convert';
 
+class NeoColors {
+  static const Color primary = Color(0xFF0D9488); // Tosca
+  static const Color text = Color(0xFF0F172A);    // Slate (Border & Text)
+  static const Color muted = Color(0xFF64748B);   // Grey
+  static const Color danger = Color(0xFFDC2626);  // Red
+  static const Color background = Colors.white;
+}
+
+class NeoContainer extends StatelessWidget {
+  final Widget child;
+  final Color? color;
+  final EdgeInsetsGeometry? padding;
+  final double? width;
+  final double? height;
+  final VoidCallback? onTap;
+  final bool hasShadow;
+
+  const NeoContainer({
+    super.key,
+    required this.child,
+    this.color = NeoColors.background,
+    this.padding,
+    this.width,
+    this.height,
+    this.onTap,
+    this.hasShadow = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: width,
+        height: height,
+        padding: padding,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: NeoColors.text, width: 2),
+          boxShadow: hasShadow
+              ? const [
+                  BoxShadow(
+                    color: NeoColors.text,
+                    offset: Offset(4, 4),
+                    blurRadius: 0,
+                  ),
+                ]
+              : null,
+        ),
+        child: child,
+      ),
+    );
+  }
+}
+
+class NeoButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onPressed;
+  final Color backgroundColor;
+  final Color textColor;
+  final IconData? icon;
+
+  const NeoButton({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.backgroundColor = NeoColors.primary,
+    this.textColor = Colors.white,
+    this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return NeoContainer(
+      onTap: onPressed,
+      color: backgroundColor,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, color: textColor, size: 20),
+            const SizedBox(width: 8),
+          ],
+          Text(
+            label,
+            style: TextStyle(
+              color: textColor,
+              fontWeight: FontWeight.w800,
+              fontSize: 16,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// --- MAIN PAGE ---
+
 class VenueDashboardPage extends StatefulWidget {
   const VenueDashboardPage({super.key});
 
@@ -30,7 +132,7 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
       final response = await request.get(url);
 
       if (response is! Map<String, dynamic>) {
-        throw Exception("Server returned invalid format (HTML). Check Login or URL.");
+        throw Exception("Server returned invalid format.");
       }
 
       List<Map<String, dynamic>> listVenues = [];
@@ -64,14 +166,25 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
       if (response['success'] == true) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(response['message'] ?? "Venue berhasil dihapus")),
+            SnackBar(
+              content: Text(
+                response['message'] ?? "Venue berhasil dihapus",
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+              backgroundColor: NeoColors.text,
+              behavior: SnackBarBehavior.floating,
+              shape: const RoundedRectangleBorder(
+                side: BorderSide(color: Colors.white, width: 2),
+                borderRadius: BorderRadius.all(Radius.circular(8)),
+              ),
+            ),
           );
           _refreshVenues();
         }
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Gagal menghapus: ${response['message']}")),
+            SnackBar(content: Text("Gagal: ${response['message']}")),
           );
         }
       }
@@ -87,43 +200,66 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
   void _showDeleteConfirmation(int venueId, String venueName) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.red[50],
-                shape: BoxShape.circle,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: NeoContainer(
+          padding: const EdgeInsets.all(20),
+          color: Colors.white,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.warning, color: NeoColors.text, size: 32),
+                  const SizedBox(width: 12),
+                  const Text(
+                    "HAPUS VENUE?",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 20,
+                      color: NeoColors.text,
+                    ),
+                  ),
+                ],
               ),
-              child: const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 28),
-            ),
-            const SizedBox(width: 12),
-            const Text("Hapus Venue"),
-          ],
-        ),
-        content: Text(
-          "Apakah Anda yakin ingin menghapus venue '$venueName'?\n\nData yang dihapus tidak dapat dikembalikan.",
-          style: TextStyle(color: Colors.grey[700]),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text("Batal", style: TextStyle(color: Colors.grey[600])),
+              const SizedBox(height: 16),
+              Text(
+                "Apakah Anda yakin ingin menghapus '$venueName'? Data tidak dapat dikembalikan.",
+                style: const TextStyle(
+                  color: NeoColors.muted,
+                  fontSize: 16,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text(
+                      "BATAL",
+                      style: TextStyle(
+                        color: NeoColors.text,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  NeoButton(
+                    label: "HAPUS",
+                    backgroundColor: NeoColors.danger,
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _deleteVenue(venueId);
+                    },
+                  ),
+                ],
+              )
+            ],
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _deleteVenue(venueId);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            child: const Text("Hapus", style: TextStyle(color: Colors.white)),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -131,429 +267,355 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      appBar: AppBar(
-        elevation: 0,
-        title: const Text(
-          'Venue Dashboard',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 22,
-          ),
-        ),
-        backgroundColor: const Color(0xFF0D9488),
-        iconTheme: const IconThemeData(color: Colors.white),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF0D9488), Color(0xFF0F766E)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+      backgroundColor: NeoColors.background,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // --- CUSTOM NEO HEADER (UPDATED) ---
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                border: Border(bottom: BorderSide(color: NeoColors.text, width: 2)),
+              ),
+              child: Row(
+                children: [
+                  // 1. Back Button (Left Side)
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: NeoColors.text, width: 2),
+                      ),
+                      child: const Icon(Icons.arrow_back, color: NeoColors.text),
+                    ),
+                  ),
+                  
+                  const SizedBox(width: 16),
+                  
+                  // 2. Title
+                  const Text(
+                    "VENUE DASHBOARD",
+                    style: TextStyle(
+                      color: NeoColors.text,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  
+                  // Spacer to push title if needed, or keeping it left aligned
+                ],
+              ),
             ),
-          ),
-        ),
-      ),
-      body: RefreshIndicator(
-        onRefresh: _refreshVenues,
-        color: const Color(0xFF0D9488),
-        child: FutureBuilder(
-          future: _venuesFuture,
-          builder: (context, AsyncSnapshot snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0D9488)),
-                ),
-              );
-            } else if (snapshot.hasError) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.red[50],
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.error_outline, color: Colors.red, size: 64),
-                    ),
-                    const SizedBox(height: 24),
-                    const Text(
-                      "Oops! Something went wrong",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                        color: Color(0xFF333333),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 40),
-                      child: Text(
-                        "${snapshot.error}",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton.icon(
-                      onPressed: _refreshVenues,
-                      icon: const Icon(Icons.refresh),
-                      label: const Text("Try Again"),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0D9488),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+
+            // --- CONTENT BODY ---
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: _refreshVenues,
+                color: NeoColors.text,
+                backgroundColor: NeoColors.primary,
+                child: FutureBuilder(
+                  future: _venuesFuture,
+                  builder: (context, AsyncSnapshot snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                        child: CircularProgressIndicator(
+                          color: NeoColors.text,
+                          strokeWidth: 4,
                         ),
-                        elevation: 2,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(40),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            const Color(0xFF0D9488).withOpacity(0.1),
-                            const Color(0xFF0F766E).withOpacity(0.05),
+                      );
+                    } else if (snapshot.hasError) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.error_outline, size: 60, color: NeoColors.text),
+                            const SizedBox(height: 16),
+                            const Text(
+                              "SOMETHING WENT WRONG",
+                              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+                            ),
+                            const SizedBox(height: 8),
+                            Text("${snapshot.error}", style: const TextStyle(color: NeoColors.muted)),
+                            const SizedBox(height: 24),
+                            NeoButton(
+                              label: "TRY AGAIN",
+                              onPressed: _refreshVenues,
+                              backgroundColor: NeoColors.text,
+                            )
                           ],
                         ),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.stadium_outlined,
-                        size: 100,
-                        color: Color(0xFF0D9488),
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    const Text(
-                      "No Venues Yet",
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF333333),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      "Start by adding your first venue!",
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    ElevatedButton.icon(
-                      onPressed: () async {
-                        final result = await Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const VenueFormPage()),
-                        );
-                        if (result == true) {
-                          _refreshVenues();
-                        }
-                      },
-                      icon: const Icon(Icons.add_circle_outline),
-                      label: const Text("Add Your First Venue"),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0D9488),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 2,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            } else {
-              return SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Stats Card
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF0D9488), Color(0xFF0F766E)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF0D9488).withOpacity(0.3),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(12),
+                      );
+                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            NeoContainer(
+                              padding: const EdgeInsets.all(24),
+                              hasShadow: true,
+                              child: const Icon(Icons.stadium_outlined, size: 64, color: NeoColors.text),
                             ),
-                            child: const Icon(Icons.stadium, color: Colors.white, size: 32),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            const SizedBox(height: 32),
+                            const Text(
+                              "NO VENUES FOUND",
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                                color: NeoColors.text,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            const Text(
+                              "Start adding your venue collection now.",
+                              style: TextStyle(color: NeoColors.muted),
+                            ),
+                            const SizedBox(height: 32),
+                            NeoButton(
+                              label: "ADD FIRST VENUE",
+                              icon: Icons.add,
+                              onPressed: () async {
+                                final result = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const VenueFormPage()),
+                                );
+                                if (result == true) _refreshVenues();
+                              },
+                            ),
+                          ],
+                        ),
+                      );
+                    } else {
+                      // --- LIST VIEW ---
+                      return ListView(
+                        padding: const EdgeInsets.all(20),
+                        children: [
+                          // Stats "Brutalist" Box
+                          NeoContainer(
+                            padding: const EdgeInsets.all(20),
+                            color: NeoColors.primary, // Tosca Background
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                const Text(
-                                  "Total Venues",
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      "TOTAL VENUES",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      "${snapshot.data!.length}",
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 40,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  "${snapshot.data!.length}",
-                                  style: const TextStyle(
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
                                     color: Colors.white,
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.bold,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: NeoColors.text, width: 2),
                                   ),
-                                ),
+                                  child: const Icon(Icons.analytics_outlined, color: NeoColors.text, size: 32),
+                                )
                               ],
                             ),
                           ),
-                          const Icon(Icons.trending_up, color: Colors.white70, size: 32),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // List Header
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          "Your Venues",
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF333333),
+                          const SizedBox(height: 30),
+                          
+                          const Text(
+                            "YOUR LIST",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: NeoColors.text,
+                              letterSpacing: 1,
+                            ),
                           ),
-                        ),
-                        Text(
-                          "${snapshot.data!.length} items",
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
+                          const SizedBox(height: 16),
 
-                    // Venue Cards
-                    ...List.generate(
-                      snapshot.data!.length,
-                      (index) {
-                        final venue = snapshot.data![index];
-                        // Ambil URL gambar (pastikan backend mengirim 'image_url')
-                        final String? imageUrl = venue['image_url'];
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(16),
-                            child: Column(
-                              children: [
-                                // --- GAMBAR VENUE ---
-                                Container(
-                                  height: 150,
-                                  width: double.infinity,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[200],
-                                    image: (imageUrl != null && imageUrl.isNotEmpty)
-                                        ? DecorationImage(
-                                            image: NetworkImage(imageUrl.startsWith('http')
-                                                ? imageUrl
-                                                : "http://10.0.2.2:8000$imageUrl"),
-                                            fit: BoxFit.cover,
-                                          )
-                                        : null,
-                                  ),
-                                  child: (imageUrl == null || imageUrl.isEmpty)
-                                      ? const Icon(Icons.stadium, size: 60, color: Colors.grey)
-                                      : null,
-                                ),
+                          // Venue Items
+                          ...List.generate(snapshot.data!.length, (index) {
+                            final venue = snapshot.data![index];
+                            final String? imageUrl = venue['image_url'];
 
-                                // Header with gradient (diletakkan di bawah gambar)
-                                Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        const Color(0xFF0D9488).withOpacity(0.1),
-                                        const Color(0xFF0F766E).withOpacity(0.05),
-                                      ],
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 24.0),
+                              child: NeoContainer(
+                                color: Colors.white,
+                                padding: EdgeInsets.zero, // Padding handled inside
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    // Image Section with Border Bottom
+                                    Container(
+                                      height: 180,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[200],
+                                        borderRadius: const BorderRadius.only(
+                                          topLeft: Radius.circular(6), // adjust for border
+                                          topRight: Radius.circular(6),
+                                        ),
+                                        border: const Border(
+                                          bottom: BorderSide(color: NeoColors.text, width: 2),
+                                        ),
+                                        image: (imageUrl != null && imageUrl.isNotEmpty)
+                                            ? DecorationImage(
+                                                image: NetworkImage(imageUrl.startsWith('http')
+                                                    ? imageUrl
+                                                    : "http://10.0.2.2:8000$imageUrl"),
+                                                fit: BoxFit.cover,
+                                              )
+                                            : null,
+                                      ),
+                                      child: (imageUrl == null || imageUrl.isEmpty)
+                                          ? const Center(
+                                              child: Icon(Icons.image_not_supported, 
+                                                size: 50, color: NeoColors.muted),
+                                            )
+                                          : null,
                                     ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(12),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF0D9488),
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: const Icon(
-                                          Icons.stadium,
-                                          color: Colors.white,
-                                          size: 24,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              venue['name'],
-                                              style: const TextStyle(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold,
-                                                color: Color(0xFF0D9488),
-                                              ),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              venue['category'] ?? '-',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.grey[600],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(Icons.delete_outline, color: Colors.red),
-                                        onPressed: () {
-                                          _showDeleteConfirmation(venue['id'], venue['name']);
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                ),
 
-                                // Body
-                                Padding(
-                                  padding: const EdgeInsets.all(16),
-                                  child: Column(
-                                    children: [
-                                      Row(
+                                    // Content Section
+                                    Padding(
+                                      padding: const EdgeInsets.all(16),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          Icon(Icons.location_on, size: 18, color: Colors.grey[600]),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: Text(
-                                              venue['location'] ?? '-',
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                color: Colors.grey[700],
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  venue['name'].toString().toUpperCase(),
+                                                  style: const TextStyle(
+                                                    fontSize: 20,
+                                                    fontWeight: FontWeight.w900,
+                                                    color: NeoColors.text,
+                                                    height: 1.1,
+                                                  ),
+                                                ),
                                               ),
+                                              GestureDetector(
+                                                onTap: () => _showDeleteConfirmation(venue['id'], venue['name']),
+                                                child: Container(
+                                                  padding: const EdgeInsets.all(8),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.red[50],
+                                                    border: Border.all(color: NeoColors.text, width: 2),
+                                                    borderRadius: BorderRadius.circular(4),
+                                                  ),
+                                                  child: const Icon(Icons.delete_outline, size: 20, color: NeoColors.danger),
+                                                ),
+                                              )
+                                            ],
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              color: Colors.grey[100],
+                                              border: Border.all(color: NeoColors.text, width: 1.5),
+                                              borderRadius: BorderRadius.circular(4),
+                                            ),
+                                            child: Text(
+                                              venue['category'] ?? 'UNCATEGORIZED',
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                                color: NeoColors.muted,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 12),
+                                          Row(
+                                            children: [
+                                              const Icon(Icons.location_on, size: 16, color: NeoColors.text),
+                                              const SizedBox(width: 4),
+                                              Expanded(
+                                                child: Text(
+                                                  venue['location'] ?? '-',
+                                                  style: const TextStyle(
+                                                    color: NeoColors.text,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 20),
+                                          
+                                          // Action Button
+                                          SizedBox(
+                                            width: double.infinity,
+                                            child: NeoButton(
+                                              label: "MANAGE VENUE",
+                                              icon: Icons.settings,
+                                              onPressed: () {
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) => VenueManagePage(
+                                                      venueId: venue['id'],
+                                                    ),
+                                                  ),
+                                                ).then((_) => _refreshVenues());
+                                              },
                                             ),
                                           ),
                                         ],
                                       ),
-                                      const SizedBox(height: 16),
-                                      SizedBox(
-                                        width: double.infinity,
-                                        child: ElevatedButton.icon(
-                                          onPressed: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) => VenueManagePage(
-                                                  venueId: venue['id'],
-                                                ),
-                                              ),
-                                            ).then((_) {
-                                              _refreshVenues();
-                                            });
-                                          },
-                                          icon: const Icon(Icons.settings, size: 20),
-                                          label: const Text("Manage Venue"),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: const Color(0xFF0F766E),
-                                            foregroundColor: Colors.white,
-                                            padding: const EdgeInsets.symmetric(vertical: 14),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(12),
-                                            ),
-                                            elevation: 0,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
+                              ),
+                            );
+                          }),
+                        ],
+                      );
+                    }
+                  },
                 ),
-              );
-            }
-          },
+              ),
+            ),
+          ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const VenueFormPage()),
-          );
-          if (result == true) {
-            _refreshVenues();
-          }
-        },
-        backgroundColor: const Color(0xFF0D9488),
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text(
-          'Add Venue',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+      // FAB kept for functionality, but removed from top bar
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 10, right: 10),
+        child: NeoContainer(
+          width: 64,
+          height: 64,
+          color: NeoColors.primary,
+          onTap: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const VenueFormPage()),
+            );
+            if (result == true) _refreshVenues();
+          },
+          child: const Center(
+            child: Icon(Icons.add, color: Colors.white, size: 32),
+          ),
         ),
-        elevation: 4,
       ),
     );
   }
