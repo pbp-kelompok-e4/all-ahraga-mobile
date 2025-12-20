@@ -4,6 +4,7 @@ import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:all_ahraga/constants/api.dart';
 import 'package:http/http.dart' as http;
+import 'package:dropdown_button2/dropdown_button2.dart';
 
 class UpdateBookingPage extends StatefulWidget {
   final int bookingId;
@@ -159,13 +160,27 @@ class _UpdateBookingPageState extends State<UpdateBookingPage> {
 
     try {
       final response = await request.get(
-        ApiConstants.scheduledCoaches(scheduleId),
+        ApiConstants.scheduledCoaches(
+          scheduleId,
+          editingBookingId: widget.bookingId,  
+        ),
       );
 
       if (response['success'] == true) {
         final coachesList = (response['coaches'] as List?)
             ?.map((e) => Map<String, dynamic>.from(e as Map))
             .toList() ?? [];
+        
+        if (_selectedCoachScheduleId != null) {
+          bool coachStillAvailable = coachesList.any(
+            (coach) => coach['coach_schedule_id'] == _selectedCoachScheduleId
+          );
+          
+          if (!coachStillAvailable) {
+            _selectedCoachScheduleId = null;
+          }
+        }
+        
         setState(() {
           _coaches = coachesList;
           _isLoadingCoaches = false;
@@ -173,12 +188,14 @@ class _UpdateBookingPageState extends State<UpdateBookingPage> {
       } else {
         setState(() {
           _coaches = [];
+          _selectedCoachScheduleId = null;
           _isLoadingCoaches = false;
         });
       }
     } catch (e) {
       setState(() {
         _coaches = [];
+        _selectedCoachScheduleId = null;
         _isLoadingCoaches = false;
       });
     }
@@ -501,14 +518,15 @@ class _UpdateBookingPageState extends State<UpdateBookingPage> {
             borderRadius: BorderRadius.circular(8),
           ),
           child: DropdownButtonHideUnderline(
-            child: DropdownButton<int>(
+            child: DropdownButton2<int>(
               value: _selectedScheduleId,
               isExpanded: true,
               hint: const Text('Pilih jadwal'),
               items: _availableSchedules.map<DropdownMenuItem<int>>((schedule) {
-                final isCurrent = schedule['id'] == widget.venueScheduleId;
+                final scheduleId = schedule['id'] as int;
+                final isCurrent = scheduleId == widget.venueScheduleId;
                 return DropdownMenuItem<int>(
-                  value: schedule['id'] as int,
+                  value: scheduleId,
                   child: Text(
                     '${isCurrent ? "(Saat ini) " : ""}${schedule['start_time']} - ${schedule['end_time']}',
                     style: TextStyle(fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal),
