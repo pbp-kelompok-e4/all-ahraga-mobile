@@ -3,8 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:all_ahraga/constants/api.dart';
-import 'package:http/http.dart' as http;
 import 'package:dropdown_button2/dropdown_button2.dart';
+import 'package:all_ahraga/widgets/error_retry_widget.dart';
+
+// PALETTE LIGHT NEO-BRUTALISM
+const Color _kBg = Colors.white;
+const Color _kSlate = Color(0xFF0F172A);
+const Color _kMuted = Color(0xFF64748B);
+const Color _kRed = Color(0xFFDC2626);
+const Color _kLightGrey = Color(0xFFF1F5F9);
+const double _kRadius = 8.0;
+const double _kBorderWidth = 2.0;
 
 class UpdateBookingPage extends StatefulWidget {
   final int bookingId;
@@ -95,12 +104,11 @@ class _UpdateBookingPageState extends State<UpdateBookingPage> {
             final bookingDate = _currentSchedule!['date'];
             for (var s in allSchedules) {
               if (s['date'] == bookingDate) {
-                 bool isAvailable = s['is_booked'] == false; 
-                 bool isMySchedule = s['id'] == currentScheduleId;
-                 
-                 if (isAvailable || isMySchedule) {
-                    filteredSchedules.add(s);
-                 }
+                bool isAvailable = s['is_booked'] == false;
+                bool isMySchedule = s['id'] == currentScheduleId;
+                if (isAvailable || isMySchedule) {
+                  filteredSchedules.add(s);
+                }
               }
             }
           }
@@ -152,9 +160,7 @@ class _UpdateBookingPageState extends State<UpdateBookingPage> {
   }
 
   Future<void> _fetchAvailableCoaches(int scheduleId) async {
-    setState(() {
-      _isLoadingCoaches = true;
-    });
+    setState(() => _isLoadingCoaches = true);
 
     final request = context.read<CookieRequest>();
 
@@ -162,7 +168,7 @@ class _UpdateBookingPageState extends State<UpdateBookingPage> {
       final response = await request.get(
         ApiConstants.scheduledCoaches(
           scheduleId,
-          editingBookingId: widget.bookingId,  
+          editingBookingId: widget.bookingId,
         ),
       );
 
@@ -175,7 +181,6 @@ class _UpdateBookingPageState extends State<UpdateBookingPage> {
           bool coachStillAvailable = coachesList.any(
             (coach) => coach['coach_schedule_id'] == _selectedCoachScheduleId
           );
-          
           if (!coachStillAvailable) {
             _selectedCoachScheduleId = null;
           }
@@ -215,14 +220,14 @@ class _UpdateBookingPageState extends State<UpdateBookingPage> {
       final data = {
         'schedule_id': _selectedScheduleId.toString(),
         'coach_schedule_id': _selectedCoachScheduleId?.toString() ?? '',
-        'equipment': _selectedEquipmentIds.map((id) => id.toString()).toList(), 
+        'equipment': _selectedEquipmentIds.map((id) => id.toString()).toList(),
         'quantities': _equipmentQuantities.map((k, v) => MapEntry(k.toString(), v.toString())),
         'payment_method': _paymentMethod,
       };
 
       final response = await request.post(
         ApiConstants.updateBooking(widget.bookingId),
-        jsonEncode(data), 
+        jsonEncode(data),
       );
 
       if (!context.mounted) return;
@@ -236,7 +241,7 @@ class _UpdateBookingPageState extends State<UpdateBookingPage> {
         );
       }
     } catch (e) {
-      _showSnackBar('Terjadi kesalahan: $e', isError: true);
+      _showSnackBar('Error: $e', isError: true);
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -256,41 +261,67 @@ class _UpdateBookingPageState extends State<UpdateBookingPage> {
       context: context,
       barrierDismissible: false,
       builder: (BuildContext ctx) {
+        final primaryColor = Theme.of(context).colorScheme.primary;
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            side: const BorderSide(color: _kSlate, width: 2),
+            borderRadius: BorderRadius.circular(_kRadius),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: Colors.blue.shade50,
                   shape: BoxShape.circle,
+                  border: Border.all(color: Colors.blue.shade600, width: 3),
                 ),
                 child: Icon(Icons.check_circle, color: Colors.blue.shade600, size: 64),
               ),
               const SizedBox(height: 24),
-              const Text('Update Berhasil! ✨',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              const Text(
+                'UPDATE BERHASIL!',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: _kSlate),
+              ),
               const SizedBox(height: 8),
-              Text('Booking Anda telah diperbarui.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey.shade600)),
+              const Text(
+                'Booking telah diperbarui.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: _kMuted, fontSize: 13),
+              ),
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    Navigator.pop(context, true);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2563EB),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(_kRadius),
+                    boxShadow: [
+                      BoxShadow(
+                        color: primaryColor.withOpacity(0.4),
+                        offset: const Offset(3, 3),
+                        blurRadius: 0,
+                      ),
+                    ],
                   ),
-                  child: const Text('Kembali', style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      Navigator.pop(context, true);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(_kRadius),
+                        side: const BorderSide(color: Colors.white, width: 2),
+                      ),
+                    ),
+                    child: const Text('KEMBALI', style: TextStyle(fontWeight: FontWeight.w900)),
+                  ),
                 ),
               ),
             ],
@@ -340,167 +371,217 @@ class _UpdateBookingPageState extends State<UpdateBookingPage> {
     );
   }
 
-  String _formatDate(String? dateStr) {
-    if (dateStr == null) return '-';
-    try {
-      final parts = dateStr.split('-');
-      final date = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
-      final days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
-      final months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-                      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-      return '${days[date.weekday - 1]}, ${date.day} ${months[date.month - 1]} ${date.year}';
-    } catch (e) {
-      return dateStr;
-    }
+  Widget _buildBrutalBox({
+    required Widget child,
+    Color bgColor = Colors.white,
+    Color borderColor = _kSlate,
+    double shadowOffset = 4.0,
+    EdgeInsets? padding,
+  }) {
+    return Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(_kRadius),
+        border: Border.all(color: borderColor, width: _kBorderWidth),
+        boxShadow: [
+          BoxShadow(
+            color: _kSlate,
+            offset: Offset(shadowOffset, shadowOffset),
+            blurRadius: 0,
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+
+  Widget _buildHeader(Color primaryColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      decoration: const BoxDecoration(
+        color: _kBg,
+        border: Border(bottom: BorderSide(color: _kSlate, width: 2)),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Row(
+          children: [
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(_kRadius),
+                  border: Border.all(color: _kSlate, width: _kBorderWidth),
+                  boxShadow: const [
+                    BoxShadow(color: _kSlate, offset: Offset(2, 2), blurRadius: 0),
+                  ],
+                ),
+                child: const Icon(Icons.arrow_back, color: _kSlate, size: 20),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "EDIT MODE",
+                  style: TextStyle(
+                    color: primaryColor,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+                Text(
+                  'BOOKING #${widget.bookingId}',
+                  style: const TextStyle(
+                    color: _kSlate,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Edit Booking #${widget.bookingId}'),
-        backgroundColor: const Color(0xFF0D9488),
-        foregroundColor: Colors.white,
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF2563EB)))
-          : _error != null
-              ? _buildErrorWidget()
-              : _buildUpdateForm(),
-    );
-  }
-
-  Widget _buildErrorWidget() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
-            const SizedBox(height: 16),
-            Text(_error!, style: const TextStyle(color: Colors.red), textAlign: TextAlign.center),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _isLoading = true;
-                  _error = null;
-                });
-                _fetchBookingDetail();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2563EB),
-                foregroundColor: Colors.white,
+      backgroundColor: _kBg,
+      body: Column(
+        children: [
+          _buildHeader(primaryColor),
+          if (_isLoading)
+            const Expanded(
+              child: Center(child: CircularProgressIndicator(color: _kSlate)),
+            )
+          else if (_error != null)
+            Expanded(
+              child: ErrorRetryWidget(
+                message: _error!,
+                onRetry: () {
+                  setState(() {
+                    _isLoading = true;
+                    _error = null;
+                  });
+                  _fetchBookingDetail();
+                },
               ),
-              child: const Text('Coba Lagi'),
+            )
+          else
+            Expanded(
+              child: Column(
+                children: [
+                  // Info Banner
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    color: primaryColor.withOpacity(0.05),
+                    child: Row(
+                      children: [
+                        Icon(Icons.info_outline, color: primaryColor, size: 20),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Text(
+                            'Edit booking Anda. Perubahan disimpan setelah tekan UPDATE.',
+                            style: TextStyle(
+                              color: _kSlate,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildCurrentBookingInfo(primaryColor),
+                          const SizedBox(height: 24),
+                          _buildScheduleDropdown(),
+                          const SizedBox(height: 20),
+                          _buildCoachDropdown(),
+                          const SizedBox(height: 20),
+                          _buildPaymentMethodDropdown(),
+                          const SizedBox(height: 20),
+                          _buildEquipmentSelector(),
+                          const SizedBox(height: 100),
+                        ],
+                      ),
+                    ),
+                  ),
+                  _buildBottomBar(primaryColor),
+                ],
+              ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildUpdateForm() {
-    return Column(
-      children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          color: const Color(0xFFF0FDFA),
-          child: Row(
+  Widget _buildCurrentBookingInfo(Color primaryColor) {
+    return _buildBrutalBox(
+      shadowOffset: 4,
+      padding: const EdgeInsets.all(20),
+      bgColor: primaryColor.withOpacity(0.05),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'BOOKING SAAT INI',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              color: _kMuted,
+              letterSpacing: 1.0,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            _venue?['name'] ?? 'Venue',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              color: primaryColor,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${_venue?['sport_category'] ?? ''} • ${_venue?['location'] ?? ''}',
+            style: const TextStyle(
+              color: _kMuted,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const Divider(height: 24, thickness: 2, color: _kSlate),
+          Row(
             children: [
-              const Icon(Icons.info_outline, color: Color(0xFF0F766E)),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Anda sedang mengedit booking. Perubahan akan disimpan setelah menekan tombol Update.',
-                  style: TextStyle(color: Colors.blue.shade700, fontSize: 13),
+              const Icon(Icons.access_time, size: 16, color: _kMuted),
+              const SizedBox(width: 8),
+              Text(
+                'Waktu: ${_currentSchedule?['start_time'] ?? '-'} - ${_currentSchedule?['end_time'] ?? '-'}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: _kSlate,
+                  fontSize: 13,
                 ),
               ),
             ],
           ),
-        ),
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildCurrentBookingInfo(),
-                const SizedBox(height: 24),
-                _buildScheduleDropdown(),
-                const SizedBox(height: 24),
-                _buildCoachDropdown(),
-                const SizedBox(height: 24),
-                _buildPaymentMethodDropdown(),
-                const SizedBox(height: 24),
-                _buildEquipmentSelector(),
-                const SizedBox(height: 100),
-              ],
-            ),
-          ),
-        ),
-        _buildBottomBar(),
-      ],
-    );
-  }
-
-  Widget _buildCurrentBookingInfo() {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2563EB).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(Icons.stadium, color: Color(0xFF2563EB), size: 28),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(_venue?['name'] ?? 'Venue',
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      Text('${_venue?['sport_category'] ?? ''} • ${_venue?['location'] ?? ''}',
-                          style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const Divider(height: 24),
-            Row(
-              children: [
-                Icon(Icons.calendar_today, size: 18, color: Colors.grey.shade600),
-                const SizedBox(width: 8),
-                Text('Tanggal: ', style: TextStyle(color: Colors.grey.shade600)),
-                Text(_formatDate(_currentSchedule?['date']),
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(Icons.access_time, size: 18, color: Colors.grey.shade600),
-                const SizedBox(width: 8),
-                Text('Waktu saat ini: ', style: TextStyle(color: Colors.grey.shade600)),
-                Text('${_currentSchedule?['start_time'] ?? '-'} - ${_currentSchedule?['end_time'] ?? '-'}',
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
-              ],
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -509,27 +590,38 @@ class _UpdateBookingPageState extends State<UpdateBookingPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Pilih Jadwal Baru:', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+        const Text(
+          'PILIH JADWAL BARU:',
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: _kSlate, letterSpacing: 0.5),
+        ),
         const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(8),
-          ),
+        _buildBrutalBox(
+          shadowOffset: 3,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           child: DropdownButtonHideUnderline(
             child: DropdownButton2<int>(
               value: _selectedScheduleId,
               isExpanded: true,
-              hint: const Text('Pilih jadwal'),
+              hint: const Text('Pilih jadwal', style: TextStyle(color: _kMuted, fontWeight: FontWeight.w700)),
+              dropdownStyleData: DropdownStyleData(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(_kRadius),
+                  border: Border.all(color: _kSlate, width: _kBorderWidth),
+                ),
+              ),
+              style: const TextStyle(color: _kSlate, fontWeight: FontWeight.w700),
               items: _availableSchedules.map<DropdownMenuItem<int>>((schedule) {
                 final scheduleId = schedule['id'] as int;
                 final isCurrent = scheduleId == widget.venueScheduleId;
                 return DropdownMenuItem<int>(
                   value: scheduleId,
                   child: Text(
-                    '${isCurrent ? "(Saat ini) " : ""}${schedule['start_time']} - ${schedule['end_time']}',
-                    style: TextStyle(fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal),
+                    '${isCurrent ? "(NOW) " : ""}${schedule['start_time']} - ${schedule['end_time']}',
+                    style: TextStyle(
+                      fontWeight: isCurrent ? FontWeight.w900 : FontWeight.w700,
+                      color: _kSlate,
+                    ),
                   ),
                 );
               }).toList(),
@@ -554,36 +646,45 @@ class _UpdateBookingPageState extends State<UpdateBookingPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Pilih Coach (opsional):', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+        const Text(
+          'PILIH COACH (OPSIONAL):',
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: _kSlate, letterSpacing: 0.5),
+        ),
         const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(8),
-          ),
+        _buildBrutalBox(
+          shadowOffset: 3,
+          padding: _isLoadingCoaches ? const EdgeInsets.all(16) : const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           child: _isLoadingCoaches
-              ? const Padding(
-                  padding: EdgeInsets.all(12),
-                  child: Center(child: SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))),
+              ? const Center(
+                  child: SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: _kSlate),
+                  ),
                 )
               : DropdownButtonHideUnderline(
                   child: DropdownButton<int?>(
                     value: _selectedCoachScheduleId,
                     isExpanded: true,
+                    dropdownColor: Colors.white,
+                    style: const TextStyle(color: _kSlate, fontWeight: FontWeight.w700),
                     items: [
-                      const DropdownMenuItem<int?>(value: null, child: Text('Tanpa Coach')),
+                      const DropdownMenuItem<int?>(
+                        value: null,
+                        child: Text('Tanpa Coach', style: TextStyle(fontWeight: FontWeight.w700)),
+                      ),
                       ..._coaches.map<DropdownMenuItem<int?>>((coach) {
                         return DropdownMenuItem<int?>(
                           value: coach['coach_schedule_id'] as int?,
-                          child: Text('${coach['name']} - Rp ${_formatPrice((coach['rate_per_hour'] ?? 0).toDouble())}/jam'),
+                          child: Text(
+                            '${coach['name']} - Rp ${_formatPrice((coach['rate_per_hour'] ?? 0).toDouble())}/jam',
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
                         );
                       }),
                     ],
                     onChanged: (value) {
-                      setState(() {
-                        _selectedCoachScheduleId = value;
-                      });
+                      setState(() => _selectedCoachScheduleId = value);
                     },
                   ),
                 ),
@@ -596,27 +697,33 @@ class _UpdateBookingPageState extends State<UpdateBookingPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Metode Pembayaran:', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+        const Text(
+          'METODE PEMBAYARAN:',
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: _kSlate, letterSpacing: 0.5),
+        ),
         const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(8),
-          ),
+        _buildBrutalBox(
+          shadowOffset: 3,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: _paymentMethod,
               isExpanded: true,
+              dropdownColor: Colors.white,
+              style: const TextStyle(color: _kSlate, fontWeight: FontWeight.w700),
               items: const [
-                DropdownMenuItem(value: 'CASH', child: Text('Cash (Bayar di Tempat)')),
-                DropdownMenuItem(value: 'TRANSFER', child: Text('Transfer Bank')),
+                DropdownMenuItem(
+                  value: 'CASH',
+                  child: Text('Cash (Bayar di Tempat)', style: TextStyle(fontWeight: FontWeight.w700)),
+                ),
+                DropdownMenuItem(
+                  value: 'TRANSFER',
+                  child: Text('Transfer Bank', style: TextStyle(fontWeight: FontWeight.w700)),
+                ),
               ],
               onChanged: (value) {
                 if (value != null) {
-                  setState(() {
-                    _paymentMethod = value;
-                  });
+                  setState(() => _paymentMethod = value);
                 }
               },
             ),
@@ -630,25 +737,24 @@ class _UpdateBookingPageState extends State<UpdateBookingPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Pilih Peralatan:', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+        const Text(
+          'PILIH PERALATAN:',
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: _kSlate, letterSpacing: 0.5),
+        ),
         const SizedBox(height: 8),
         if (_equipments.isEmpty)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(8),
+          _buildBrutalBox(
+            shadowOffset: 3,
+            padding: const EdgeInsets.all(20),
+            bgColor: _kLightGrey,
+            child: const Text(
+              'Tidak ada peralatan tersedia.',
+              style: TextStyle(color: _kMuted, fontWeight: FontWeight.w600),
             ),
-            child: Text('Tidak ada peralatan tersedia untuk venue ini.',
-                style: TextStyle(color: Colors.grey.shade600)),
           )
         else
-          Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(8),
-            ),
+          _buildBrutalBox(
+            shadowOffset: 3,
             child: Column(
               children: List.generate(_equipments.length, (index) {
                 final eq = _equipments[index];
@@ -658,40 +764,106 @@ class _UpdateBookingPageState extends State<UpdateBookingPage> {
 
                 return Column(
                   children: [
-                    CheckboxListTile(
-                      value: isSelected,
-                      onChanged: (value) {
-                        setState(() {
-                          if (value == true) {
-                            _selectedEquipmentIds.add(eqId);
-                            _equipmentQuantities[eqId] = 1;
-                          } else {
-                            _selectedEquipmentIds.remove(eqId);
-                            _equipmentQuantities.remove(eqId);
-                          }
-                        });
-                      },
-                      title: Text(eq['name']?.toString() ?? '-'),
-                      subtitle: Text('Rp ${_formatPrice((eq['rental_price'] ?? 0).toDouble())} • Stok: ${eq['stock_quantity'] ?? 0}'),
-                      activeColor: const Color(0xFF2563EB),
-                      secondary: isSelected
-                          ? Row(
-                              mainAxisSize: MainAxisSize.min,
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      child: Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                if (isSelected) {
+                                  _selectedEquipmentIds.remove(eqId);
+                                  _equipmentQuantities.remove(eqId);
+                                } else {
+                                  _selectedEquipmentIds.add(eqId);
+                                  _equipmentQuantities[eqId] = 1;
+                                }
+                              });
+                            },
+                            child: Container(
+                              width: 24,
+                              height: 24,
+                              decoration: BoxDecoration(
+                                color: isSelected ? Theme.of(context).colorScheme.primary : Colors.white,
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(color: _kSlate, width: 2),
+                              ),
+                              child: isSelected
+                                  ? const Icon(Icons.check, size: 16, color: Colors.white)
+                                  : null,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                IconButton(
-                                  icon: const Icon(Icons.remove_circle_outline, size: 20),
-                                  onPressed: qty > 1 ? () => setState(() => _equipmentQuantities[eqId] = qty - 1) : null,
+                                Text(
+                                  eq['name']?.toString() ?? '-',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w900,
+                                    color: _kSlate,
+                                    fontSize: 13,
+                                  ),
                                 ),
-                                Text('$qty'),
-                                IconButton(
-                                  icon: const Icon(Icons.add_circle_outline, size: 20),
-                                  onPressed: qty < (eq['stock_quantity'] ?? 1) ? () => setState(() => _equipmentQuantities[eqId] = qty + 1) : null,
+                                Text(
+                                  'Rp ${_formatPrice((eq['rental_price'] ?? 0).toDouble())} • Stok: ${eq['stock_quantity'] ?? 0}',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: _kMuted,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ],
-                            )
-                          : null,
+                            ),
+                          ),
+                          if (isSelected)
+                            Row(
+                              children: [
+                                GestureDetector(
+                                  onTap: qty > 1 ? () => setState(() => _equipmentQuantities[eqId] = qty - 1) : null,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color: qty > 1 ? _kLightGrey : Colors.grey.shade300,
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(color: _kSlate, width: 2),
+                                    ),
+                                    child: Icon(Icons.remove, size: 16, color: qty > 1 ? _kSlate : _kMuted),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                                  child: Text(
+                                    '$qty',
+                                    style: const TextStyle(fontWeight: FontWeight.w900, color: _kSlate),
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: qty < (eq['stock_quantity'] ?? 1)
+                                      ? () => setState(() => _equipmentQuantities[eqId] = qty + 1)
+                                      : null,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color: qty < (eq['stock_quantity'] ?? 1) ? _kLightGrey : Colors.grey.shade300,
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(color: _kSlate, width: 2),
+                                    ),
+                                    child: Icon(
+                                      Icons.add,
+                                      size: 16,
+                                      color: qty < (eq['stock_quantity'] ?? 1) ? _kSlate : _kMuted,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                        ],
+                      ),
                     ),
-                    if (index < _equipments.length - 1) const Divider(height: 1),
+                    if (index < _equipments.length - 1)
+                      const Divider(height: 1, thickness: 2, color: _kSlate),
                   ],
                 );
               }),
@@ -701,14 +873,12 @@ class _UpdateBookingPageState extends State<UpdateBookingPage> {
     );
   }
 
-  Widget _buildBottomBar() {
+  Widget _buildBottomBar(Color primaryColor) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
-        boxShadow: [
-          BoxShadow(color: Colors.grey.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, -2)),
-        ],
+        border: Border(top: BorderSide(color: _kSlate, width: 2)),
       ),
       child: SafeArea(
         child: Row(
@@ -718,25 +888,61 @@ class _UpdateBookingPageState extends State<UpdateBookingPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('Total Biaya', style: TextStyle(color: Colors.grey)),
-                  Text('Rp ${_formatPrice(_calculateTotal())}',
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF2563EB))),
+                  const Text(
+                    'TOTAL BIAYA',
+                    style: TextStyle(
+                      color: _kMuted,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  Text(
+                    'Rp ${_formatPrice(_calculateTotal())}',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      color: primaryColor,
+                    ),
+                  ),
                 ],
               ),
             ),
             const SizedBox(width: 16),
             Expanded(
-              child: ElevatedButton(
-                onPressed: _isSubmitting ? null : _updateBooking,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2563EB),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(_kRadius),
+                  boxShadow: [
+                    BoxShadow(
+                      color: primaryColor.withOpacity(0.4),
+                      offset: const Offset(4, 4),
+                      blurRadius: 0,
+                    ),
+                  ],
                 ),
-                child: _isSubmitting
-                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : const Text('Update Booking', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                child: ElevatedButton(
+                  onPressed: _isSubmitting ? null : _updateBooking,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _isSubmitting ? _kMuted : primaryColor,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(_kRadius),
+                      side: const BorderSide(color: Colors.white, width: 2),
+                    ),
+                  ),
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        )
+                      : const Text(
+                          'UPDATE',
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+                        ),
+                ),
               ),
             ),
           ],

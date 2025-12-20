@@ -9,6 +9,16 @@ import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:all_ahraga/widgets/error_retry_widget.dart';
+
+// PALETTE LIGHT NEO-BRUTALISM
+const Color _kBg = Colors.white;
+const Color _kSlate = Color(0xFF0F172A);
+const Color _kMuted = Color(0xFF64748B);
+const Color _kRed = Color(0xFFDC2626);
+const Color _kLightGrey = Color(0xFFF1F5F9);
+const double _kRadius = 8.0;
+const double _kBorderWidth = 2.0;
 
 class BookingHistoryPage extends StatefulWidget {
   const BookingHistoryPage({super.key});
@@ -20,11 +30,18 @@ class BookingHistoryPage extends StatefulWidget {
 class _BookingHistoryPageState extends State<BookingHistoryPage> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  bool _isLocaleReady = false;
 
   @override
   void initState() {
     super.initState();
-    initializeDateFormatting('id_ID', null);
+    _initData();
+  }
+
+  Future<void> _initData() async {
+    await initializeDateFormatting('id_ID', null);
+    if (!mounted) return;
+    setState(() => _isLocaleReady = true);
   }
 
   @override
@@ -65,10 +82,8 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
   Future<List<ReviewEntry>> fetchReviews(CookieRequest request, int bookingId) async {
     try {
       final url = ApiConstants.reviewsList(bookingId);
-      
       try {
         final response = await request.get(url);
-        
         List<ReviewEntry> reviews = [];
         if (response is List) {
           for (var d in response) {
@@ -78,9 +93,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
           }
         }
         return reviews;
-      } on FormatException catch (_) {
-        // Fallback to http request if initial response fails
-      }
+      } on FormatException catch (_) {}
       
       final httpResponse = await http.get(
         Uri.parse(url),
@@ -102,7 +115,6 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
         try {
           final jsonData = jsonDecode(httpResponse.body);
           List<ReviewEntry> reviews = [];
-          
           if (jsonData is List) {
             for (var d in jsonData) {
               if (d != null) {
@@ -110,7 +122,6 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
               }
             }
           }
-          
           return reviews;
         } catch (e) {
           return [];
@@ -123,491 +134,502 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final request = context.watch<CookieRequest>();
-
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: const Text(
-          'Riwayat Booking',
-          style: TextStyle(fontWeight: FontWeight.bold),
+  Widget _buildBrutalBox({
+    required Widget child,
+    VoidCallback? onTap,
+    Color bgColor = Colors.white,
+    Color borderColor = _kSlate,
+    double shadowOffset = 4.0,
+    EdgeInsets? padding,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: padding,
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(_kRadius),
+          border: Border.all(color: borderColor, width: _kBorderWidth),
+          boxShadow: [
+            BoxShadow(
+              color: _kSlate,
+              offset: Offset(shadowOffset, shadowOffset),
+              blurRadius: 0,
+            ),
+          ],
         ),
-        backgroundColor: const Color(0xFF0D9488),
-        foregroundColor: Colors.white,
-        elevation: 0,
+        child: child,
       ),
-      body: RefreshIndicator(
-        onRefresh: () async => setState(() {}),
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
+    );
+  }
+
+  Widget _buildHeader(Color primaryColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      decoration: const BoxDecoration(
+        color: _kBg,
+        border: Border(bottom: BorderSide(color: _kSlate, width: 2)),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Row(
+          children: [
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
               child: Container(
-                margin: const EdgeInsets.all(16),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade300),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 5,
-                      offset: const Offset(0, 2),
-                    ),
+                  borderRadius: BorderRadius.circular(_kRadius),
+                  border: Border.all(color: _kSlate, width: _kBorderWidth),
+                  boxShadow: const [
+                    BoxShadow(color: _kSlate, offset: Offset(2, 2), blurRadius: 0),
                   ],
                 ),
-                child: TextField(
-                  controller: _searchController,
-                  onChanged: (value) => setState(() => _searchQuery = value.toLowerCase()),
-                  decoration: const InputDecoration(
-                    hintText: 'Cari nama venue atau ID booking ...',
-                    border: InputBorder.none,
-                    icon: Icon(Icons.search, color: Colors.grey),
-                  ),
-                ),
+                child: const Icon(Icons.arrow_back, color: _kSlate, size: 20),
               ),
             ),
-
-            FutureBuilder<List<BookingListEntry>>(
-              future: fetchBookingHistory(request),
-              builder: (context, AsyncSnapshot<List<BookingListEntry>> snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const SliverToBoxAdapter(
-                    child: Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(32),
-                        child: CircularProgressIndicator(color: Color(0xFF0D9488)),
-                      ),
-                    ),
-                  );
-                }
-
-                if (snapshot.hasError) {
-                  return SliverToBoxAdapter(
-                    child: Center(child: Padding(padding: const EdgeInsets.all(32), child: Text("Error: ${snapshot.error}"))),
-                  );
-                }
-
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.all(40),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.assignment,
-                              size: 48,
-                              color: Colors.grey,
-                            ),
-                          ),
-
-                          const SizedBox(height: 24),
-                          const Text(
-                            "Anda belum memiliki riwayat booking",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-
-                          const SizedBox(height: 8),
-                          const Text(
-                            "Mulai booking venue dan coach favorit Anda sekarang!",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }
-
-                final filteredBookings = snapshot.data!.where((booking) {
-                  final query = _searchQuery.toLowerCase();
-                  return booking.pk.toString().contains(query) ||
-                         booking.fields.venueName.toLowerCase().contains(query);
-                }).toList();
-
-                if (filteredBookings.isEmpty) {
-                  return const SliverToBoxAdapter(child: Center(child: Padding(padding: EdgeInsets.all(32), child: Text("Tidak ditemukan."))));
-                }
-
-                return SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      return _buildHistoryCard(context, filteredBookings[index]);
-                    },
-                    childCount: filteredBookings.length,
+            const SizedBox(width: 16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "HISTORY AREA",
+                  style: TextStyle(
+                    color: primaryColor,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.5,
                   ),
-                );
-              },
+                ),
+                const Text(
+                  "RIWAYAT BOOKING",
+                  style: TextStyle(
+                    color: _kSlate,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 30)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHistoryCard(BuildContext context, BookingListEntry booking) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
-            spreadRadius: 1,
-            blurRadius: 6,
-            offset: const Offset(0, 3),
+  @override
+  Widget build(BuildContext context) {
+    if (!_isLocaleReady) {
+      return Scaffold(
+        backgroundColor: _kBg,
+        body: Center(
+          child: CircularProgressIndicator(
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        ),
+      );
+    }
+
+    final request = context.watch<CookieRequest>();
+    final primaryColor = Theme.of(context).colorScheme.primary;
+
+    return Scaffold(
+      backgroundColor: _kBg,
+      body: Column(
+        children: [
+          _buildHeader(primaryColor),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: () async => setState(() {}),
+              color: primaryColor,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Search Box
+                    _buildBrutalBox(
+                      shadowOffset: 3,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      child: TextField(
+                        controller: _searchController,
+                        onChanged: (value) => setState(() => _searchQuery = value.toLowerCase()),
+                        style: const TextStyle(
+                          color: _kSlate,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        decoration: const InputDecoration(
+                          hintText: 'CARI VENUE...',
+                          hintStyle: TextStyle(
+                            color: _kMuted,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                          ),
+                          border: InputBorder.none,
+                          icon: Icon(Icons.search, color: _kMuted),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Booking History List
+                    FutureBuilder<List<BookingListEntry>>(
+                      future: fetchBookingHistory(request),
+                      builder: (context, AsyncSnapshot<List<BookingListEntry>> snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(32),
+                              child: CircularProgressIndicator(color: primaryColor),
+                            ),
+                          );
+                        }
+
+                        if (snapshot.hasError) {
+                          return ErrorRetryWidget(
+                            message: "Gagal memuat riwayat booking.",
+                            onRetry: () => setState(() {}),
+                          );
+                        }
+
+                        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                          return _buildEmptyState();
+                        }
+
+                        final filteredBookings = snapshot.data!.where((booking) {
+                          final query = _searchQuery.toLowerCase();
+                          return booking.pk.toString().contains(query) ||
+                              booking.fields.venueName.toLowerCase().contains(query);
+                        }).toList();
+
+                        if (filteredBookings.isEmpty) {
+                          return const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(32),
+                              child: Text(
+                                "TIDAK ADA HASIL",
+                                style: TextStyle(
+                                  color: _kMuted,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+
+                        return Column(
+                          children: filteredBookings.map((booking) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 20),
+                              child: _buildHistoryCard(context, booking, primaryColor),
+                            );
+                          }).toList(),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 60),
+                  ],
+                ),
+              ),
+            ),
           ),
         ],
-        border: Border.all(color: Colors.grey.shade200),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40),
         child: Column(
           children: [
             Container(
-              decoration: const BoxDecoration(
-                border: Border(
-                  left: BorderSide(color: Color(0xFF2563EB), width: 5),  
-                ),
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: _kLightGrey,
+                borderRadius: BorderRadius.circular(_kRadius),
+                border: Border.all(color: _kSlate, width: _kBorderWidth),
               ),
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Booking #${booking.pk}',
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade500, fontWeight: FontWeight.w500),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    booking.fields.venueName,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF2563EB), 
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  _buildInfoRow(
-                    Icons.calendar_today_outlined,
-                    "Tanggal",
-                    formatDate(booking.fields.date),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildInfoRow(
-                    Icons.access_time,
-                    "Waktu",
-                    "${booking.fields.startTime} - ${booking.fields.endTime}",
-                  ),
-                  
-                  if (booking.fields.coachName != null && booking.fields.coachName != "-" && booking.fields.coachName != "null") ...[
-                    const SizedBox(height: 12),
-                    _buildInfoRow(
-                      Icons.person_outline,
-                      "Coach",
-                      booking.fields.coachName!,
-                    ),
-                  ],
-
-                  if (booking.fields.equipments.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    _buildEquipmentRow(booking.fields.equipments),
-                  ],
-                ],
+              child: const Icon(Icons.assignment, size: 48, color: _kMuted),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              "BELUM ADA RIWAYAT",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+                color: _kSlate,
               ),
             ),
-
-            const Divider(height: 1, thickness: 1),
-
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFEFF6FF), 
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              "TOTAL BIAYA",
-                              style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.blue.shade700),
-                            ),
-                            const SizedBox(height: 4),
-                            FittedBox(
-                              fit: BoxFit.scaleDown,
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                formatCurrency(booking.fields.totalPrice),
-                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A)),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    
-                    const SizedBox(width: 8),
-
-                    Expanded(
-                      flex: 2,
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade50, 
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              "METODE PEMBAYARAN",
-                              style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.grey.shade600),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              booking.fields.paymentMethod.toUpperCase(),
-                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black87),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(width: 8),
-
-                    Expanded(
-                      flex: 3, 
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade50, 
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              "STATUS PEMBAYARAN",
-                              style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.grey.shade600),
-                            ),
-                            const SizedBox(height: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFDCFCE7), 
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Container(
-                                    width: 8,
-                                    height: 8,
-                                    decoration: const BoxDecoration(
-                                      color: Color(0xFF16A34A),
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  const Flexible(
-                                    child: Text(
-                                      "BOOKING TERKONFIRMASI",
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color(0xFF166534), 
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Feedback',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  FutureBuilder<List<ReviewEntry>>(
-                    future: fetchReviews(context.read<CookieRequest>(), booking.pk),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      final reviews = snapshot.data ?? [];
-                      return Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF0F7FF),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: const Color(0xFFD1E7FF), width: 1),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.blue.withValues(alpha: 0.05),
-                              blurRadius: 2,
-                              offset: const Offset(0, 1),
-                            ),
-                          ],
-                        ),
-                        padding: const EdgeInsets.all(14),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (reviews.isNotEmpty) ...[
-                              ...reviews.map((review) => _buildReviewCard(context, review)),
-                              const SizedBox(height: 12),
-                            ],
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Expanded(
-                                  child: ElevatedButton.icon(
-                                    onPressed: () => _navigateToReviewForm(
-                                      context,
-                                      context.read<CookieRequest>(),
-                                      booking,
-                                      'venue',
-                                      reviews.firstWhere(
-                                        (r) => r.fields.targetType == 'venue',
-                                        orElse: () => ReviewEntry(
-                                          pk: 0,
-                                          fields: ReviewFields(
-                                            rating: 0,
-                                            comment: '',
-                                            targetType: '',
-                                            targetName: '',
-                                            createdAt: DateTime.now(),
-                                            updatedAt: DateTime.now(),
-                                          ),
-                                        ),
-                                      ).pk == 0 ? null : reviews.firstWhere((r) => r.fields.targetType == 'venue'),
-                                    ),
-                                    icon: const Icon(Icons.location_on, size: 16),
-                                    label: Text(
-                                      reviews.any((r) => r.fields.targetType == 'venue') 
-                                        ? 'Edit Review Venue' 
-                                        : 'Beri Review Venue',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF0D9488),
-                                      foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                if (booking.fields.coachName != null &&
-                                    booking.fields.coachName != "-" &&
-                                    booking.fields.coachName != "null")
-                                  Expanded(
-                                    child: ElevatedButton.icon(
-                                      onPressed: () => _navigateToReviewForm(
-                                        context,
-                                        context.read<CookieRequest>(),
-                                        booking,
-                                        'coach',
-                                        reviews.firstWhere(
-                                          (r) => r.fields.targetType == 'coach',
-                                          orElse: () => ReviewEntry(
-                                            pk: 0,
-                                            fields: ReviewFields(
-                                              rating: 0,
-                                              comment: '',
-                                              targetType: '',
-                                              targetName: '',
-                                              createdAt: DateTime.now(),
-                                              updatedAt: DateTime.now(),
-                                            ),
-                                          ),
-                                        ).pk == 0 ? null : reviews.firstWhere((r) => r.fields.targetType == 'coach'),
-                                      ),
-                                      icon: const Icon(Icons.person, size: 16),
-                                      label: Text(
-                                        reviews.any((r) => r.fields.targetType == 'coach') 
-                                          ? 'Edit Review Coach' 
-                                          : 'Beri Review Coach',
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color(0xFF2563EB),
-                                        foregroundColor: Colors.white,
-                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
+            const SizedBox(height: 8),
+            const Text(
+              "Mulai booking sekarang!",
+              style: TextStyle(fontSize: 14, color: _kMuted),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildHistoryCard(BuildContext context, BookingListEntry booking, Color primaryColor) {
+    return _buildBrutalBox(
+      shadowOffset: 6,
+      child: Column(
+        children: [
+          // Header Section
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.green.shade50,
+              border: Border(
+                left: BorderSide(color: Colors.green.shade600, width: 6),
+                bottom: const BorderSide(color: _kSlate, width: _kBorderWidth),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'BOOKING #${booking.pk}',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: _kMuted,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade100,
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: Colors.green.shade700, width: 2),
+                      ),
+                      child: Text(
+                        'CONFIRMED',
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.green.shade900,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  booking.fields.venueName.toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.green.shade700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Details Section
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildInfoRow(Icons.calendar_today, "TANGGAL", formatDate(booking.fields.date)),
+                const SizedBox(height: 12),
+                _buildInfoRow(Icons.access_time, "WAKTU", "${booking.fields.startTime} - ${booking.fields.endTime}"),
+                if (booking.fields.coachName != null && booking.fields.coachName != "-" && booking.fields.coachName != "null") ...[
+                  const SizedBox(height: 12),
+                  _buildInfoRow(Icons.person, "COACH", booking.fields.coachName!),
+                ],
+                if (booking.fields.equipments.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  _buildEquipmentRow(booking.fields.equipments),
+                ],
+                const SizedBox(height: 20),
+
+                // Payment Info
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: _kLightGrey,
+                    borderRadius: BorderRadius.circular(_kRadius),
+                    border: Border.all(color: _kSlate, width: 2),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'TOTAL BIAYA',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                              color: _kMuted,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            formatCurrency(booking.fields.totalPrice),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                              color: primaryColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          const Text(
+                            'METODE',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                              color: _kMuted,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            booking.fields.paymentMethod.toUpperCase(),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w900,
+                              color: _kSlate,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Review Section
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: const BoxDecoration(
+              border: Border(top: BorderSide(color: _kSlate, width: 2)),
+              color: _kLightGrey,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'FEEDBACK',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                    color: _kSlate,
+                    letterSpacing: 1.0,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                FutureBuilder<List<ReviewEntry>>(
+                  future: fetchReviews(context.read<CookieRequest>(), booking.pk),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(16),
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      );
+                    }
+                    final reviews = snapshot.data ?? [];
+                    return Column(
+                      children: [
+                        if (reviews.isNotEmpty)
+                          ...reviews.map((review) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: _buildReviewCard(context, review),
+                          )),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildReviewButton(
+                                label: reviews.any((r) => r.fields.targetType == 'venue')
+                                    ? 'EDIT VENUE'
+                                    : 'REVIEW VENUE',
+                                icon: Icons.location_on,
+                                color: primaryColor,
+                                onPressed: () => _navigateToReviewForm(
+                                  context,
+                                  context.read<CookieRequest>(),
+                                  booking,
+                                  'venue',
+                                  reviews.firstWhere(
+                                    (r) => r.fields.targetType == 'venue',
+                                    orElse: () => ReviewEntry(
+                                      pk: 0,
+                                      fields: ReviewFields(
+                                        rating: 0,
+                                        comment: '',
+                                        targetType: '',
+                                        targetName: '',
+                                        createdAt: DateTime.now(),
+                                        updatedAt: DateTime.now(),
+                                      ),
+                                    ),
+                                  ).pk == 0 ? null : reviews.firstWhere((r) => r.fields.targetType == 'venue'),
+                                ),
+                              ),
+                            ),
+                            if (booking.fields.coachName != null &&
+                                booking.fields.coachName != "-" &&
+                                booking.fields.coachName != "null") ...[
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _buildReviewButton(
+                                  label: reviews.any((r) => r.fields.targetType == 'coach')
+                                      ? 'EDIT COACH'
+                                      : 'REVIEW COACH',
+                                  icon: Icons.person,
+                                  color: Colors.blue.shade600,
+                                  onPressed: () => _navigateToReviewForm(
+                                    context,
+                                    context.read<CookieRequest>(),
+                                    booking,
+                                    'coach',
+                                    reviews.firstWhere(
+                                      (r) => r.fields.targetType == 'coach',
+                                      orElse: () => ReviewEntry(
+                                        pk: 0,
+                                        fields: ReviewFields(
+                                          rating: 0,
+                                          comment: '',
+                                          targetType: '',
+                                          targetName: '',
+                                          createdAt: DateTime.now(),
+                                          updatedAt: DateTime.now(),
+                                        ),
+                                      ),
+                                    ).pk == 0 ? null : reviews.firstWhere((r) => r.fields.targetType == 'coach'),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -616,7 +638,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 20, color: Colors.grey.shade500),
+        Icon(icon, size: 18, color: _kMuted),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -624,12 +646,21 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
             children: [
               Text(
                 label,
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black87),
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  color: _kMuted,
+                  letterSpacing: 0.5,
+                ),
               ),
               const SizedBox(height: 2),
               Text(
                 value,
-                style: TextStyle(fontSize: 14, color: Colors.grey.shade700, height: 1.3),
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: _kSlate,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ],
           ),
@@ -642,15 +673,20 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(Icons.inbox_outlined, size: 20, color: Colors.grey.shade500), 
+        const Icon(Icons.sports_soccer, size: 18, color: _kMuted),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                "Peralatan",
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black87),
+                'PERALATAN',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  color: _kMuted,
+                  letterSpacing: 0.5,
+                ),
               ),
               const SizedBox(height: 6),
               Wrap(
@@ -658,14 +694,19 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
                 runSpacing: 6,
                 children: equipments.map((eq) {
                   return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(6),
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: _kSlate, width: 2),
                     ),
                     child: Text(
-                      "${eq.name} ×${eq.quantity}",
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.black87),
+                      '${eq.name} ×${eq.quantity}',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: _kSlate,
+                      ),
                     ),
                   );
                 }).toList(),
@@ -678,114 +719,136 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
   }
 
   Widget _buildReviewCard(BuildContext context, ReviewEntry review) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 14),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-        side: const BorderSide(
-          color: Color(0xFFE5E7EB),
-          width: 1,
-        ),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(_kRadius),
+        border: Border.all(color: _kSlate, width: 2),
+        boxShadow: const [
+          BoxShadow(color: _kSlate, offset: Offset(3, 3), blurRadius: 0),
+        ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        review.fields.targetName,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1F2937),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        review.fields.targetType == 'venue' ? '📍 Venue' : '👤 Coach',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF6B7280),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Color(0xFFDC2626), size: 24),
-                  onPressed: () => _showDeleteConfirmation(context, review.pk),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                  tooltip: 'Hapus review',
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Column(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        ...List.generate(
-                          5,
-                          (index) => Icon(
-                            index < review.fields.rating ? Icons.star : Icons.star_border,
-                            size: 20,
-                            color: const Color(0xFFFBBF24),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          '${review.fields.rating}/5',
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1F2937),
-                          ),
-                        ),
-                      ],
+                    Text(
+                      review.fields.targetName.toUpperCase(),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
+                        color: _kSlate,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      review.fields.targetType == 'venue' ? 'VENUE' : 'COACH',
+                      style: const TextStyle(
+                        fontSize: 9,
+                        color: _kMuted,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ],
                 ),
-                Text(
-                  _formatDate(review.fields.updatedAt),
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF9CA3AF),
-                    fontWeight: FontWeight.w500,
+              ),
+              GestureDetector(
+                onTap: () => _showDeleteConfirmation(context, review.pk),
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: _kRed, width: 2),
                   ),
+                  child: const Icon(Icons.delete, color: _kRed, size: 16),
                 ),
-              ],
-            ),
-            
-            if (review.fields.comment.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Text(
-                review.fields.comment,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF4B5563),
-                  height: 1.5,
-                ),
-                maxLines: 4,
-                overflow: TextOverflow.ellipsis,
               ),
             ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              ...List.generate(
+                5,
+                (index) => Icon(
+                  index < review.fields.rating ? Icons.star : Icons.star_border,
+                  size: 16,
+                  color: Colors.amber.shade700,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '${review.fields.rating}/5',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900,
+                  color: _kSlate,
+                ),
+              ),
+            ],
+          ),
+          if (review.fields.comment.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              review.fields.comment,
+              style: const TextStyle(
+                fontSize: 12,
+                color: _kSlate,
+                height: 1.4,
+              ),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReviewButton({
+    required String label,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onPressed,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(_kRadius),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.3),
+            offset: const Offset(2, 2),
+            blurRadius: 0,
+          ),
+        ],
+      ),
+      child: ElevatedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, size: 14),
+        label: Text(
+          label,
+          style: const TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(_kRadius),
+            side: const BorderSide(color: Colors.white, width: 2),
+          ),
         ),
       ),
     );
@@ -795,66 +858,59 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Hapus Feedback?'),
-        content: const Text('Feedback akan dihapus permanen.'),
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          side: const BorderSide(color: _kSlate, width: 2),
+          borderRadius: BorderRadius.circular(_kRadius),
+        ),
+        title: const Text(
+          'HAPUS FEEDBACK?',
+          style: TextStyle(color: _kSlate, fontWeight: FontWeight.w900),
+        ),
+        content: const Text(
+          'Feedback akan dihapus permanen.',
+          style: TextStyle(color: _kSlate),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Batal'),
+            child: const Text('BATAL', style: TextStyle(fontWeight: FontWeight.bold, color: _kMuted)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFDC2626),
+              backgroundColor: _kRed,
               foregroundColor: Colors.white,
+              elevation: 0,
             ),
             onPressed: () {
               Navigator.pop(dialogContext);
               _deleteReview(context, reviewId);
             },
-            child: const Text('Hapus'),
+            child: const Text('HAPUS', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
     );
   }
 
-  String _formatDate(DateTime date) {
-    final months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-    ];
-    return '${date.day} ${months[date.month - 1]} ${date.year}';
-  }
-
   Future<void> _deleteReview(BuildContext context, int reviewId) async {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
-    
     try {
       final request = context.read<CookieRequest>();
       final url = ApiConstants.deleteReview(reviewId);
       
-      String errorMessage = '';
-      bool success = false;
-      
       try {
         final response = await request.post(url, {});
-        
-        if (response is Map<String, dynamic>) {
-          success = response['success'] ?? false;
-          
-          if (success) {
-            if (mounted) {
-              setState(() {});
-              scaffoldMessenger.showSnackBar(
-                const SnackBar(content: Text('Review berhasil dihapus'), backgroundColor: Colors.green),
-              );
-            }
-            return;
+        if (response is Map<String, dynamic> && (response['success'] ?? false)) {
+          if (mounted) {
+            setState(() {});
+            scaffoldMessenger.showSnackBar(
+              const SnackBar(content: Text('Review berhasil dihapus'), backgroundColor: Colors.green),
+            );
           }
+          return;
         }
-      } on FormatException catch (_) {
-        // Fallback to http request if initial response fails
-      }
+      } on FormatException catch (_) {}
       
       final httpResponse = await http.post(
         Uri.parse(url),
@@ -869,53 +925,31 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
         onTimeout: () => http.Response('{"error": "timeout"}', 408),
       );
       
-      if (httpResponse.body.contains('<!DOCTYPE') || httpResponse.body.contains('<html')) {
-        errorMessage = 'Server returned HTML instead of JSON';
-      } else if (httpResponse.statusCode == 200 || httpResponse.statusCode == 201) {
+      if (httpResponse.statusCode == 200 || httpResponse.statusCode == 201) {
         try {
           final jsonResponse = jsonDecode(httpResponse.body);
-          
-          if (jsonResponse is Map<String, dynamic>) {
-            success = jsonResponse['success'] ?? false;
-            final message = jsonResponse['message'] ?? '';
-            
-            if (success) {
-              if (mounted) {
-                setState(() {});
-                scaffoldMessenger.showSnackBar(
-                  const SnackBar(content: Text('Review berhasil dihapus'), backgroundColor: Colors.green),
-                );
-              }
-              return;
-            } else {
-              errorMessage = message.isNotEmpty ? message : 'Delete failed';
+          if (jsonResponse is Map<String, dynamic> && (jsonResponse['success'] ?? false)) {
+            if (mounted) {
+              setState(() {});
+              scaffoldMessenger.showSnackBar(
+                const SnackBar(content: Text('Review berhasil dihapus'), backgroundColor: Colors.green),
+              );
             }
+            return;
           }
-        } catch (e) {
-          errorMessage = 'Failed to parse delete response';
-        }
-      } else if (httpResponse.statusCode == 404) {
-        errorMessage = 'Review not found';
-      } else if (httpResponse.statusCode == 401 || httpResponse.statusCode == 403) {
-        errorMessage = 'You do not have permission to delete this review';
-      } else {
-        errorMessage = 'Delete failed with status ${httpResponse.statusCode}';
+        } catch (e) {}
       }
       
-      if (errorMessage.isNotEmpty && mounted) {
+      if (mounted) {
         scaffoldMessenger.showSnackBar(
-          SnackBar(content: Text('Gagal menghapus review: $errorMessage')),
+          const SnackBar(content: Text('Gagal menghapus review')),
         );
       }
     } catch (e) {
       if (mounted) {
-        try {
-          scaffoldMessenger.showSnackBar(
-            SnackBar(content: Text('Gagal menghapus review: $e')),
-          );
-        } catch (ex) {
-          debugPrint('Error showing snackbar: $ex');
-        }
+        scaffoldMessenger.showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
       }
     }
   }
@@ -940,8 +974,6 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
           initialComment: existingReview?.fields.comment ?? '',
         ),
       ),
-    ).then((_) {
-      setState(() {});
-    });
+    ).then((_) => setState(() {}));
   }
 }
