@@ -5,13 +5,23 @@ import 'package:provider/provider.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import '/models/coach_list_models.dart';
 
+// Design System Constants
+class NeoBrutalism {
+  static const Color primary = Color(0xFF0D9488);
+  static const Color slate = Color(0xFF0F172A);
+  static const Color grey = Color(0xFF64748B);
+  static const Color danger = Color(0xFFDC2626);
+  static const Color white = Colors.white;
+
+  static const double borderWidth = 2.0;
+  static const double borderRadius = 8.0;
+  static const Offset shadowOffset = Offset(4, 4);
+}
+
 class CoachDetailPage extends StatefulWidget {
   final int coachId;
 
-  const CoachDetailPage({
-    Key? key,
-    required this.coachId,
-  }) : super(key: key);
+  const CoachDetailPage({Key? key, required this.coachId}) : super(key: key);
 
   @override
   State<CoachDetailPage> createState() => _CoachDetailPageState();
@@ -63,18 +73,18 @@ class _CoachDetailPageState extends State<CoachDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // bottomNavigationBar dihapus sesuai permintaan
+      backgroundColor: NeoBrutalism.white,
       body: _isLoading
           ? const Center(
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.teal),
+                valueColor: AlwaysStoppedAnimation<Color>(NeoBrutalism.primary),
               ),
             )
           : _errorMessage != null
-              ? _buildErrorView()
-              : _coach == null
-                  ? const Center(child: Text('Data tidak tersedia'))
-                  : _buildContent(),
+          ? _buildErrorView()
+          : _coach == null
+          ? const Center(child: Text('Data tidak tersedia'))
+          : _buildContent(),
     );
   }
 
@@ -85,28 +95,33 @@ class _CoachDetailPageState extends State<CoachDetailPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
+            const Icon(
+              Icons.error_outline,
+              size: 64,
+              color: NeoBrutalism.danger,
+            ),
             const SizedBox(height: 16),
             Text(
               _errorMessage!,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.red.shade700, fontSize: 16),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: _fetchCoachDetail,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Coba Lagi'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.teal,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              style: const TextStyle(
+                color: NeoBrutalism.slate,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
               ),
             ),
+            const SizedBox(height: 24),
+            _buildNeoButton(
+              onPressed: _fetchCoachDetail,
+              label: 'COBA LAGI',
+              icon: Icons.refresh,
+            ),
             const SizedBox(height: 12),
-            TextButton(
+            _buildNeoButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Kembali'),
+              label: 'KEMBALI',
+              icon: Icons.arrow_back,
+              isPrimary: false,
             ),
           ],
         ),
@@ -117,17 +132,17 @@ class _CoachDetailPageState extends State<CoachDetailPage> {
   Widget _buildContent() {
     return CustomScrollView(
       slivers: [
-        _buildAppBar(), // Menampilkan Foto
+        _buildCustomAppBar(),
         SliverToBoxAdapter(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildCoachHeader(), // Menampilkan Nama & Jenis Olahraga
-              const SizedBox(height: 8),
-              _buildQuickInfo(), // Menampilkan Umur, Rate, Area Layanan
+              _buildCoachHeader(),
               const SizedBox(height: 16),
-              _buildExperienceSection(), // Menampilkan Deskripsi Pengalaman
-              const SizedBox(height: 40), // Spasi bawah
+              _buildQuickInfo(),
+              const SizedBox(height: 16),
+              _buildExperienceSection(),
+              const SizedBox(height: 40),
             ],
           ),
         ),
@@ -135,13 +150,35 @@ class _CoachDetailPageState extends State<CoachDetailPage> {
     );
   }
 
-  // Header berisi Foto Coach
-  Widget _buildAppBar() {
+  Widget _buildCustomAppBar() {
     return SliverAppBar(
       expandedHeight: 300,
       pinned: true,
-      backgroundColor: Colors.teal.shade700,
-      iconTheme: const IconThemeData(color: Colors.white),
+      backgroundColor: NeoBrutalism.white,
+      iconTheme: const IconThemeData(color: NeoBrutalism.slate),
+      leading: Container(
+        margin: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: NeoBrutalism.white,
+          borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+          border: Border.all(
+            color: NeoBrutalism.slate,
+            width: NeoBrutalism.borderWidth,
+          ),
+          boxShadow: const [
+            BoxShadow(
+              color: NeoBrutalism.slate,
+              offset: Offset(2, 2),
+              blurRadius: 0,
+            ),
+          ],
+        ),
+        child: IconButton(
+          icon: const Icon(Icons.arrow_back, color: NeoBrutalism.slate),
+          onPressed: () => Navigator.pop(context),
+          padding: EdgeInsets.zero,
+        ),
+      ),
       flexibleSpace: FlexibleSpaceBar(
         background: Stack(
           fit: StackFit.expand,
@@ -150,22 +187,17 @@ class _CoachDetailPageState extends State<CoachDetailPage> {
                 ? Image.network(
                     _coach!.profilePicture!,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return _buildPlaceholderImage();
-                    },
+                    errorBuilder: (context, error, stackTrace) =>
+                        _buildPlaceholderImage(),
                   )
                 : _buildPlaceholderImage(),
-            // Gradient overlay agar teks/icon back terlihat jelas
             Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withOpacity(0.3),
-                    Colors.transparent,
-                    Colors.black.withOpacity(0.1),
-                  ],
+              decoration: const BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: NeoBrutalism.slate,
+                    width: NeoBrutalism.borderWidth,
+                  ),
                 ),
               ),
             ),
@@ -177,81 +209,115 @@ class _CoachDetailPageState extends State<CoachDetailPage> {
 
   Widget _buildPlaceholderImage() {
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Colors.teal.shade300, Colors.teal.shade700],
-        ),
-      ),
-      child: Center(
-        child: Icon(
-          Icons.person,
-          size: 120,
-          color: Colors.white.withOpacity(0.5),
-        ),
+      color: NeoBrutalism.grey,
+      child: const Center(
+        child: Icon(Icons.person, size: 120, color: NeoBrutalism.white),
       ),
     );
   }
 
-  // Menampilkan Nama dan Jenis Olahraga
   Widget _buildCoachHeader() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            _coach!.user.fullName,
-            style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
+    return Align(
+      // Gunakan Align atau Center agar Box tidak memaksa lebar penuh
+      alignment: Alignment.center,
+      child: Container(
+        // Margin tetap ada untuk memberi jarak dengan elemen lain
+        margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 24,
+          vertical: 16,
+        ), // Padding horizontal ditambah agar lebih proporsional
+        decoration: BoxDecoration(
+          color: NeoBrutalism.white,
+          borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+          border: Border.all(
+            color: NeoBrutalism.slate,
+            width: NeoBrutalism.borderWidth,
           ),
-          const SizedBox(height: 8),
-          if (_coach!.mainSportTrained != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.teal.shade50,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.teal.shade200),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.sports_basketball, size: 16, color: Colors.teal.shade700),
-                  const SizedBox(width: 6),
-                  Text(
-                    _coach!.mainSportTrained!.name,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.teal.shade700,
-                    ),
-                  ),
-                ],
-              ),
+          boxShadow: const [
+            BoxShadow(
+              color: NeoBrutalism.slate,
+              offset: NeoBrutalism.shadowOffset,
+              blurRadius: 0,
             ),
-        ],
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize
+              .min, // SANGAT PENTING: Agar box mengecil mengikuti isi
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              _coach!.user.fullName.toUpperCase(),
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w900,
+                color: NeoBrutalism.slate,
+                letterSpacing: 1.0,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            if (_coach!.mainSportTrained != null)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: NeoBrutalism.primary,
+                  borderRadius: BorderRadius.circular(
+                    NeoBrutalism.borderRadius,
+                  ),
+                  border: Border.all(
+                    color: NeoBrutalism.slate,
+                    width: NeoBrutalism.borderWidth,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize:
+                      MainAxisSize.min, // Agar badge olahraga tidak lebar penuh
+                  children: [
+                    const Icon(
+                      Icons.sports_basketball,
+                      size: 16,
+                      color: NeoBrutalism.white,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      _coach!.mainSportTrained!.name.toUpperCase(),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: NeoBrutalism.white,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
 
-  // Menampilkan Umur, Rate, dan Area Layanan
   Widget _buildQuickInfo() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
+        color: NeoBrutalism.white,
+        borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+        border: Border.all(
+          color: NeoBrutalism.slate,
+          width: NeoBrutalism.borderWidth,
+        ),
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            color: NeoBrutalism.slate,
+            offset: NeoBrutalism.shadowOffset,
+            blurRadius: 0,
           ),
         ],
       ),
@@ -259,21 +325,20 @@ class _CoachDetailPageState extends State<CoachDetailPage> {
         children: [
           _buildQuickInfoRow(
             icon: Icons.person_outline,
-            label: 'Umur',
+            label: 'UMUR',
             value: '${_coach!.age ?? '-'} tahun',
           ),
-          const Divider(height: 20),
+          _buildDivider(),
           _buildQuickInfoRow(
             icon: Icons.attach_money,
-            label: 'Rate per jam',
+            label: 'RATE PER JAM',
             value: _coach!.formattedRate,
-            valueColor: Colors.green.shade700,
-            isBold: true,
+            isHighlight: true,
           ),
-          const Divider(height: 20),
+          _buildDivider(),
           _buildQuickInfoRow(
             icon: Icons.location_on_outlined,
-            label: 'Area Layanan',
+            label: 'AREA LAYANAN',
             value: _coach!.serviceAreasText,
             isMultiline: true,
           ),
@@ -282,24 +347,37 @@ class _CoachDetailPageState extends State<CoachDetailPage> {
     );
   }
 
+  Widget _buildDivider() {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 12),
+      height: NeoBrutalism.borderWidth,
+      color: NeoBrutalism.slate,
+    );
+  }
+
   Widget _buildQuickInfoRow({
     required IconData icon,
     required String label,
     required String value,
-    Color? valueColor,
-    bool isBold = false,
+    bool isHighlight = false,
     bool isMultiline = false,
   }) {
     return Row(
-      crossAxisAlignment: isMultiline ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+      crossAxisAlignment: isMultiline
+          ? CrossAxisAlignment.start
+          : CrossAxisAlignment.center,
       children: [
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.teal.shade50,
-            borderRadius: BorderRadius.circular(8),
+            color: NeoBrutalism.white,
+            borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+            border: Border.all(
+              color: NeoBrutalism.slate,
+              width: NeoBrutalism.borderWidth,
+            ),
           ),
-          child: Icon(icon, size: 20, color: Colors.teal.shade700),
+          child: Icon(icon, size: 20, color: NeoBrutalism.slate),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -308,10 +386,11 @@ class _CoachDetailPageState extends State<CoachDetailPage> {
             children: [
               Text(
                 label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                  fontWeight: FontWeight.w500,
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: NeoBrutalism.grey,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
                 ),
               ),
               const SizedBox(height: 2),
@@ -319,8 +398,10 @@ class _CoachDetailPageState extends State<CoachDetailPage> {
                 value,
                 style: TextStyle(
                   fontSize: 15,
-                  color: valueColor ?? Colors.black87,
-                  fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
+                  color: isHighlight
+                      ? NeoBrutalism.primary
+                      : NeoBrutalism.slate,
+                  fontWeight: FontWeight.w800,
                 ),
                 maxLines: isMultiline ? null : 1,
                 overflow: isMultiline ? null : TextOverflow.ellipsis,
@@ -332,21 +413,24 @@ class _CoachDetailPageState extends State<CoachDetailPage> {
     );
   }
 
-  // Menampilkan Deskripsi Pengalaman
   Widget _buildExperienceSection() {
     if (_coach!.experienceDesc.isEmpty) return const SizedBox.shrink();
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
+        color: NeoBrutalism.white,
+        borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+        border: Border.all(
+          color: NeoBrutalism.slate,
+          width: NeoBrutalism.borderWidth,
+        ),
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            color: NeoBrutalism.slate,
+            offset: NeoBrutalism.shadowOffset,
+            blurRadius: 0,
           ),
         ],
       ),
@@ -355,29 +439,98 @@ class _CoachDetailPageState extends State<CoachDetailPage> {
         children: [
           Row(
             children: [
-              Icon(Icons.history_edu, color: Colors.teal.shade700, size: 22),
-              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: NeoBrutalism.white,
+                  borderRadius: BorderRadius.circular(
+                    NeoBrutalism.borderRadius,
+                  ),
+                  border: Border.all(
+                    color: NeoBrutalism.slate,
+                    width: NeoBrutalism.borderWidth,
+                  ),
+                ),
+                child: const Icon(
+                  Icons.history_edu,
+                  color: NeoBrutalism.slate,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
               const Text(
-                'Pengalaman',
+                'PENGALAMAN',
                 style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  color: NeoBrutalism.slate,
+                  letterSpacing: 1.0,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Text(
             _coach!.experienceDesc,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14,
-              color: Colors.grey.shade700,
+              color: NeoBrutalism.slate,
+              fontWeight: FontWeight.w500,
               height: 1.6,
             ),
             textAlign: TextAlign.justify,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildNeoButton({
+    required VoidCallback? onPressed,
+    required String label,
+    required IconData icon,
+    bool isPrimary = true,
+  }) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+        boxShadow: onPressed != null
+            ? const [
+                BoxShadow(
+                  color: NeoBrutalism.slate,
+                  offset: Offset(3, 3),
+                  blurRadius: 0,
+                ),
+              ]
+            : null,
+      ),
+      child: ElevatedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, size: 18),
+        label: Text(label),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: isPrimary
+              ? NeoBrutalism.primary
+              : NeoBrutalism.white,
+          foregroundColor: isPrimary ? NeoBrutalism.white : NeoBrutalism.slate,
+          disabledBackgroundColor: NeoBrutalism.grey,
+          disabledForegroundColor: NeoBrutalism.white,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+            side: BorderSide(
+              color: onPressed != null ? NeoBrutalism.slate : NeoBrutalism.grey,
+              width: NeoBrutalism.borderWidth,
+            ),
+          ),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 14,
+            letterSpacing: 0.5,
+          ),
+        ),
       ),
     );
   }

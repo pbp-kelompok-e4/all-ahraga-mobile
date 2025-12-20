@@ -1,3 +1,5 @@
+// lib/screens/coach/coach_profile_form.dart
+
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -11,6 +13,19 @@ import '/models/sport_category.dart';
 import '/models/location_area.dart';
 import 'package:http/browser_client.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+
+// Design System Constants
+class NeoBrutalism {
+  static const Color primary = Color(0xFF0D9488);
+  static const Color slate = Color(0xFF0F172A);
+  static const Color grey = Color(0xFF64748B);
+  static const Color danger = Color(0xFFDC2626);
+  static const Color white = Colors.white;
+  
+  static const double borderWidth = 2.0;
+  static const double borderRadius = 8.0;
+  static const Offset shadowOffset = Offset(4, 4);
+}
 
 class CoachProfileFormPage extends StatefulWidget {
   final CoachEntry? existingProfile;
@@ -28,14 +43,12 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
   final TextEditingController _experienceController = TextEditingController();
 
   bool _isLoading = false;
-  dynamic _imageFile; // Changed from File? to dynamic to handle both web and mobile
+  dynamic _imageFile;
   final ImagePicker _picker = ImagePicker();
 
-  // Dropdown data
   List<SportCategory> _sportCategories = [];
   List<LocationArea> _locationAreas = [];
 
-  // Selected values
   int? _selectedSportId;
   List<int> _selectedAreaIds = [];
 
@@ -69,7 +82,6 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
     final request = context.read<CookieRequest>();
 
     try {
-      // Load sport categories
       final sportResponse = await request.get(
         'http://localhost:8000/api/sport-categories/',
       );
@@ -82,7 +94,6 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
         });
       }
 
-      // Load location areas
       final areaResponse = await request.get(
         'http://localhost:8000/api/location-areas/',
       );
@@ -117,13 +128,11 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
 
       if (pickedFile != null) {
         if (kIsWeb) {
-          // For web, store bytes
           final bytes = await pickedFile.readAsBytes();
           setState(() {
             _imageFile = bytes;
           });
         } else {
-          // For mobile, store File
           setState(() {
             _imageFile = File(pickedFile.path);
           });
@@ -134,7 +143,7 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Gagal memilih gambar: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: NeoBrutalism.danger,
           ),
         );
       }
@@ -150,7 +159,7 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Pilih olahraga utama'),
-          backgroundColor: Colors.red,
+          backgroundColor: NeoBrutalism.danger,
         ),
       );
       return;
@@ -160,7 +169,7 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Pilih minimal satu area layanan'),
-          backgroundColor: Colors.red,
+          backgroundColor: NeoBrutalism.danger,
         ),
       );
       return;
@@ -173,11 +182,9 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
     try {
       final request = context.read<CookieRequest>();
       
-      // Prepare multipart request
       var uri = Uri.parse('http://localhost:8000/coach/profile/save/');
       var multipartRequest = http.MultipartRequest('POST', uri);
 
-      // Add cookies from CookieRequest
       final cookies = request.cookies;
       if (cookies.isNotEmpty) {
         multipartRequest.headers['cookie'] = cookies.entries
@@ -185,17 +192,14 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
             .join('; ');
       }
 
-      // Add form fields
       multipartRequest.fields['age'] = _ageController.text;
       multipartRequest.fields['rate_per_hour'] = _rateController.text;
       multipartRequest.fields['main_sport_trained_id'] = _selectedSportId.toString();
       multipartRequest.fields['experience_desc'] = _experienceController.text;
       multipartRequest.fields['service_area_ids'] = jsonEncode(_selectedAreaIds);
 
-      // Add image if selected
       if (_imageFile != null) {
         if (kIsWeb && _imageFile is Uint8List) {
-          // For web: Uint8List
           multipartRequest.files.add(
             http.MultipartFile.fromBytes(
               'profile_picture',
@@ -204,7 +208,6 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
             ),
           );
         } else if (!kIsWeb && _imageFile is File) {
-          // For mobile: File
           multipartRequest.files.add(
             await http.MultipartFile.fromPath(
               'profile_picture',
@@ -214,7 +217,6 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
         }
       }
 
-      // Send request
       http.StreamedResponse streamedResponse;
 
       if (kIsWeb) {
@@ -234,17 +236,17 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
               content: Text(
                 responseData['message'] ?? 'Profil berhasil disimpan',
               ),
-              backgroundColor: Colors.green,
+              backgroundColor: NeoBrutalism.primary,
             ),
           );
-          Navigator.pop(context, true); // Return true to indicate success
+          Navigator.pop(context, true);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
                 responseData['message'] ?? 'Gagal menyimpan profil',
               ),
-              backgroundColor: Colors.red,
+              backgroundColor: NeoBrutalism.danger,
             ),
           );
         }
@@ -254,7 +256,7 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Terjadi kesalahan: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: NeoBrutalism.danger,
           ),
         );
       }
@@ -278,20 +280,86 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.existingProfile == null ? 'Lengkapi Profil' : 'Edit Profil',
-          style: const TextStyle(color: Colors.white),
+      backgroundColor: NeoBrutalism.white,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildCustomHeader(),
+            Expanded(
+              child: _isLoadingData
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(NeoBrutalism.primary),
+                      ),
+                    )
+                  : _errorMessage != null
+                      ? _buildErrorView()
+                      : _buildForm(),
+            ),
+          ],
         ),
-        backgroundColor: Colors.teal, // Changed to teal color
-        foregroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: _isLoadingData
-          ? const Center(child: CircularProgressIndicator())
-          : _errorMessage != null
-              ? _buildErrorView()
-              : _buildForm(),
+    );
+  }
+
+  Widget _buildCustomHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      decoration: const BoxDecoration(
+        color: NeoBrutalism.white,
+        border: Border(
+          bottom: BorderSide(
+            color: NeoBrutalism.slate,
+            width: NeoBrutalism.borderWidth,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: NeoBrutalism.white,
+                borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+                border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+                boxShadow: const [
+                  BoxShadow(
+                    color: NeoBrutalism.slate,
+                    offset: Offset(2, 2),
+                    blurRadius: 0,
+                  ),
+                ],
+              ),
+              child: const Icon(Icons.arrow_back, color: NeoBrutalism.slate, size: 20),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "PROFILE FORM",
+                style: TextStyle(
+                  color: NeoBrutalism.primary,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              Text(
+                widget.existingProfile == null ? 'LENGKAPI PROFIL' : 'EDIT PROFIL',
+                style: const TextStyle(
+                  color: NeoBrutalism.slate,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -302,16 +370,21 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 64, color: Colors.red),
+            const Icon(Icons.error_outline, size: 64, color: NeoBrutalism.danger),
             const SizedBox(height: 16),
             Text(
               _errorMessage ?? 'Terjadi kesalahan',
               textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                color: NeoBrutalism.slate,
+              ),
             ),
             const SizedBox(height: 24),
-            ElevatedButton(
+            _buildNeoButton(
               onPressed: _loadFormData,
-              child: const Text('Coba Lagi'),
+              label: 'COBA LAGI',
+              icon: Icons.refresh,
             ),
           ],
         ),
@@ -337,9 +410,16 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
                       width: 120,
                       height: 120,
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade200,
+                        color: NeoBrutalism.white,
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.teal, width: 2),
+                        border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: NeoBrutalism.slate,
+                            offset: Offset(4, 4),
+                            blurRadius: 0,
+                          ),
+                        ],
                       ),
                       child: _imageFile != null
                           ? ClipOval(
@@ -357,22 +437,44 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
                                     fit: BoxFit.cover,
                                   ),
                                 )
-                              : Icon(
+                              : const Icon(
                                   Icons.add_a_photo,
                                   size: 40,
-                                  color: Colors.grey.shade600,
+                                  color: NeoBrutalism.grey,
                                 ),
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  TextButton.icon(
-                    onPressed: _pickImage,
-                    icon: const Icon(Icons.upload),
-                    label: Text(
-                      _imageFile != null ||
-                              widget.existingProfile?.profilePicture != null
-                          ? 'Ganti Foto'
-                          : 'Pilih Foto Profil',
+                  const SizedBox(height: 12),
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: NeoBrutalism.slate,
+                          offset: Offset(2, 2),
+                          blurRadius: 0,
+                        ),
+                      ],
+                    ),
+                    child: ElevatedButton.icon(
+                      onPressed: _pickImage,
+                      icon: const Icon(Icons.upload, size: 16),
+                      label: Text(
+                        _imageFile != null || widget.existingProfile?.profilePicture != null
+                            ? 'GANTI FOTO'
+                            : 'PILIH FOTO',
+                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: NeoBrutalism.white,
+                        foregroundColor: NeoBrutalism.slate,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+                          side: const BorderSide(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -381,17 +483,12 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
             const SizedBox(height: 24),
 
             // Age Field
-            TextFormField(
+            _buildTextField(
               controller: _ageController,
+              label: 'UMUR',
+              hint: 'Masukkan umur Anda',
+              icon: Icons.cake,
               keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'Umur',
-                hintText: 'Masukkan umur Anda',
-                prefixIcon: const Icon(Icons.cake),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Umur harus diisi';
@@ -405,18 +502,13 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
             ),
             const SizedBox(height: 16),
 
-            // Rate per Hour Field
-            TextFormField(
+            // Rate Field
+            _buildTextField(
               controller: _rateController,
+              label: 'TARIF PER JAM (RP)',
+              hint: 'Contoh: 100000',
+              icon: Icons.attach_money,
               keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'Tarif per Jam (Rp)',
-                hintText: 'Contoh: 100000',
-                prefixIcon: const Icon(Icons.attach_money),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Tarif harus diisi';
@@ -430,21 +522,16 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
             ),
             const SizedBox(height: 16),
 
-            // Sport Category Dropdown
-            DropdownButtonFormField<int>(
+            // Sport Dropdown
+            _buildDropdown(
               value: _selectedSportId,
-              decoration: InputDecoration(
-                labelText: 'Olahraga Utama',
-                prefixIcon: const Icon(Icons.sports),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              hint: const Text('Pilih olahraga'),
+              label: 'OLAHRAGA UTAMA',
+              hint: 'Pilih olahraga',
+              icon: Icons.sports,
               items: _sportCategories.map((sport) {
                 return DropdownMenuItem<int>(
                   value: sport.id,
-                  child: Text(sport.name),
+                  child: Text(sport.name, style: const TextStyle(fontWeight: FontWeight.w600)),
                 );
               }).toList(),
               onChanged: (value) {
@@ -452,31 +539,41 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
                   _selectedSportId = value;
                 });
               },
-              validator: (value) {
-                if (value == null) {
-                  return 'Pilih olahraga utama';
-                }
-                return null;
-              },
             ),
             const SizedBox(height: 16),
 
-            // Service Areas Multi-select
+            // Service Areas
             const Text(
-              'Area Layanan',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              'AREA LAYANAN',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+                color: NeoBrutalism.slate,
+                letterSpacing: 1,
+              ),
             ),
             const SizedBox(height: 8),
             Container(
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade400),
-                borderRadius: BorderRadius.circular(12),
+                color: NeoBrutalism.white,
+                borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+                border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+                boxShadow: const [
+                  BoxShadow(
+                    color: NeoBrutalism.slate,
+                    offset: NeoBrutalism.shadowOffset,
+                    blurRadius: 0,
+                  ),
+                ],
               ),
               child: Column(
                 children: _locationAreas.map((area) {
                   final isSelected = _selectedAreaIds.contains(area.id);
                   return CheckboxListTile(
-                    title: Text(area.name),
+                    title: Text(
+                      area.name,
+                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                    ),
                     value: isSelected,
                     onChanged: (bool? value) {
                       setState(() {
@@ -488,32 +585,27 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
                       });
                     },
                     controlAffinity: ListTileControlAffinity.leading,
+                    activeColor: NeoBrutalism.primary,
                   );
                 }).toList(),
               ),
             ),
             if (_selectedAreaIds.isEmpty)
-              Padding(
-                padding: const EdgeInsets.only(left: 12, top: 8),
+              const Padding(
+                padding: EdgeInsets.only(left: 12, top: 8),
                 child: Text(
                   'Pilih minimal satu area layanan',
-                  style: TextStyle(color: Colors.red.shade700, fontSize: 12),
+                  style: TextStyle(color: NeoBrutalism.danger, fontSize: 12, fontWeight: FontWeight.w600),
                 ),
               ),
             const SizedBox(height: 16),
 
-            // Experience Description Field
-            TextFormField(
+            // Experience Field
+            _buildTextField(
               controller: _experienceController,
+              label: 'DESKRIPSI PENGALAMAN',
+              hint: 'Ceritakan pengalaman Anda sebagai pelatih...',
               maxLines: 5,
-              decoration: InputDecoration(
-                labelText: 'Deskripsi Pengalaman',
-                hintText: 'Ceritakan pengalaman Anda sebagai pelatih...',
-                alignLabelWithHint: true,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Deskripsi pengalaman harus diisi';
@@ -530,48 +622,207 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
             Row(
               children: [
                 Expanded(
-                  child: OutlinedButton(
+                  child: _buildNeoButton(
                     onPressed: _isLoading ? null : () => Navigator.pop(context),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      side: const BorderSide(color: Colors.grey),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text('Batal'),
+                    label: 'BATAL',
+                    icon: Icons.close,
+                    isPrimary: false,
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: ElevatedButton(
+                  child: _buildNeoButton(
                     onPressed: _isLoading ? null : _submitForm,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.teal, // Changed to teal
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
-                              ),
-                            ),
-                          )
-                        : const Text('Simpan Profil'),
+                    label: _isLoading ? 'MENYIMPAN...' : 'SIMPAN',
+                    icon: Icons.save,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 24),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    IconData? icon,
+    TextInputType? keyboardType,
+    int maxLines = 1,
+    String? Function(String?)? validator,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w900,
+            color: NeoBrutalism.slate,
+            letterSpacing: 1,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+            boxShadow: const [
+              BoxShadow(
+                color: NeoBrutalism.slate,
+                offset: NeoBrutalism.shadowOffset,
+                blurRadius: 0,
+              ),
+            ],
+          ),
+          child: TextFormField(
+            controller: controller,
+            keyboardType: keyboardType,
+            maxLines: maxLines,
+            style: const TextStyle(fontWeight: FontWeight.w600, color: NeoBrutalism.slate),
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: const TextStyle(color: NeoBrutalism.grey, fontWeight: FontWeight.w500),
+              prefixIcon: icon != null ? Icon(icon, color: NeoBrutalism.slate, size: 20) : null,
+              filled: true,
+              fillColor: NeoBrutalism.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+                borderSide: const BorderSide(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+                borderSide: const BorderSide(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+                borderSide: const BorderSide(color: NeoBrutalism.primary, width: NeoBrutalism.borderWidth),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+                borderSide: const BorderSide(color: NeoBrutalism.danger, width: NeoBrutalism.borderWidth),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+                borderSide: const BorderSide(color: NeoBrutalism.danger, width: NeoBrutalism.borderWidth),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            ),
+            validator: validator,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDropdown({
+    required int? value,
+    required String label,
+    required String hint,
+    required IconData icon,
+    required List<DropdownMenuItem<int>> items,
+    required void Function(int?) onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w900,
+            color: NeoBrutalism.slate,
+            letterSpacing: 1,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+            boxShadow: const [
+              BoxShadow(
+                color: NeoBrutalism.slate,
+                offset: NeoBrutalism.shadowOffset,
+                blurRadius: 0,
+              ),
+            ],
+          ),
+          child: DropdownButtonFormField<int>(
+            value: value,
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: const TextStyle(color: NeoBrutalism.grey, fontWeight: FontWeight.w500),
+              prefixIcon: Icon(icon, color: NeoBrutalism.slate, size: 20),
+              filled: true,
+              fillColor: NeoBrutalism.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+                borderSide: const BorderSide(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+                borderSide: const BorderSide(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+                borderSide: const BorderSide(color: NeoBrutalism.primary, width: NeoBrutalism.borderWidth),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            ),
+            items: items,
+            onChanged: onChanged,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNeoButton({
+    required VoidCallback? onPressed,
+    required String label,
+    required IconData icon,
+    bool isPrimary = true,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+        boxShadow: onPressed != null
+            ? const [
+                BoxShadow(
+                  color: NeoBrutalism.slate,
+                  offset: Offset(3, 3),
+                  blurRadius: 0,
+                ),
+              ]
+            : null,
+      ),
+      child: ElevatedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, size: 18),
+        label: Text(label),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: isPrimary ? NeoBrutalism.primary : NeoBrutalism.white,
+          foregroundColor: isPrimary ? NeoBrutalism.white : NeoBrutalism.slate,
+          disabledBackgroundColor: NeoBrutalism.grey,
+          disabledForegroundColor: NeoBrutalism.white,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+            side: BorderSide(
+              color: onPressed != null ? NeoBrutalism.slate : NeoBrutalism.grey,
+              width: NeoBrutalism.borderWidth,
+            ),
+          ),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 14,
+            letterSpacing: 0.5,
+          ),
         ),
       ),
     );
