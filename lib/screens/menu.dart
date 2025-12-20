@@ -685,7 +685,7 @@ class _VenueCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final imageUrl =
         venue['image'] != null && venue['image'].toString().isNotEmpty
-        ? 'http://localhost:8000${venue['image']}'
+        ? '${ApiConstants.baseUrl}${venue['image']}'
         : null;
 
     return GestureDetector(

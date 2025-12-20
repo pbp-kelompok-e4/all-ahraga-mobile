@@ -8,6 +8,7 @@ import 'package:all_ahraga/screens/coach/coach_manage_schedule.dart';
 import 'package:all_ahraga/screens/coach/coach_profile.dart';
 import 'package:all_ahraga/screens/venue_menu.dart';
 import 'package:all_ahraga/screens/auth_page.dart';
+import 'package:all_ahraga/constants/api.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 
@@ -247,7 +248,7 @@ class LeftDrawer extends StatelessWidget {
             title: const Text("Logout"),
             onTap: () async {
               final response = await request.logout(
-                  "http://localhost:8000/auth/logout/");
+                  ApiConstants.authLogout);
               String message = response["message"];
               if (context.mounted) {
                 if (response['status']) {
