@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import '/models/coach_list_models.dart';
+import '/constants/api.dart';
 
 // Design System Constants
 class NeoBrutalism {
@@ -47,7 +48,7 @@ class _CoachDetailPageState extends State<CoachDetailPage> {
     try {
       final request = context.read<CookieRequest>();
       final response = await request.get(
-        'http://localhost:8000/api/coach/${widget.coachId}/',
+        ApiConstants.coachDetail(widget.coachId),
       );
 
       if (response['success'] == true) {

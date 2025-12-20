@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:intl/intl.dart';
 import '/models/coach_revenue_model.dart';
+import '/constants/api.dart';
 import 'package:all_ahraga/screens/coach/coach_profile.dart';
 
 // Design System Constants
@@ -46,7 +47,7 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
 
     try {
       final request = context.read<CookieRequest>();
-      final response = await request.get('http://localhost:8000/api/coach/revenue/');
+      final response = await request.get(ApiConstants.coachRevenue);
 
       if (response['success'] == true) {
         setState(() {
