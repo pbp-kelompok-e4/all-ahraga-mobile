@@ -73,3 +73,10 @@ Link Figma :
 https://www.figma.com/design/caLbHnsOKBKhNPs934xZJg/Untitled?node-id=0-1&t=Xhjl9p4pkmHMP3MC-1
 ---
 
+Link APK : 
+https://app.bitrise.io/app/b062aca1-d047-4e10-86a6-bf86fa6d3e8b/installable-artifacts/a5e8786f806dfd11/public-install-page/ed946502d175009f15ad1e3ad974c3ed
+---
+
+Link Video : 
+https://youtu.be/GKS_ZJMswL8
+---
