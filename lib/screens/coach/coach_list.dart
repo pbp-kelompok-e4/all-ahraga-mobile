@@ -1,5 +1,3 @@
-// lib/screens/coach_list.dart
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
@@ -8,7 +6,6 @@ import '/models/coach_list_models.dart';
 import '/constants/api.dart';
 import 'coach_detail.dart';
 
-// Design System Constants
 class NeoBrutalism {
   static const Color primary = Color(0xFF0D9488);
   static const Color slate = Color(0xFF0F172A);
@@ -361,7 +358,6 @@ class _CoachListPageState extends State<CoachListPage> {
 
   Widget _buildFilterSection() {
     return Container(
-      // Gunakan margin simetris saja, hilangkan margin bawah agar rapat dengan list
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -379,7 +375,6 @@ class _CoachListPageState extends State<CoachListPage> {
           ),
         ],
       ),
-      // Menghindari kebocoran warna di sudut border
       clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
@@ -397,7 +392,6 @@ class _CoachListPageState extends State<CoachListPage> {
                 fontWeight: FontWeight.w500,
               ),
               prefixIcon: const Icon(Icons.search, color: NeoBrutalism.slate),
-              // ... sisa decoration sama
               filled: true,
               fillColor: NeoBrutalism.white,
               contentPadding: const EdgeInsets.symmetric(
@@ -429,7 +423,6 @@ class _CoachListPageState extends State<CoachListPage> {
     );
   }
 
-  // Helper untuk merapikan border agar konsisten
   OutlineInputBorder _buildOutlineBorder({bool isFocused = false}) {
     return OutlineInputBorder(
       borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
@@ -630,7 +623,6 @@ class _CoachListPageState extends State<CoachListPage> {
   String _getProxiedImageUrl(String imageUrl) {
     if (imageUrl.isEmpty) return '';
     
-    // Handle full URL vs relative
     String fullUrl = imageUrl.startsWith('http')
         ? imageUrl
         : "${ApiConstants.baseUrl}$imageUrl";
@@ -856,7 +848,6 @@ class _CoachListPageState extends State<CoachListPage> {
             ],
           ),
           const SizedBox(height: 12),
-          // Page dots
           _buildPageDots(pagination),
         ],
       ),
@@ -867,7 +858,6 @@ class _CoachListPageState extends State<CoachListPage> {
     final totalPages = pagination.totalPages;
     final currentPage = pagination.currentPage;
     
-    // Tampilkan max 7 dots, dengan current page di tengah jika mungkin
     int startPage = 1;
     int endPage = totalPages;
     

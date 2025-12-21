@@ -353,7 +353,6 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
   }
 }
 
-// ================== Login Content ==================
 
 class _LoginContent extends StatelessWidget {
   const _LoginContent({
@@ -489,8 +488,6 @@ class _LoginContent extends StatelessWidget {
     );
   }
 }
-
-// ================== Register Content ==================
 
 class _RegisterContent extends StatelessWidget {
   const _RegisterContent({
@@ -687,7 +684,6 @@ class _RegisterContent extends StatelessWidget {
   }
 }
 
-// ================== Components ==================
 
 class _MiniPillButton extends StatelessWidget {
   const _MiniPillButton({required this.text, required this.onTap});
@@ -920,7 +916,6 @@ PageRouteBuilder _pageSlide(Widget page, {required bool toLeft}) {
   );
 }
 
-// ================== Background Painter ==================
 
 class _SportBgPainter extends CustomPainter {
   _SportBgPainter({required this.t});

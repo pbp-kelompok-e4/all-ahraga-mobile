@@ -104,7 +104,6 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
           }
         }
       } on FormatException {
-        // Fallback to raw HTTP
       }
       
       final httpResponse = await http.post(
@@ -218,7 +217,6 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
           }
         }
       } on FormatException {
-        // Fallback to raw HTTP
       }
       
       final httpResponse = await http.post(
@@ -663,7 +661,7 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
 
               const SizedBox(height: 20),
 
-              // Delete button (kalau edit mode)
+              // Delete button 
               if (widget.reviewId != null) ...[
                 SizedBox(
                   width: double.infinity,

@@ -7,10 +7,10 @@ import 'package:all_ahraga/constants/api.dart';
 import 'dart:convert';
 
 class NeoColors {
-  static const Color primary = Color(0xFF0D9488); // Tosca
-  static const Color text = Color(0xFF0F172A); // Slate (Border & Text)
-  static const Color muted = Color(0xFF64748B); // Grey
-  static const Color danger = Color(0xFFDC2626); // Red
+  static const Color primary = Color(0xFF0D9488);
+  static const Color text = Color(0xFF0F172A);
+  static const Color muted = Color(0xFF64748B); 
+  static const Color danger = Color(0xFFDC2626); 
   static const Color background = Colors.white;
 }
 
@@ -105,8 +105,6 @@ class NeoButton extends StatelessWidget {
     );
   }
 }
-
-// --- MAIN PAGE ---
 
 class VenueDashboardPage extends StatefulWidget {
   const VenueDashboardPage({super.key});
@@ -273,7 +271,6 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
       body: SafeArea(
         child: Column(
           children: [
-            // --- CUSTOM NEO HEADER (UPDATED) ---
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               decoration: const BoxDecoration(
@@ -284,7 +281,7 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
               ),
               child: Row(
                 children: [
-                  // 1. Back Button (Left Side)
+                  // Back Button
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
                     child: Container(
@@ -303,7 +300,7 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
 
                   const SizedBox(width: 16),
 
-                  // 2. Title
+                  // Title
                   const Text(
                     "VENUE DASHBOARD",
                     style: TextStyle(
@@ -314,12 +311,10 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
                     ),
                   ),
 
-                  // Spacer to push title if needed, or keeping it left aligned
                 ],
               ),
             ),
 
-            // --- CONTENT BODY ---
             Expanded(
               child: RefreshIndicator(
                 onRefresh: _refreshVenues,
@@ -413,14 +408,12 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
                         ),
                       );
                     } else {
-                      // --- LIST VIEW ---
                       return ListView(
                         padding: const EdgeInsets.all(20),
                         children: [
-                          // Stats "Brutalist" Box
                           NeoContainer(
                             padding: const EdgeInsets.all(20),
-                            color: NeoColors.primary, // Tosca Background
+                            color: NeoColors.primary,
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -478,17 +471,14 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
                           ),
                           const SizedBox(height: 16),
 
-                          // Venue Items
                           ...List.generate(snapshot.data!.length, (index) {
                             final venue = snapshot.data![index];
                             final String? imageUrl = venue['image_url'];
                             
-                            // Helper function untuk proxy image
                             String _getProxiedImageUrl(String originalUrl) {
                               return '${ApiConstants.imageProxy}?url=${Uri.encodeComponent(originalUrl)}';
                             }
                             
-                            // Prepare proxied URL
                             String? proxiedUrl;
                             if (imageUrl != null && imageUrl.isNotEmpty) {
                               String fullImageUrl = imageUrl.startsWith('http')
@@ -502,12 +492,11 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
                               child: NeoContainer(
                                 color: Colors.white,
                                 padding:
-                                    EdgeInsets.zero, // Padding handled inside
+                                    EdgeInsets.zero, 
                                 child: Column(
                                   crossAxisAlignment:
                                       CrossAxisAlignment.stretch,
                                   children: [
-                                    // Image Section with Border Bottom
                                     Container(
                                       height: 180,
                                       decoration: BoxDecoration(
@@ -515,7 +504,7 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
                                         borderRadius: const BorderRadius.only(
                                           topLeft: Radius.circular(
                                             6,
-                                          ), // adjust for border
+                                          ), 
                                           topRight: Radius.circular(6),
                                         ),
                                         border: const Border(
@@ -701,7 +690,6 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
           ],
         ),
       ),
-      // FAB kept for functionality, but removed from top bar
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 10, right: 10),
         child: NeoContainer(

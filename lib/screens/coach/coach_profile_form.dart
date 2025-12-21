@@ -1,5 +1,3 @@
-// lib/screens/coach/coach_profile_form.dart
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
@@ -9,7 +7,6 @@ import '/models/sport_category.dart';
 import '/models/location_area.dart';
 import '/constants/api.dart';
 
-// Design System Constants
 class NeoBrutalism {
   static const Color primary = Color(0xFF0D9488);
   static const Color slate = Color(0xFF0F172A);
@@ -409,7 +406,6 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
               icon: Icons.image,
               keyboardType: TextInputType.url,
               onChanged: (value) {
-                // Trigger rebuild to update preview
                 setState(() {});
               },
               validator: (value) {

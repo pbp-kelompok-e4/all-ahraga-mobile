@@ -6,7 +6,6 @@ import '/models/coach_revenue_model.dart';
 import '/constants/api.dart';
 import 'package:all_ahraga/screens/coach/coach_profile.dart';
 
-// Design System Constants
 class NeoBrutalism {
   static const Color primary = Color(0xFF0D9488);
   static const Color slate = Color(0xFF0F172A);

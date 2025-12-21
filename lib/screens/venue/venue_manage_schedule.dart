@@ -9,20 +9,18 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:all_ahraga/constants/api.dart';
 import 'package:all_ahraga/models/venue_schedule_entry.dart';
 
-// --- PALETTE LIGHT MODE (SAMA DENGAN COACH) ---
-const Color _kBg = Colors.white; // Background Utama Putih
-const Color _kTeal = Color(0xFF0D9488); // Ijo Tosca (Primary Brand)
+const Color _kBg = Colors.white; 
+const Color _kTeal = Color(0xFF0D9488); 
 const Color _kSlate = Color(
   0xFF0F172A,
-); // Hitam/Biru Gelap (Untuk Text & Border)
-const Color _kLightGrey = Color(0xFFF1F5F9); // Abu muda (Untuk Booked Item)
-const Color _kMuted = Color(0xFF64748B); // Text abu-abu
+); 
+const Color _kLightGrey = Color(0xFFF1F5F9); 
+const Color _kMuted = Color(0xFF64748B); 
 const Color _kRedLight = Color(
   0xFFFEF2F2,
-); // Merah sangat muda (Background Delete)
-const Color _kRed = Color(0xFFDC2626); // Merah tegas
+); 
+const Color _kRed = Color(0xFFDC2626); 
 
-// Konstanta Desain
 const double _kRadius = 8.0;
 const double _kBorderWidth = 2.0;
 
@@ -37,12 +35,10 @@ class VenueManageSchedulePage extends StatefulWidget {
 }
 
 class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
-  // --- LOGIC VARIABLES ---
   DateTime? _selectedDate;
   TimeOfDay? _startTime;
   TimeOfDay? _endTimeGlobal;
 
-  // Model diganti ke VenueSchedule
   List<VenueSchedule> _schedules = [];
   bool _isLoading = true;
   bool _isLocaleReady = false;
@@ -64,13 +60,11 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
     _fetchSchedules();
   }
 
-  // --- 1. GET DATA (VENUE) ---
   Future<void> _fetchSchedules() async {
     final request = context.read<CookieRequest>();
     setState(() => _isLoading = true);
 
     try {
-      // Logic URL khusus Venue
       final url =
           "${ApiConstants.venueManageSchedule(widget.venueId)}?format=json";
       final response = await request.get(url);
@@ -110,7 +104,6 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
     }
   }
 
-  // --- 2. POST DATA (VENUE) ---
   Future<void> _addSchedule() async {
     if (_selectedDate == null || _startTime == null || _endTimeGlobal == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -126,7 +119,6 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
     String endGlobalStr =
         '${_endTimeGlobal!.hour.toString().padLeft(2, '0')}:${_endTimeGlobal!.minute.toString().padLeft(2, '0')}';
 
-    // Logic Payload khusus Venue (ada is_available)
     Map<String, dynamic> payload = {
       'date': dateStr,
       'start_time': startStr,
@@ -169,7 +161,6 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
     }
   }
 
-  // --- 3. DELETE DATA (VENUE) ---
   Future<void> _deleteSchedules(List<int> ids) async {
     if (ids.isEmpty) return;
     final request = context.read<CookieRequest>();
@@ -216,7 +207,6 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
     if (confirm != true) return;
 
     try {
-      // Logic URL khusus Venue
       final response = await request.postJson(
         ApiConstants.venueDeleteSchedule(widget.venueId),
         jsonEncode({'selected_schedules': ids}),
@@ -267,7 +257,6 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
     });
   }
 
-  // --- PICKERS ---
   Future<void> _pickDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -378,7 +367,6 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
     );
   }
 
-  // --- HELPERS ---
   String _getMonthKey(String dateIso) {
     if (dateIso.length >= 7) return dateIso.substring(0, 7);
     return dateIso;
@@ -433,8 +421,6 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
       return "HARI INI";
     }
   }
-
-  // --- COMPONENTS (SAMA DENGAN COACH) ---
 
   Widget _buildBrutalBox({
     required Widget child,
@@ -685,19 +671,16 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
       backgroundColor: _kBg,
       body: Column(
         children: [
-          // 1. Header
           _buildHeader(),
 
-          // 2. Content
+          // Content
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // --- LOGIC SWITCH TAMPILAN ---
                   if (!_isSelectionMode) ...[
-                    // --- A. INPUT FORM (NORMAL MODE) ---
                     _buildBrutalBox(
                       shadowOffset: 6,
                       padding: const EdgeInsets.all(20),
@@ -798,7 +781,7 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
                             ],
                           ),
                           const SizedBox(height: 20),
-                          // Button (TOSCA)
+                          // Button 
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
@@ -828,7 +811,6 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
                     ),
                     const SizedBox(height: 30),
                   ] else ...[
-                    // --- A. INSTRUCTION BANNER (DELETE MODE) ---
                     _buildBrutalBox(
                       bgColor: _kRedLight,
                       borderColor: _kRed,
@@ -867,7 +849,6 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
                     const SizedBox(height: 20),
                   ],
 
-                  // --- B. Filter & Title ---
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -920,7 +901,6 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // --- C. List (Accordion Style) ---
                   _isLoading
                       ? const Center(
                           child: Padding(
@@ -1014,7 +994,7 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
                                       width: double.infinity,
                                       padding: const EdgeInsets.all(16),
                                       decoration: const BoxDecoration(
-                                        color: _kLightGrey, // Isi abu muda
+                                        color: _kLightGrey, 
                                         border: Border(
                                           top: BorderSide(
                                             color: _kSlate,
