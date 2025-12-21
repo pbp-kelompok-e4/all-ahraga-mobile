@@ -136,8 +136,6 @@ class NeoInputWrapper extends StatelessWidget {
   }
 }
 
-// --- MAIN PAGE LOGIC ---
-
 class VenueFormPage extends StatefulWidget {
   const VenueFormPage({super.key});
 
@@ -158,9 +156,6 @@ class _VenueFormPageState extends State<VenueFormPage> {
 
   int? _selectedLocation;
   int? _selectedCategory;
-
-  // _selectedPaymentOption dihapus karena default backend sudah menghandle Cash & Transfer
-
   bool _isLoading = true;
 
   @override
@@ -237,7 +232,6 @@ class _VenueFormPageState extends State<VenueFormPage> {
           'price_per_hour': int.tryParse(_priceController.text) ?? 0,
           'location': _selectedLocation,
           'sport_category': _selectedCategory,
-          // 'payment_options' dihapus, backend akan set default (TRANSFER/CASH)
           'image': _imageController.text,
         }),
       );
@@ -266,7 +260,6 @@ class _VenueFormPageState extends State<VenueFormPage> {
       body: SafeArea(
         child: Column(
           children: [
-            // --- CUSTOM HEADER ---
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               decoration: const BoxDecoration(
@@ -304,7 +297,6 @@ class _VenueFormPageState extends State<VenueFormPage> {
               ),
             ),
 
-            // --- FORM BODY ---
             Expanded(
               child: _isLoading
                   ? const Center(
@@ -317,7 +309,7 @@ class _VenueFormPageState extends State<VenueFormPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // 1. INPUT URL GAMBAR
+                            // INPUT URL GAMBAR
                             NeoInputWrapper(
                               label: "URL Foto Venue",
                               child: TextFormField(
@@ -333,7 +325,7 @@ class _VenueFormPageState extends State<VenueFormPage> {
                             ),
                             const SizedBox(height: 16),
 
-                            // 2. IMAGE PREVIEW
+                            // IMAGE PREVIEW
                             if (_imageController.text.isNotEmpty)
                               Center(
                                 child: NeoContainer(
@@ -402,7 +394,7 @@ class _VenueFormPageState extends State<VenueFormPage> {
                               ),
                             const SizedBox(height: 24),
 
-                            // 3. INPUT FIELDS
+                            // INPUT FIELDS
                             NeoInputWrapper(
                               label: "Nama Venue",
                               child: TextFormField(
@@ -447,7 +439,7 @@ class _VenueFormPageState extends State<VenueFormPage> {
                             ),
                             const SizedBox(height: 16),
 
-                            // 4. DROPDOWNS
+                            // DROPDOWNS
                             NeoInputWrapper(
                               label: "Lokasi / Area",
                               child: DropdownButtonFormField<int>(
@@ -503,10 +495,9 @@ class _VenueFormPageState extends State<VenueFormPage> {
                               ),
                             ),
 
-                            // Opsi Pembayaran sudah dihapus
                             const SizedBox(height: 32),
 
-                            // 5. SUBMIT BUTTON
+                            // SUBMIT BUTTON
                             SizedBox(
                               width: double.infinity,
                               child: NeoButton(

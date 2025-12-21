@@ -5,10 +5,9 @@ import 'package:all_ahraga/widgets/left_drawer.dart';
 import 'package:all_ahraga/screens/venue/venue_revenue.dart';
 import 'package:all_ahraga/screens/venue/venue_dashboard.dart';
 
-// --- Design System Constants (Sama persis dengan Coach Menu) ---
 class NeoBrutalism {
-  static const Color primary = Color(0xFF0D9488); // Tosca
-  static const Color slate = Color(0xFF0F172A); // Dark Slate
+  static const Color primary = Color(0xFF0D9488);
+  static const Color slate = Color(0xFF0F172A);
   static const Color grey = Color(0xFF64748B);
   static const Color danger = Color(0xFFDC2626);
   static const Color white = Colors.white;
@@ -31,7 +30,6 @@ class _VenueHomePageState extends State<VenueHomePage> {
     final request = context.watch<CookieRequest>();
     String userName = 'Venue Owner';
 
-    // Logika pengambilan nama user (Sama seperti Coach)
     if (request.jsonData.isNotEmpty &&
         request.jsonData.containsKey('username')) {
       userName = request.jsonData['username'] ?? 'Venue Owner';
@@ -79,7 +77,6 @@ class _VenueHomePageState extends State<VenueHomePage> {
     );
   }
 
-  // Header Custom (Sama persis dengan Coach)
   Widget _buildCustomHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -151,7 +148,6 @@ class _VenueHomePageState extends State<VenueHomePage> {
     );
   }
 
-  // Welcome Banner (Sama persis dengan Coach)
   Widget _buildWelcomeBanner(String userName) {
     return Container(
       width: double.infinity,
@@ -189,7 +185,7 @@ class _VenueHomePageState extends State<VenueHomePage> {
                   ),
                 ),
                 child: const Icon(
-                  Icons.stadium_outlined, // Icon diganti sesuai konteks Venue
+                  Icons.stadium_outlined, 
                   color: NeoBrutalism.white,
                   size: 28,
                 ),
@@ -226,7 +222,6 @@ class _VenueHomePageState extends State<VenueHomePage> {
     );
   }
 
-  // Menu Grid (Layout sama, isi disesuaikan Venue)
   Widget _buildMenuGrid(BuildContext context) {
     return GridView.count(
       primary: false,
@@ -259,7 +254,7 @@ class _VenueHomePageState extends State<VenueHomePage> {
           icon: Icons.monetization_on_outlined,
           title: 'PENDAPATAN',
           subtitle: 'Laporan Pendapatan',
-          color: const Color(0xFF16a34a), // Green shade like Coach
+          color: const Color(0xFF16a34a), 
           onTap: () {
             Navigator.push(
               context,
@@ -271,7 +266,6 @@ class _VenueHomePageState extends State<VenueHomePage> {
     );
   }
 
-  // Card Builder (Sama persis dengan Coach)
   Widget _buildMenuCard(
     BuildContext context, {
     required IconData icon,

@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
-import 'dart:ui';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
@@ -39,14 +39,15 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
   bool _regLoading = false;
   bool _regObscure1 = true;
   bool _regObscure2 = true;
+
   late final AnimationController _bgCtrl;
 
   @override
   void initState() {
     super.initState();
     _bgCtrl = AnimationController(
+      duration: const Duration(milliseconds: 8000),
       vsync: this,
-      duration: const Duration(milliseconds: 5200),
     )..repeat();
   }
 
@@ -216,18 +217,18 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final request = context.watch<CookieRequest>();
-    final screenHeight = MediaQuery.of(context).size.height;
+    final _ = MediaQuery.of(context).size.height;
 
     return Scaffold(
       backgroundColor: const Color(0xFF061B2B),
       body: Stack(
         children: [
+          // BACKGROUND
           Positioned.fill(
             child: AnimatedBuilder(
               animation: _bgCtrl,
-              builder: (_, __) => CustomPaint(
-                painter: _SportBgPainter(t: _bgCtrl.value),
-              ),
+              builder: (_, __) =>
+                  CustomPaint(painter: _SportBgPainter(t: _bgCtrl.value)),
             ),
           ),
           SafeArea(
@@ -236,27 +237,43 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
                 // Top Bar
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                  child: Row(
-                    children: [
-                      InkWell(
-                        onTap: _goLanding,
-                        borderRadius: BorderRadius.circular(10),
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-                          child: Text(
-                            "ALL-AHRAGA",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1.0,
-                              fontSize: 16.5,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(100),
+                    child: BackdropFilter(
+                      filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(100),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                        ),
+                        child: Row(
+                          children: [
+                            InkWell(
+                              onTap: _goLanding,
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.sports_soccer, color: Colors.white, size: 20),
+                                  const SizedBox(width: 8),
+                                  const Text(
+                                    "ALL-AHRAGA",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 1.0,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
+                            const Spacer(),
+                            _MiniPillButton(text: "Kembali", onTap: _goLanding),
+                          ],
                         ),
                       ),
-                      const Spacer(),
-                      _MiniPillButton(text: "Kembali", onTap: _goLanding),
-                    ],
+                    ),
                   ),
                 ),
 
@@ -270,37 +287,42 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 440),
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(24),
-                          child: BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(24),
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.20),
-                                  width: 1.5,
-                                ),
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: const Color(0xFF0F172A),
+                                width: 2,
                               ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(28),
-                                child: AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 500),
-                                  switchInCurve: Curves.easeOutCubic,
-                                  switchOutCurve: Curves.easeInCubic,
-                                  transitionBuilder: (child, animation) {
-                                    return FadeTransition(
-                                      opacity: animation,
-                                      child: SlideTransition(
-                                        position: Tween<Offset>(
-                                          begin: const Offset(0, 0.08),
-                                          end: Offset.zero,
-                                        ).animate(animation),
-                                        child: child,
-                                      ),
-                                    );
-                                  },
-                                  child: _mode == AuthMode.login
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0xFF0F172A),
+                                  offset: Offset(4, 4),
+                                  blurRadius: 0,
+                                )
+                              ],
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 500),
+                                switchInCurve: Curves.easeOutCubic,
+                                switchOutCurve: Curves.easeInCubic,
+                                transitionBuilder: (child, animation) {
+                                  return FadeTransition(
+                                    opacity: animation,
+                                    child: SlideTransition(
+                                      position: Tween<Offset>(
+                                        begin: const Offset(0, 0.08),
+                                        end: Offset.zero,
+                                      ).animate(animation),
+                                      child: child,
+                                    ),
+                                  );
+                                },
+                                child: _mode == AuthMode.login
                                       ? _LoginContent(
                                           key: const ValueKey('login'),
                                           error: _loginError,
@@ -335,7 +357,6 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
                                           onSwitchToLogin: () =>
                                               _switchTo(AuthMode.login),
                                         ),
-                                ),
                               ),
                             ),
                           ),
@@ -388,15 +409,15 @@ class _LoginContent extends StatelessWidget {
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w900,
-            color: Colors.white,
+            color: Color(0xFF0F172A),
             letterSpacing: 0.5,
           ),
         ),
         const SizedBox(height: 6),
-        Text(
+        const Text(
           "Masuk untuk melanjutkan aktivitas olahraga kamu",
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.80),
+            color: Color(0xFF64748B),
             fontWeight: FontWeight.w600,
             fontSize: 13.5,
           ),
@@ -407,17 +428,25 @@ class _LoginContent extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: const Color(0xFF7f1d1d).withValues(alpha: 0.25),
-              borderRadius: BorderRadius.circular(14),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: const Color(0xFFfca5a5).withValues(alpha: 0.40),
+                color: const Color(0xFFDC2626),
+                width: 2,
               ),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0xFF0F172A),
+                  offset: Offset(2, 2),
+                  blurRadius: 0,
+                )
+              ],
             ),
             child: Text(
               error!,
               style: const TextStyle(
-                color: Color(0xFFFEE2E2),
-                fontWeight: FontWeight.w700,
+                color: Color(0xFFDC2626),
+                fontWeight: FontWeight.w600,
                 fontSize: 13,
               ),
             ),
@@ -441,7 +470,7 @@ class _LoginContent extends StatelessWidget {
             onPressed: loading ? null : onToggleObscure,
             icon: Icon(
               obscure ? Icons.visibility_off : Icons.visibility,
-              color: Colors.white70,
+              color: const Color(0xFF0F172A),
             ),
           ),
         ),
@@ -456,10 +485,10 @@ class _LoginContent extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
+              const Text(
                 "Tidak punya akun? ",
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.75),
+                  color: Color(0xFF0F172A),
                   fontSize: 13.5,
                   fontWeight: FontWeight.w600,
                 ),
@@ -470,14 +499,14 @@ class _LoginContent extends StatelessWidget {
                   "Register",
                   style: TextStyle(
                     color: loading
-                        ? Colors.white.withValues(alpha: 0.50)
-                        : const Color(0xFF22C55E),
+                        ? const Color(0xFF64748B)
+                        : const Color(0xFF0D9488),
                     fontSize: 13.5,
                     fontWeight: FontWeight.w900,
                     decoration: TextDecoration.underline,
                     decorationColor: loading
-                        ? Colors.white.withValues(alpha: 0.50)
-                        : const Color(0xFF22C55E),
+                        ? const Color(0xFF64748B)
+                        : const Color(0xFF0D9488),
                     decorationThickness: 1.5,
                   ),
                 ),
@@ -539,15 +568,15 @@ class _RegisterContent extends StatelessWidget {
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w900,
-            color: Colors.white,
+            color: Color(0xFF0F172A),
             letterSpacing: 0.5,
           ),
         ),
         const SizedBox(height: 6),
-        Text(
+        const Text(
           "Daftar untuk mulai booking venue & coach favorit",
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.80),
+            color: Color(0xFF64748B),
             fontWeight: FontWeight.w600,
             fontSize: 13.5,
           ),
@@ -558,17 +587,25 @@ class _RegisterContent extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: const Color(0xFF7f1d1d).withValues(alpha: 0.25),
-              borderRadius: BorderRadius.circular(14),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: const Color(0xFFfca5a5).withValues(alpha: 0.40),
+                color: const Color(0xFFDC2626),
+                width: 2,
               ),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0xFF0F172A),
+                  offset: Offset(2, 2),
+                  blurRadius: 0,
+                )
+              ],
             ),
             child: Text(
               error!,
               style: const TextStyle(
-                color: Color(0xFFFEE2E2),
-                fontWeight: FontWeight.w700,
+                color: Color(0xFFDC2626),
+                fontWeight: FontWeight.w600,
                 fontSize: 13,
               ),
             ),
@@ -619,7 +656,7 @@ class _RegisterContent extends StatelessWidget {
                     onPressed: loading ? null : onToggle1,
                     icon: Icon(
                       obscure1 ? Icons.visibility_off : Icons.visibility,
-                      color: Colors.white70,
+                      color: const Color(0xFF0F172A),
                     ),
                   ),
                 ),
@@ -634,7 +671,7 @@ class _RegisterContent extends StatelessWidget {
                     onPressed: loading ? null : onToggle2,
                     icon: Icon(
                       obscure2 ? Icons.visibility_off : Icons.visibility,
-                      color: Colors.white70,
+                      color: const Color(0xFF0F172A),
                     ),
                   ),
                 ),
@@ -653,10 +690,10 @@ class _RegisterContent extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
+              const Text(
                 "Sudah punya akun? ",
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.75),
+                  color: Color(0xFF0F172A),
                   fontSize: 13.5,
                   fontWeight: FontWeight.w600,
                 ),
@@ -667,14 +704,14 @@ class _RegisterContent extends StatelessWidget {
                   "Login",
                   style: TextStyle(
                     color: loading
-                        ? Colors.white.withValues(alpha: 0.50)
-                        : const Color(0xFF22C55E),
+                        ? const Color(0xFF64748B)
+                        : const Color(0xFF0D9488),
                     fontSize: 13.5,
                     fontWeight: FontWeight.w900,
                     decoration: TextDecoration.underline,
                     decorationColor: loading
-                        ? Colors.white.withValues(alpha: 0.50)
-                        : const Color(0xFF22C55E),
+                        ? const Color(0xFF64748B)
+                        : const Color(0xFF0D9488),
                     decorationThickness: 1.5,
                   ),
                 ),
@@ -698,21 +735,28 @@ class _MiniPillButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        height: 40,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.75), width: 1.3),
-          color: Colors.white.withValues(alpha: 0.08),
-        ),
-        child: Text(
-          text,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w900,
-            fontSize: 13,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(100),
+        child: BackdropFilter(
+          filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            height: 36,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(100),
+              color: Colors.white.withValues(alpha: 0.12),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1),
+            ),
+            child: Text(
+              text,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                fontSize: 12,
+                letterSpacing: 0.5,
+              ),
+            ),
           ),
         ),
       ),
@@ -740,21 +784,21 @@ class _PrimaryButton extends StatelessWidget {
         opacity: enabled ? 1 : 0.55,
         child: Container(
           width: double.infinity,
-          height: 54,
+          height: 48,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            gradient: const LinearGradient(
-              colors: [Color(0xFF22C55E), Color(0xFF0D9488)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+            borderRadius: BorderRadius.circular(8),
+            color: const Color(0xFF0D9488),
+            border: Border.all(
+              color: const Color(0xFF0F172A),
+              width: 2,
             ),
-            boxShadow: [
+            boxShadow: const [
               BoxShadow(
-                color: const Color(0xFF22C55E).withValues(alpha: 0.35),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
+                color: Color(0xFF0F172A),
+                offset: Offset(4, 4),
+                blurRadius: 0,
+              )
             ],
           ),
           child: Row(
@@ -765,8 +809,8 @@ class _PrimaryButton extends StatelessWidget {
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w900,
-                  fontSize: 16,
-                  letterSpacing: 0.3,
+                  fontSize: 14,
+                  letterSpacing: 0.6,
                 ),
               ),
               const SizedBox(width: 8),
@@ -806,36 +850,43 @@ class _GlassTextField extends StatelessWidget {
       obscureText: obscureText,
       keyboardType: keyboardType,
       style: const TextStyle(
-        color: Colors.white,
-        fontWeight: FontWeight.w700,
-        fontSize: 14.5,
+        color: Color(0xFF0F172A),
+        fontWeight: FontWeight.w600,
+        fontSize: 14,
       ),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(
-          color: Colors.white.withValues(alpha: 0.75),
-          fontSize: 13.5,
+        labelStyle: const TextStyle(
+          color: Color(0xFF64748B),
+          fontSize: 13,
           fontWeight: FontWeight.w600,
         ),
-        prefixIcon: Icon(icon, color: Colors.white70, size: 22),
+        prefixIcon: Icon(icon, color: const Color(0xFF0F172A), size: 20),
         suffixIcon: suffix,
         filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.10),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(
+            color: Color(0xFF0F172A),
+            width: 2,
+          ),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(
-            color: Colors.white.withValues(alpha: 0.15),
-            width: 1,
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(
+            color: Color(0xFF0F172A),
+            width: 2,
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFF22C55E), width: 1.5),
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Color(0xFF0D9488), width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Color(0xFFDC2626), width: 2),
         ),
       ),
     );
@@ -856,40 +907,43 @@ class _GlassDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<String>(
-      value: initialValue,
+      initialValue: initialValue,
       onChanged: enabled ? onChanged : null,
-      dropdownColor: const Color(0xFF0A2537),
-      iconEnabledColor: Colors.white70,
+      dropdownColor: Colors.white,
+      iconEnabledColor: const Color(0xFF0F172A),
       style: const TextStyle(
-        color: Colors.white,
-        fontWeight: FontWeight.w700,
-        fontSize: 14.5,
+        color: Color(0xFF0F172A),
+        fontWeight: FontWeight.w600,
+        fontSize: 14,
       ),
       decoration: InputDecoration(
         labelText: "Daftar sebagai",
-        labelStyle: TextStyle(
-          color: Colors.white.withValues(alpha: 0.75),
-          fontSize: 13.5,
+        labelStyle: const TextStyle(
+          color: Color(0xFF64748B),
+          fontSize: 13,
           fontWeight: FontWeight.w600,
         ),
-        prefixIcon: const Icon(Icons.badge_outlined, color: Colors.white70, size: 22),
+        prefixIcon: const Icon(Icons.badge_outlined, color: Color(0xFF0F172A), size: 20),
         filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.10),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(
+            color: Color(0xFF0F172A),
+            width: 2,
+          ),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(
-            color: Colors.white.withValues(alpha: 0.15),
-            width: 1,
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(
+            color: Color(0xFF0F172A),
+            width: 2,
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFF22C55E), width: 1.5),
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Color(0xFF0D9488), width: 2),
         ),
       ),
       items: const [
@@ -945,7 +999,7 @@ class _SportBgPainter extends CustomPainter {
       size,
       Offset(size.width * 0.22, size.height * 0.26),
       size.width * 0.28,
-      _teal.withValues(alpha: 0.20),
+      _teal.withValues(alpha: 0.15),
       0.0,
     );
     _blob(
@@ -953,7 +1007,7 @@ class _SportBgPainter extends CustomPainter {
       size,
       Offset(size.width * 0.78, size.height * 0.22),
       size.width * 0.24,
-      _mint.withValues(alpha: 0.16),
+      _mint.withValues(alpha: 0.12),
       1.2,
     );
     _blob(
@@ -961,13 +1015,13 @@ class _SportBgPainter extends CustomPainter {
       size,
       Offset(size.width * 0.68, size.height * 0.86),
       size.width * 0.30,
-      Colors.white.withValues(alpha: 0.08),
+      Colors.white.withValues(alpha: 0.05),
       2.4,
     );
 
     final vignette = Paint()
       ..shader = RadialGradient(
-        colors: [Colors.transparent, Colors.black.withValues(alpha: 0.55)],
+        colors: [Colors.transparent, Colors.black.withValues(alpha: 0.6)],
         stops: const [0.55, 1.0],
       ).createShader(
         Rect.fromCircle(
@@ -979,7 +1033,14 @@ class _SportBgPainter extends CustomPainter {
     canvas.drawRect(Offset.zero & size, vignette);
   }
 
-  void _blob(Canvas canvas, Size size, Offset c, double r, Color color, double phase) {
+  void _blob(
+    Canvas canvas,
+    Size size,
+    Offset c,
+    double r,
+    Color color,
+    double phase,
+  ) {
     final paint = Paint()..color = color;
     final k = sin((t * 2 * pi) + phase) * 0.04;
 
@@ -987,7 +1048,8 @@ class _SportBgPainter extends CustomPainter {
     const n = 12;
     for (int i = 0; i <= n; i++) {
       final a = (i / n) * 2 * pi;
-      final wob = (sin(a * 3 + t * 2 * pi + phase) * 0.10) +
+      final wob =
+          (sin(a * 3 + t * 2 * pi + phase) * 0.10) +
           (cos(a * 2 - t * 2 * pi + phase) * 0.08);
       final rr = r * (0.88 + wob + k);
       final x = c.dx + cos(a) * rr;
@@ -1003,5 +1065,5 @@ class _SportBgPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _SportBgPainter oldDelegate) => oldDelegate.t != t;
+  bool shouldRepaint(_SportBgPainter oldDelegate) => oldDelegate.t != t;
 }

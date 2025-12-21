@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import 'package:all_ahraga/constants/api.dart';
 import 'package:all_ahraga/screens/venue/venue_manage_schedule.dart';
 
-// --- DESIGN SYSTEM CONSTANTS & WIDGETS ---
 class NeoColors {
   static const Color primary = Color(0xFF0D9488);
   static const Color text = Color(0xFF0F172A);
@@ -137,8 +136,6 @@ class NeoInputWrapper extends StatelessWidget {
   }
 }
 
-// --- MAIN PAGE LOGIC ---
-
 class VenueManagePage extends StatefulWidget {
   final int venueId;
   const VenueManagePage({super.key, required this.venueId});
@@ -159,8 +156,6 @@ class _VenueManagePageState extends State<VenueManagePage> {
 
   int? _selectedLocationId;
   int? _selectedCategoryId;
-
-  // Payment option dihapus
 
   List<dynamic> _equipments = [];
   bool _isLoading = true;
@@ -247,7 +242,6 @@ class _VenueManagePageState extends State<VenueManagePage> {
           'price_per_hour': double.tryParse(_priceController.text) ?? 0,
           'location': _selectedLocationId,
           'sport_category': _selectedCategoryId,
-          // 'payment_options' dihapus dari payload
           'image': _imageController.text,
         }),
       );
@@ -497,7 +491,6 @@ class _VenueManagePageState extends State<VenueManagePage> {
       body: SafeArea(
         child: Column(
           children: [
-            // --- HEADER ---
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               decoration: const BoxDecoration(
@@ -535,7 +528,6 @@ class _VenueManagePageState extends State<VenueManagePage> {
               ),
             ),
 
-            // --- CONTENT ---
             Expanded(
               child: _isLoading
                   ? const Center(
@@ -548,7 +540,6 @@ class _VenueManagePageState extends State<VenueManagePage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // 1. URL INPUT & PREVIEW
                             NeoInputWrapper(
                               label: "URL Foto Venue",
                               child: TextFormField(
@@ -597,7 +588,6 @@ class _VenueManagePageState extends State<VenueManagePage> {
 
                             const SizedBox(height: 24),
 
-                            // 2. FORM FIELDS
                             NeoInputWrapper(
                               label: "Nama Venue",
                               child: TextFormField(
@@ -695,7 +685,6 @@ class _VenueManagePageState extends State<VenueManagePage> {
                               ),
                             ),
 
-                            // Payment Options dihapus
                             const SizedBox(height: 32),
 
                             // ACTION BUTTONS
@@ -732,7 +721,7 @@ class _VenueManagePageState extends State<VenueManagePage> {
                             const Divider(color: NeoColors.text, thickness: 2),
                             const SizedBox(height: 24),
 
-                            // EQUIPMENT SECTION (Sama persis)
+                            // EQUIPMENT SECTION 
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [

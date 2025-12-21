@@ -75,7 +75,7 @@ class _CustomerPaymentPageState extends State<CustomerPaymentPage> {
       if (!mounted) return;
       setState(() {
         _isProcessing = false;
-        _errorMessage = "Gangguan koneksi. Coba lagi.";
+        _errorMessage = 'Koneksi terputus. Silakan periksa internet Anda.';
       });
     }
   }
