@@ -257,7 +257,7 @@ class _VenueHomePageState extends State<VenueHomePage> {
         _buildMenuCard(
           context,
           icon: Icons.monetization_on_outlined,
-          title: 'REVENUE',
+          title: 'PENDAPATAN',
           subtitle: 'Laporan Pendapatan',
           color: const Color(0xFF16a34a), // Green shade like Coach
           onTap: () {
