@@ -39,6 +39,10 @@ class _MyHomePageState extends State<MyHomePage> {
   String? _selectedLocation;
   String? _selectedCategory;
 
+  // --- PAGINATION VARIABLES ---
+  int _currentPage = 1;
+  int _totalPages = 1;
+
   final List<String> _allLocations = [
     'Bekasi',
     'Bogor',
@@ -99,17 +103,19 @@ class _MyHomePageState extends State<MyHomePage> {
     }).toList();
   }
 
-  Future<void> _fetchVenues() async {
+  Future<void> _fetchVenues({int page = 1}) async {
     setState(() {
       _isLoading = true;
       _error = null;
+      _currentPage = page;
     });
 
     final request = context.read<CookieRequest>();
 
     try {
+      // Mengirimkan parameter page ke backend
       final response = await request.get(
-        '${ApiConstants.venues}?search=$_searchQuery',
+        '${ApiConstants.venues}?search=$_searchQuery&page=$_currentPage',
       );
 
       if (response['success'] == true) {
@@ -117,6 +123,8 @@ class _MyHomePageState extends State<MyHomePage> {
         if (mounted) {
           setState(() {
             _venues = fetchedVenues;
+            // Mengambil total_pages dari response backend (jika ada)
+            _totalPages = response['total_pages'] ?? 1;
             _isLoading = false;
           });
         }
@@ -157,7 +165,7 @@ class _MyHomePageState extends State<MyHomePage> {
               child: RefreshIndicator(
                 color: _kTosca,
                 backgroundColor: _kBg,
-                onRefresh: _fetchVenues,
+                onRefresh: () => _fetchVenues(page: 1),
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   child: Column(
@@ -198,6 +206,11 @@ class _MyHomePageState extends State<MyHomePage> {
                             const SizedBox(height: 16),
 
                             _buildContentList(),
+                            
+                            // 4. PAGINATION CONTROLS
+                            if (!_isLoading && _venues.isNotEmpty)
+                              _buildPagination(),
+
                             const SizedBox(height: 40),
                           ],
                         ),
@@ -215,6 +228,62 @@ class _MyHomePageState extends State<MyHomePage> {
 
   // --- WIDGETS ---
 
+  Widget _buildPagination() {
+    return Container(
+      margin: const EdgeInsets.only(top: 30),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(_kRadius),
+        border: Border.all(color: _kSlate, width: _kBorderWidth),
+        boxShadow: const [
+          BoxShadow(color: _kSlate, offset: Offset(4, 4)),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Tombol Sebelumnya
+          _PaginationButton(
+            text: "Sebelumnya",
+            icon: Icons.chevron_left,
+            isDisabled: _currentPage <= 1,
+            onTap: () => _fetchVenues(page: _currentPage - 1),
+          ),
+
+          // Info Halaman
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF0FDFA),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: _kTosca.withOpacity(0.5)),
+            ),
+            child: Text(
+              "Halaman $_currentPage dari $_totalPages",
+              style: const TextStyle(
+                color: _kSlate,
+                fontWeight: FontWeight.w800,
+                fontSize: 12,
+              ),
+            ),
+          ),
+
+          // Tombol Berikutnya
+          _PaginationButton(
+            text: "Berikutnya",
+            icon: Icons.chevron_right,
+            isRightIcon: true,
+            isDisabled: _currentPage >= _totalPages,
+            onTap: () => _fetchVenues(page: _currentPage + 1),
+            color: _kTosca,
+            textColor: Colors.white,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildDecoratedAppBar() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -227,14 +296,11 @@ class _MyHomePageState extends State<MyHomePage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Kiri: Menu Button
           _NeoIconButton(
             icon: Icons.menu,
             onTap: () => _scaffoldKey.currentState?.openDrawer(),
             bgColor: Colors.white,
           ),
-
-          // Tengah: Logo dengan Ornamen
           Row(
             children: const [
               Icon(Icons.sports_soccer, color: _kTosca, size: 24),
@@ -251,9 +317,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ],
           ),
-
-          // Kanan: Kosong (Sesuai Request)
-          const SizedBox(width: 40), // Placeholder agar Title tetap di tengah
+          const SizedBox(width: 40),
         ],
       ),
     );
@@ -270,7 +334,6 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       child: Stack(
         children: [
-          // ORNAMEN 1: Lingkaran Besar
           Positioned(
             right: -20,
             top: -20,
@@ -284,7 +347,6 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
           ),
-          // ORNAMEN 2: Lingkaran Kecil
           Positioned(
             right: 60,
             bottom: -10,
@@ -304,8 +366,6 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
           ),
-
-          // KONTEN
           Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -337,7 +397,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ),
                 const SizedBox(height: 20),
-
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -359,7 +418,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         _selectedLocation = null;
                         _selectedCategory = null;
                       });
-                      _fetchVenues();
+                      _fetchVenues(page: 1);
                     },
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
@@ -383,7 +442,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               onPressed: () {
                                 _searchController.clear();
                                 _searchQuery = '';
-                                _fetchVenues();
+                                _fetchVenues(page: 1);
                               },
                             )
                           : null,
@@ -413,7 +472,6 @@ class _MyHomePageState extends State<MyHomePage> {
             child: const Icon(Icons.filter_list, color: Colors.white, size: 20),
           ),
           const SizedBox(width: 12),
-
           _NeoDropdown(
             hint: "LOKASI",
             value: _selectedLocation,
@@ -427,7 +485,6 @@ class _MyHomePageState extends State<MyHomePage> {
             items: _allCategories,
             onChanged: (val) => setState(() => _selectedCategory = val),
           ),
-
           if (_selectedLocation != null || _selectedCategory != null) ...[
             const SizedBox(width: 12),
             GestureDetector(
@@ -479,7 +536,7 @@ class _MyHomePageState extends State<MyHomePage> {
             const SizedBox(height: 12),
             _NeoButton(
               text: "COBA LAGI",
-              onTap: _fetchVenues,
+              onTap: () => _fetchVenues(page: 1),
               color: _kBg,
               textColor: _kSlate,
             ),
@@ -531,7 +588,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     CreateBookingPage(venueId: _filteredVenues[index]['id']),
               ),
             ).then((result) {
-              if (result == true) _fetchVenues();
+              if (result == true) _fetchVenues(page: _currentPage);
             });
           },
         );
@@ -539,6 +596,70 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
+
+class _PaginationButton extends StatelessWidget {
+  final String text;
+  final IconData icon;
+  final VoidCallback onTap;
+  final bool isDisabled;
+  final bool isRightIcon;
+  final Color color;
+  final Color textColor;
+
+  const _PaginationButton({
+    required this.text,
+    required this.icon,
+    required this.onTap,
+    this.isDisabled = false,
+    this.isRightIcon = false,
+    this.color = const Color(0xFFE2E8F0),
+    this.textColor = _kSlate,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: isDisabled ? null : onTap,
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 200),
+        opacity: isDisabled ? 0.5 : 1.0,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: _kSlate, width: 1.5),
+            boxShadow: isDisabled 
+                ? null 
+                : [const BoxShadow(color: _kSlate, offset: Offset(2, 2))],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (!isRightIcon) ...[
+                Icon(icon, size: 16, color: textColor),
+                const SizedBox(width: 4),
+              ],
+              Text(
+                text,
+                style: TextStyle(
+                  color: textColor,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 12,
+                ),
+              ),
+              if (isRightIcon) ...[
+                const SizedBox(width: 4),
+                Icon(icon, size: 16, color: textColor),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 
 class _NeoIconButton extends StatelessWidget {
   final IconData icon;
