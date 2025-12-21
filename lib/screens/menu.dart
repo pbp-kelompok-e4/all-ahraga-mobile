@@ -111,9 +111,14 @@ class _MyHomePageState extends State<MyHomePage> {
     final request = context.read<CookieRequest>();
 
     try {
-      final response = await request.get(
-        '${ApiConstants.venues}?search=$_searchQuery&page=$_currentPage',
-      );
+      String url = '${ApiConstants.venues}?search=$_searchQuery&page=$_currentPage';
+      if (_selectedLocation != null) {
+        url += '&location=${Uri.encodeComponent(_selectedLocation!)}';
+      }
+      if (_selectedCategory != null) {
+        url += '&sport_category=${Uri.encodeComponent(_selectedCategory!)}';
+      }
+      final response = await request.get(url);
 
       if (response['success'] == true) {
         final List<dynamic> fetchedVenues = response['venues'] ?? [];
@@ -125,13 +130,13 @@ class _MyHomePageState extends State<MyHomePage> {
           });
         }
       } else {
-        if (mounted) {
-          setState(() {
-            _error = response['message'] ?? 'Gagal memuat venue';
-            _isLoading = false;
-          });
+          if (mounted) {
+            setState(() {
+              _error = response['message'] ?? 'Gagal memuat venue';
+              _isLoading = false;
+            });
+          }
         }
-      }
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -464,14 +469,20 @@ class _MyHomePageState extends State<MyHomePage> {
             hint: "LOKASI",
             value: _selectedLocation,
             items: _allLocations,
-            onChanged: (val) => setState(() => _selectedLocation = val),
+            onChanged: (val) {
+              setState(() => _selectedLocation = val);
+              _fetchVenues(page: 1); 
+            },
           ),
           const SizedBox(width: 12),
           _NeoDropdown(
             hint: "KATEGORI",
             value: _selectedCategory,
             items: _allCategories,
-            onChanged: (val) => setState(() => _selectedCategory = val),
+            onChanged: (val) {
+              setState(() => _selectedCategory = val);
+              _fetchVenues(page: 1); 
+            },
           ),
           if (_selectedLocation != null || _selectedCategory != null) ...[
             const SizedBox(width: 12),
@@ -481,6 +492,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   _selectedLocation = null;
                   _selectedCategory = null;
                 });
+                _fetchVenues(page: 1);
               },
               child: Container(
                 padding: const EdgeInsets.all(10),

@@ -30,6 +30,7 @@ class LeftDrawer extends StatelessWidget {
 
     return Drawer(
       child: ListView(
+        padding: EdgeInsets.zero,
         children: [
           DrawerHeader(
             decoration: const BoxDecoration(
@@ -72,18 +73,20 @@ class LeftDrawer extends StatelessWidget {
           ),
           
           // Home
-          ListTile(
-            leading: const Icon(Icons.home_outlined),
-            title: const Text("Home"),
-            onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const MyHomePage(),
-                ),
-              );
-            },
-          ),
+          if (userRole == 'CUSTOMER') ...[
+            ListTile(
+              leading: const Icon(Icons.home_outlined),
+              title: const Text("Home"),
+              onTap: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const MyHomePage(),
+                  ),
+                );
+              },
+            ),
+          ],
           
           const Divider(),
           if (showBookingMenu) ...[
@@ -129,9 +132,8 @@ class LeftDrawer extends StatelessWidget {
 
           // Coach
           if (isCoach) ...[
-            const Divider(),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 1),
               child: Text(
                 'COACH',
                 style: TextStyle(
@@ -213,9 +215,8 @@ class LeftDrawer extends StatelessWidget {
             ),
           ],
           if (isVenueOwner) ...[
-          const Divider(),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 1),
             child: Text(
               'VENUE OWNER',
               style: TextStyle(
@@ -257,7 +258,6 @@ class LeftDrawer extends StatelessWidget {
           ],
           
           // Logout Button
-          const Divider(),
           ListTile(
             leading: const Icon(Icons.logout_outlined, color: Color(0xFFEA580C)),
             title: const Text("Logout"),
