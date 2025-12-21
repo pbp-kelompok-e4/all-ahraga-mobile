@@ -680,11 +680,18 @@ class _VenueCard extends StatelessWidget {
         );
   }
 
+  // Helper function untuk proxy image
+  String _getProxiedImageUrl(String originalUrl) {
+    return '${ApiConstants.imageProxy}?url=${Uri.encodeComponent(originalUrl)}';
+  }
+
   @override
   Widget build(BuildContext context) {
     // --- [LOGIC FIX] Handle Image URL ---
     String? rawImage = venue['image'];
     String? imageUrl;
+    String? proxiedUrl;
+    
     if (rawImage != null && rawImage.toString().isNotEmpty) {
       if (rawImage.startsWith('http')) {
         imageUrl = rawImage; // Pakai langsung kalau sudah URL lengkap
@@ -692,6 +699,8 @@ class _VenueCard extends StatelessWidget {
         imageUrl =
             '${ApiConstants.baseUrl}$rawImage'; // Tambah base kalau path relative
       }
+      // Gunakan proxy untuk mengatasi CORS
+      proxiedUrl = _getProxiedImageUrl(imageUrl);
     }
     // ------------------------------------
 
@@ -722,11 +731,14 @@ class _VenueCard extends StatelessWidget {
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(_kRadius - 2),
                 ),
-                child: imageUrl != null
+                child: proxiedUrl != null
                     ? Image.network(
-                        imageUrl,
+                        proxiedUrl,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => _PlaceholderImage(),
+                        errorBuilder: (context, error, stackTrace) {
+                          debugPrint('❌ Image proxy error: $error');
+                          return _PlaceholderImage();
+                        },
                       )
                     : _PlaceholderImage(),
               ),

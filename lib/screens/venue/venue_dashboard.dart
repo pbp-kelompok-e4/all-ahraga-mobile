@@ -482,6 +482,20 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
                           ...List.generate(snapshot.data!.length, (index) {
                             final venue = snapshot.data![index];
                             final String? imageUrl = venue['image_url'];
+                            
+                            // Helper function untuk proxy image
+                            String _getProxiedImageUrl(String originalUrl) {
+                              return '${ApiConstants.imageProxy}?url=${Uri.encodeComponent(originalUrl)}';
+                            }
+                            
+                            // Prepare proxied URL
+                            String? proxiedUrl;
+                            if (imageUrl != null && imageUrl.isNotEmpty) {
+                              String fullImageUrl = imageUrl.startsWith('http')
+                                  ? imageUrl
+                                  : "${ApiConstants.baseUrl}$imageUrl";
+                              proxiedUrl = _getProxiedImageUrl(fullImageUrl);
+                            }
 
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 24.0),
@@ -510,29 +524,38 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
                                             width: 2,
                                           ),
                                         ),
-                                        image:
-                                            (imageUrl != null &&
-                                                imageUrl.isNotEmpty)
-                                            ? DecorationImage(
-                                                image: NetworkImage(
-                                                  imageUrl.startsWith('http')
-                                                      ? imageUrl
-                                                      : "${ApiConstants.baseUrl}$imageUrl",
-                                                ),
-                                                fit: BoxFit.cover,
-                                              )
-                                            : null,
                                       ),
-                                      child:
-                                          (imageUrl == null || imageUrl.isEmpty)
-                                          ? const Center(
-                                              child: Icon(
-                                                Icons.image_not_supported,
-                                                size: 50,
-                                                color: NeoColors.muted,
-                                              ),
+                                      child: (imageUrl != null &&
+                                              imageUrl.isNotEmpty)
+                                          ? Image.network(
+                                              proxiedUrl!,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (context, error,
+                                                  stackTrace) {
+                                                debugPrint(
+                                                    '❌ Venue image proxy error: $error');
+                                                return Container(
+                                                  color: Colors.grey[200],
+                                                  child: const Center(
+                                                    child: Icon(
+                                                      Icons.image_not_supported,
+                                                      size: 50,
+                                                      color: NeoColors.muted,
+                                                    ),
+                                                  ),
+                                                );
+                                              },
                                             )
-                                          : null,
+                                          : Container(
+                                              color: Colors.grey[200],
+                                              child: const Center(
+                                                child: Icon(
+                                                  Icons.image_not_supported,
+                                                  size: 50,
+                                                  color: NeoColors.muted,
+                                                ),
+                                              ),
+                                            ),
                                     ),
 
                                     // Content Section

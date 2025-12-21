@@ -33,6 +33,26 @@ class _CoachProfilePageState extends State<CoachProfilePage> {
   String? _errorMessage;
   Map<String, dynamic>? _userData;
 
+  String _getFullImageUrl(String? imageUrl) {
+    if (imageUrl == null || imageUrl.isEmpty) {
+      return '';
+    }
+    // Jika sudah URL lengkap (dengan http/https), gunakan langsung
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      return imageUrl;
+    }
+    // Jika relative URL, tambahkan baseUrl
+    return '${ApiConstants.baseUrl}${imageUrl.startsWith('/') ? imageUrl.substring(1) : imageUrl}';
+  }
+
+  String _getProxiedImageUrl(String? imageUrl) {
+    if (imageUrl == null || imageUrl.isEmpty) {
+      return '';
+    }
+    final fullUrl = _getFullImageUrl(imageUrl);
+    return '${ApiConstants.imageProxy}?url=${Uri.encodeComponent(fullUrl)}';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -407,20 +427,41 @@ class _CoachProfilePageState extends State<CoachProfilePage> {
                         width: NeoBrutalism.borderWidth,
                       ),
                     ),
-                    child: CircleAvatar(
-                      radius: 60,
-                      backgroundColor: NeoBrutalism.primary,
-                      backgroundImage: _coachProfile!.profilePicture != null
-                          ? NetworkImage(_coachProfile!.profilePicture!)
-                          : null,
-                      child: _coachProfile!.profilePicture == null
-                          ? const Icon(
+                    child: _coachProfile!.profilePicture != null && 
+                           _coachProfile!.profilePicture!.isNotEmpty
+                        ? ClipOval(
+                            child: Image.network(
+                              _getProxiedImageUrl(_coachProfile!.profilePicture),
+                              width: 120,
+                              height: 120,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                debugPrint('❌ Coach image proxy error: $error');
+                                return Container(
+                                  width: 120,
+                                  height: 120,
+                                  decoration: BoxDecoration(
+                                    color: NeoBrutalism.primary,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.person,
+                                    size: 60,
+                                    color: NeoBrutalism.white,
+                                  ),
+                                );
+                              },
+                            ),
+                          )
+                        : CircleAvatar(
+                            radius: 60,
+                            backgroundColor: NeoBrutalism.primary,
+                            child: const Icon(
                               Icons.person,
                               size: 60,
                               color: NeoBrutalism.white,
-                            )
-                          : null,
-                    ),
+                            ),
+                          ),
                   ),
                   const SizedBox(height: 20),
                   Text(
