@@ -6,7 +6,6 @@ import 'package:all_ahraga/constants/api.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:all_ahraga/widgets/error_retry_widget.dart';
 
-// PALETTE LIGHT NEO-BRUTALISM
 const Color _kBg = Colors.white;
 const Color _kSlate = Color(0xFF0F172A);
 const Color _kMuted = Color(0xFF64748B);
@@ -153,7 +152,7 @@ class _UpdateBookingPageState extends State<UpdateBookingPage> {
       }
     } catch (e) {
       setState(() {
-        _error = 'Error: $e';
+        _error = 'Koneksi terputus. Silakan periksa internet Anda.';
         _isLoading = false;
       });
     }
