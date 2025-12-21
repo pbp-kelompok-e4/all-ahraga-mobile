@@ -9,6 +9,11 @@ import 'package:all_ahraga/screens/coach/coach_profile.dart';
 import 'package:all_ahraga/screens/venue_menu.dart';
 import 'package:all_ahraga/screens/venue/venue_revenue.dart';
 import 'package:all_ahraga/screens/auth_page.dart';
+import 'package:all_ahraga/screens/admin/admin_menu.dart';
+import 'package:all_ahraga/screens/admin/admin_users.dart';
+import 'package:all_ahraga/screens/admin/admin_coaches.dart';
+import 'package:all_ahraga/screens/admin/admin_venues.dart';
+import 'package:all_ahraga/screens/admin/admin_bookings.dart';
 import 'package:all_ahraga/constants/api.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
@@ -21,12 +26,21 @@ class LeftDrawer extends StatelessWidget {
     final request = context.watch<CookieRequest>();
     String userRole = 'CUSTOMER';
     if (request.jsonData.isNotEmpty && request.jsonData.containsKey('role_type')) {
-      userRole = request.jsonData['role_type']; 
+      userRole = request.jsonData['role_type']?.toString().toUpperCase() ?? 'CUSTOMER'; 
     }
 
     bool isVenueOwner = userRole == 'VENUE_OWNER';
     bool isCoach = userRole == 'COACH';
-    bool showBookingMenu = !isCoach && !isVenueOwner;
+
+    // Deteksi admin/superuser (tangani boolean/string/angka)
+    final dynamic _isSuperRaw = request.jsonData['is_superuser'];
+    final bool isAdmin = userRole == 'ADMIN' ||
+      _isSuperRaw == true ||
+      (_isSuperRaw is String && _isSuperRaw.toLowerCase() == 'true') ||
+      _isSuperRaw == 1 ||
+      (_isSuperRaw?.toString() == '1');
+
+    bool showBookingMenu = !isCoach && !isVenueOwner && !isAdmin;
 
     return Drawer(
       child: ListView(
@@ -89,6 +103,72 @@ class LeftDrawer extends StatelessWidget {
           ],
           
           const Divider(),
+          // Admin Menu
+          if (isAdmin) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                'ADMIN',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey.shade600,
+                  letterSpacing: 1,
+                ),
+              ),
+            ),
+
+            // Admin Dashboard removed from drawer — access via Admin menu
+
+            ListTile(
+              leading: const Icon(Icons.people, color: Color(0xFF0D9488)),
+              title: const Text("Kelola Pengguna"),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AdminUsersPage()),
+                );
+              },
+            ),
+
+            ListTile(
+              leading: const Icon(Icons.sports_gymnastics, color: Color(0xFF0D9488)),
+              title: const Text("Kelola Pelatih"),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AdminCoachesPage()),
+                );
+              },
+            ),
+
+            ListTile(
+              leading: const Icon(Icons.stadium, color: Color(0xFF0D9488)),
+              title: const Text("Kelola Venue"),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AdminVenuesPage()),
+                );
+              },
+            ),
+
+            ListTile(
+              leading: const Icon(Icons.receipt_long, color: Color(0xFF0D9488)),
+              title: const Text("Kelola Booking"),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AdminBookingsPage()),
+                );
+              },
+            ),
+            const Divider(),
+          ],
           if (showBookingMenu) ...[
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

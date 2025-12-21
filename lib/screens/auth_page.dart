@@ -10,6 +10,7 @@ import 'package:all_ahraga/screens/menu.dart' as customer;
 import 'package:all_ahraga/screens/venue_menu.dart';
 import 'package:all_ahraga/screens/coach_menu.dart';
 import 'package:all_ahraga/screens/landing_page.dart';
+import 'package:all_ahraga/screens/admin/admin_menu.dart';
 import 'package:all_ahraga/constants/api.dart';
 
 enum AuthMode { login, register }
@@ -80,7 +81,10 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
         transitionDuration: const Duration(milliseconds: 420),
         pageBuilder: (_, __, ___) => const LandingPage(),
         transitionsBuilder: (_, anim, __, child) {
-          final curved = CurvedAnimation(parent: anim, curve: Curves.easeInOutCubic);
+          final curved = CurvedAnimation(
+            parent: anim,
+            curve: Curves.easeInOutCubic,
+          );
           return FadeTransition(
             opacity: curved,
             child: SlideTransition(
@@ -107,10 +111,10 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
     });
 
     try {
-      final response = await request.login(
-        ApiConstants.authLogin,
-        {'username': username, 'password': password},
-      );
+      final response = await request.login(ApiConstants.authLogin, {
+        'username': username,
+        'password': password,
+      });
 
       if (!mounted) return;
 
@@ -118,9 +122,20 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
         final message = (response['message'] ?? 'Login successful!').toString();
         final uname = (response['username'] ?? username).toString();
         final roleType = response['role_type']?.toString();
+        final dynamic _isSuperRaw = response['is_superuser'];
+        final bool isSuperuser =
+            _isSuperRaw == true ||
+            (_isSuperRaw is String && _isSuperRaw.toLowerCase() == 'true') ||
+            _isSuperRaw == 1 ||
+            (_isSuperRaw?.toString() == '1');
+
+        final roleTypeNorm = roleType?.toString().toUpperCase();
 
         Widget target;
-        if (roleType == 'VENUE_OWNER') {
+
+        if (roleTypeNorm == 'ADMIN' || isSuperuser) {
+          target = const AdminHomePage(); // Masuk ke Dashboard Admin
+        } else if (roleType == 'VENUE_OWNER') {
           target = const VenueHomePage();
         } else if (roleType == 'COACH') {
           target = const CoachHomePage();
@@ -139,9 +154,10 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
             ),
           );
       } else {
-        final msg = (response['message'] ??
-                'Login failed, please check your username or password.')
-            .toString();
+        final msg =
+            (response['message'] ??
+                    'Login failed, please check your username or password.')
+                .toString();
         setState(() => _loginError = msg);
       }
     } catch (e) {
@@ -197,14 +213,19 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
       if (response['status'] == "success") {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
-          ..showSnackBar(const SnackBar(
+          ..showSnackBar(
+            const SnackBar(
               content: Text("Successfully registered!"),
-              backgroundColor: Colors.green));
+              backgroundColor: Colors.green,
+            ),
+          );
 
         _switchTo(AuthMode.login);
       } else {
-        setState(() =>
-            _regError = (response['message'] ?? "Registration failed!").toString());
+        setState(
+          () => _regError = (response['message'] ?? "Registration failed!")
+              .toString(),
+        );
       }
     } catch (e) {
       if (!mounted) return;
@@ -217,7 +238,7 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final request = context.watch<CookieRequest>();
-    final _ = MediaQuery.of(context).size.height;
+    // final _ = MediaQuery.of(context).size.height; // Unused variable removed
 
     return Scaffold(
       backgroundColor: const Color(0xFF061B2B),
@@ -242,11 +263,16 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
                     child: BackdropFilter(
                       filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(100),
-                          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.2),
+                          ),
                         ),
                         child: Row(
                           children: [
@@ -254,7 +280,11 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
                               onTap: _goLanding,
                               child: Row(
                                 children: [
-                                  const Icon(Icons.sports_soccer, color: Colors.white, size: 20),
+                                  const Icon(
+                                    Icons.sports_soccer,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
                                   const SizedBox(width: 8),
                                   const Text(
                                     "ALL-AHRAGA",
@@ -301,7 +331,7 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
                                   color: Color(0xFF0F172A),
                                   offset: Offset(4, 4),
                                   blurRadius: 0,
-                                )
+                                ),
                               ],
                             ),
                             child: Padding(
@@ -323,40 +353,44 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
                                   );
                                 },
                                 child: _mode == AuthMode.login
-                                      ? _LoginContent(
-                                          key: const ValueKey('login'),
-                                          error: _loginError,
-                                          loading: _loginLoading,
-                                          obscure: _loginObscure,
-                                          onToggleObscure: () => setState(
-                                              () => _loginObscure = !_loginObscure),
-                                          usernameCtrl: _loginUsername,
-                                          passwordCtrl: _loginPassword,
-                                          onSubmit: () => _doLogin(request),
-                                          onSwitchToRegister: () =>
-                                              _switchTo(AuthMode.register),
-                                        )
-                                      : _RegisterContent(
-                                          key: const ValueKey('register'),
-                                          error: _regError,
-                                          loading: _regLoading,
-                                          role: _regRole,
-                                          onRole: (v) => setState(() => _regRole = v),
-                                          obscure1: _regObscure1,
-                                          obscure2: _regObscure2,
-                                          onToggle1: () => setState(
-                                              () => _regObscure1 = !_regObscure1),
-                                          onToggle2: () => setState(
-                                              () => _regObscure2 = !_regObscure2),
-                                          usernameCtrl: _regUsername,
-                                          emailCtrl: _regEmail,
-                                          phoneCtrl: _regPhone,
-                                          passwordCtrl: _regPassword,
-                                          confirmCtrl: _regConfirm,
-                                          onSubmit: () => _doRegister(request),
-                                          onSwitchToLogin: () =>
-                                              _switchTo(AuthMode.login),
+                                    ? _LoginContent(
+                                        key: const ValueKey('login'),
+                                        error: _loginError,
+                                        loading: _loginLoading,
+                                        obscure: _loginObscure,
+                                        onToggleObscure: () => setState(
+                                          () => _loginObscure = !_loginObscure,
                                         ),
+                                        usernameCtrl: _loginUsername,
+                                        passwordCtrl: _loginPassword,
+                                        onSubmit: () => _doLogin(request),
+                                        onSwitchToRegister: () =>
+                                            _switchTo(AuthMode.register),
+                                      )
+                                    : _RegisterContent(
+                                        key: const ValueKey('register'),
+                                        error: _regError,
+                                        loading: _regLoading,
+                                        role: _regRole,
+                                        onRole: (v) =>
+                                            setState(() => _regRole = v),
+                                        obscure1: _regObscure1,
+                                        obscure2: _regObscure2,
+                                        onToggle1: () => setState(
+                                          () => _regObscure1 = !_regObscure1,
+                                        ),
+                                        onToggle2: () => setState(
+                                          () => _regObscure2 = !_regObscure2,
+                                        ),
+                                        usernameCtrl: _regUsername,
+                                        emailCtrl: _regEmail,
+                                        phoneCtrl: _regPhone,
+                                        passwordCtrl: _regPassword,
+                                        confirmCtrl: _regConfirm,
+                                        onSubmit: () => _doRegister(request),
+                                        onSwitchToLogin: () =>
+                                            _switchTo(AuthMode.login),
+                                      ),
                               ),
                             ),
                           ),
@@ -430,16 +464,13 @@ class _LoginContent extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: const Color(0xFFDC2626),
-                width: 2,
-              ),
+              border: Border.all(color: const Color(0xFFDC2626), width: 2),
               boxShadow: const [
                 BoxShadow(
                   color: Color(0xFF0F172A),
                   offset: Offset(2, 2),
                   blurRadius: 0,
-                )
+                ),
               ],
             ),
             child: Text(
@@ -589,16 +620,13 @@ class _RegisterContent extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: const Color(0xFFDC2626),
-                width: 2,
-              ),
+              border: Border.all(color: const Color(0xFFDC2626), width: 2),
               boxShadow: const [
                 BoxShadow(
                   color: Color(0xFF0F172A),
                   offset: Offset(2, 2),
                   blurRadius: 0,
-                )
+                ),
               ],
             ),
             child: Text(
@@ -746,7 +774,10 @@ class _MiniPillButton extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(100),
               color: Colors.white.withValues(alpha: 0.12),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.3),
+                width: 1,
+              ),
             ),
             child: Text(
               text,
@@ -789,16 +820,13 @@ class _PrimaryButton extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
             color: const Color(0xFF0D9488),
-            border: Border.all(
-              color: const Color(0xFF0F172A),
-              width: 2,
-            ),
+            border: Border.all(color: const Color(0xFF0F172A), width: 2),
             boxShadow: const [
               BoxShadow(
                 color: Color(0xFF0F172A),
                 offset: Offset(4, 4),
                 blurRadius: 0,
-              )
+              ),
             ],
           ),
           child: Row(
@@ -865,20 +893,17 @@ class _GlassTextField extends StatelessWidget {
         suffixIcon: suffix,
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(
-            color: Color(0xFF0F172A),
-            width: 2,
-          ),
+          borderSide: const BorderSide(color: Color(0xFF0F172A), width: 2),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(
-            color: Color(0xFF0F172A),
-            width: 2,
-          ),
+          borderSide: const BorderSide(color: Color(0xFF0F172A), width: 2),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
@@ -923,23 +948,24 @@ class _GlassDropdown extends StatelessWidget {
           fontSize: 13,
           fontWeight: FontWeight.w600,
         ),
-        prefixIcon: const Icon(Icons.badge_outlined, color: Color(0xFF0F172A), size: 20),
+        prefixIcon: const Icon(
+          Icons.badge_outlined,
+          color: Color(0xFF0F172A),
+          size: 20,
+        ),
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(
-            color: Color(0xFF0F172A),
-            width: 2,
-          ),
+          borderSide: const BorderSide(color: Color(0xFF0F172A), width: 2),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(
-            color: Color(0xFF0F172A),
-            width: 2,
-          ),
+          borderSide: const BorderSide(color: Color(0xFF0F172A), width: 2),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
@@ -961,7 +987,10 @@ PageRouteBuilder _pageSlide(Widget page, {required bool toLeft}) {
     reverseTransitionDuration: const Duration(milliseconds: 480),
     pageBuilder: (_, __, ___) => page,
     transitionsBuilder: (_, animation, __, child) {
-      final curved = CurvedAnimation(parent: animation, curve: Curves.easeInOutCubic);
+      final curved = CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeInOutCubic,
+      );
       final begin = toLeft ? const Offset(-0.10, 0) : const Offset(0.10, 0);
       return SlideTransition(
         position: Tween<Offset>(begin: begin, end: Offset.zero).animate(curved),
@@ -1020,15 +1049,16 @@ class _SportBgPainter extends CustomPainter {
     );
 
     final vignette = Paint()
-      ..shader = RadialGradient(
-        colors: [Colors.transparent, Colors.black.withValues(alpha: 0.6)],
-        stops: const [0.55, 1.0],
-      ).createShader(
-        Rect.fromCircle(
-          center: Offset(size.width * 0.5, size.height * 0.35),
-          radius: max(size.width, size.height) * 0.9,
-        ),
-      );
+      ..shader =
+          RadialGradient(
+            colors: [Colors.transparent, Colors.black.withValues(alpha: 0.6)],
+            stops: const [0.55, 1.0],
+          ).createShader(
+            Rect.fromCircle(
+              center: Offset(size.width * 0.5, size.height * 0.35),
+              radius: max(size.width, size.height) * 0.9,
+            ),
+          );
 
     canvas.drawRect(Offset.zero & size, vignette);
   }

@@ -70,7 +70,7 @@ class _MyHomePageState extends State<MyHomePage> {
     String userRole = 'CUSTOMER';
     if (request.jsonData.isNotEmpty &&
         request.jsonData.containsKey('role_type')) {
-      userRole = request.jsonData['role_type'];
+      userRole = request.jsonData['role_type']?.toString().toUpperCase() ?? 'CUSTOMER';
     }
 
     if (userRole == 'COACH') {

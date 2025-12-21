@@ -17,6 +17,7 @@ class ApiConstants {
     }
     return url;
   }
+
   static String cancelBooking(int bookingId) =>
       '$baseUrl/api/booking/$bookingId/cancel/';
   static String updateBooking(int bookingId) =>
@@ -66,4 +67,13 @@ class ApiConstants {
       '$baseUrl/review/$reviewId/delete/';
   static String reviewsList(int bookingId) =>
       '$baseUrl/review/$bookingId/list/json/';
+
+  // Admin Endpoints
+  static const String adminDashboard = '$baseUrl/api/admin/dashboard/';
+  static const String adminUsers = '$baseUrl/api/admin/users/';
+  static const String adminVenues = '$baseUrl/api/admin/venues/';
+  static const String adminCoaches = '$baseUrl/api/admin/coaches/';
+  static const String adminBookings = '$baseUrl/api/admin/bookings/';
+  static String adminToggleVerifyCoach(int id) =>
+      '$baseUrl/dashboard/admin/coaches/toggle-verify/$id/';
 }
