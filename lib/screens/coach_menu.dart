@@ -7,7 +7,6 @@ import 'package:all_ahraga/screens/coach/coach_list.dart';
 import 'package:all_ahraga/screens/coach/coach_revenue.dart';
 import 'package:all_ahraga/screens/coach/coach_manage_schedule.dart';
 
-// Design System Constants
 class NeoBrutalism {
   static const Color primary = Color(0xFF0D9488);
   static const Color slate = Color(0xFF0F172A);
@@ -33,7 +32,6 @@ class _CoachHomePageState extends State<CoachHomePage> {
     final request = context.watch<CookieRequest>();
     String userName = 'Coach';
 
-    // Logika pengambilan nama user
     if (request.jsonData.isNotEmpty &&
         request.jsonData.containsKey('username')) {
       userName = request.jsonData['username'] ?? 'Coach';
@@ -313,7 +311,7 @@ class _CoachHomePageState extends State<CoachHomePage> {
       child: Container(
         padding: const EdgeInsets.all(
           8,
-        ), // Kurangi sedikit padding luar (dari 12 ke 8)
+        ), 
         decoration: BoxDecoration(
           color: NeoBrutalism.white,
           borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
@@ -333,7 +331,7 @@ class _CoachHomePageState extends State<CoachHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(10), // Kurangi padding icon sedikit
+              padding: const EdgeInsets.all(10), 
               decoration: BoxDecoration(
                 color: color,
                 borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
@@ -344,12 +342,11 @@ class _CoachHomePageState extends State<CoachHomePage> {
               ),
               child: Icon(
                 icon,
-                size: 24, // Kurangi size icon sedikit (dari 28 ke 24)
+                size: 24, 
                 color: NeoBrutalism.white,
               ),
             ),
             const SizedBox(height: 10),
-            // Gunakan Flexible agar teks tidak memaksa ruang berlebih
             Flexible(
               child: Text(
                 title,

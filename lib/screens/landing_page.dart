@@ -4,10 +4,9 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:all_ahraga/screens/auth_page.dart';
 
-// --- CONSTANTS UNTUK WARNA (Supaya Konsisten) ---
 const Color _kBgDark = Color(0xFF061B2B);
 const Color _kTeal = Color(0xFF0D9488);
-const Color _kAmber = Color(0xFFFBBF24); // Aksen Baru (Kuning)
+const Color _kAmber = Color(0xFFFBBF24); 
 const Color _kSlate = Color(0xFF0F172A);
 const Color _kWhite = Colors.white;
 
@@ -34,7 +33,7 @@ class _LandingPageState extends State<LandingPage>
   final _kFlow = GlobalKey();
   final _kTestimonials = GlobalKey();
 
-  static const double _topOffset = 100; // Adjusted for taller header
+  static const double _topOffset = 100; 
 
   @override
   void initState() {
@@ -44,7 +43,7 @@ class _LandingPageState extends State<LandingPage>
       vsync: this,
       duration: const Duration(
         milliseconds: 8000,
-      ), // Diperlambat biar lebih smooth
+      ), 
     )..repeat();
 
     _introCtrl = AnimationController(
@@ -125,7 +124,6 @@ class _LandingPageState extends State<LandingPage>
             child: LayoutBuilder(
               builder: (context, c) {
                 final isNarrow = c.maxWidth < 900;
-                // Padding konten utama dibuat lebih lega
                 final contentPadding = EdgeInsets.symmetric(
                   horizontal: isNarrow ? 20 : 40,
                 );
@@ -173,7 +171,7 @@ class _LandingPageState extends State<LandingPage>
                                         ),
                                         const SizedBox(
                                           height: 24,
-                                        ), // Jarak diperbesar
+                                        ), 
                                         _HeroRight(
                                           fade: _fade,
                                           slide: _heroRightSlide,
@@ -185,7 +183,7 @@ class _LandingPageState extends State<LandingPage>
                                           CrossAxisAlignment.start,
                                       children: [
                                         Expanded(
-                                          flex: 6, // Ratio disesuaikan
+                                          flex: 6, 
                                           child: _HeroLeft(
                                             fade: _fade,
                                             slide: _heroLeftSlide,
@@ -305,7 +303,7 @@ class _LandingPageState extends State<LandingPage>
                       ),
                     ),
 
-                    // HOW IT WORKS (Dark Band)
+                    // HOW IT WORKS 
                     SliverToBoxAdapter(
                       child: _Anchor(
                         key: _kFlow,
@@ -524,8 +522,6 @@ class _LandingPageState extends State<LandingPage>
   }
 }
 
-// ======================= WIDGETS =======================
-
 class _Anchor extends StatelessWidget {
   const _Anchor({required super.key, required this.child});
   final Widget child;
@@ -533,7 +529,6 @@ class _Anchor extends StatelessWidget {
   Widget build(BuildContext context) => child;
 }
 
-// 1. TOP BAR (Dirapikan dengan Glassmorphism)
 class _TopBar extends StatelessWidget {
   const _TopBar({
     required this.isNarrow,
@@ -553,9 +548,8 @@ class _TopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Dibungkus ClipRRect & BackdropFilter agar terlihat seperti "floating glass"
     return ClipRRect(
-      borderRadius: BorderRadius.circular(100), // Pill shape
+      borderRadius: BorderRadius.circular(100),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
@@ -571,7 +565,6 @@ class _TopBar extends StatelessWidget {
                 onTap: onHome,
                 child: Row(
                   children: [
-                    // GANTI: Icons.flash_on -> Icons.sports_soccer
                     const Icon(Icons.sports_soccer, color: _kWhite, size: 20),
                     const SizedBox(width: 8),
                     const Text(
@@ -641,7 +634,7 @@ class _MiniPillButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: _kWhite, // Tombol putih solid biar kontras
+          color: _kWhite, 
           borderRadius: BorderRadius.circular(999),
         ),
         child: Text(
@@ -657,7 +650,6 @@ class _MiniPillButton extends StatelessWidget {
   }
 }
 
-// 2. HERO LEFT (Teks Dirapikan)
 class _HeroLeft extends StatelessWidget {
   const _HeroLeft({
     required this.fade,
@@ -681,9 +673,9 @@ class _HeroLeft extends StatelessWidget {
           fill: _kWhite,
           borderColor: _kSlate,
           shadowColor: Colors.black.withOpacity(0.2),
-          shadowOffset: const Offset(8, 8), // Shadow lebih tegas
+          shadowOffset: const Offset(8, 8), 
           child: Padding(
-            padding: const EdgeInsets.all(32), // Padding lebih besar
+            padding: const EdgeInsets.all(32), 
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -755,7 +747,6 @@ class _HeroLeft extends StatelessWidget {
   }
 }
 
-// 3. HERO RIGHT (Grid lebih rapi)
 class _HeroRight extends StatelessWidget {
   const _HeroRight({required this.fade, required this.slide});
   final Animation<double> fade;
@@ -845,7 +836,7 @@ class _TagChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: _kAmber, // Pakai kuning biar mencolok
+        color: _kAmber, 
         border: Border.all(color: _kSlate, width: 2),
         boxShadow: const [BoxShadow(color: _kSlate, offset: Offset(2, 2))],
       ),
@@ -873,11 +864,10 @@ class _SectionTitle extends StatelessWidget {
   final String eyebrow;
   final String title;
   final String subtitle;
-  final bool dark; // Mempertahankan parameter dark
+  final bool dark;
 
   @override
   Widget build(BuildContext context) {
-    // Logic warna sederhana berdasarkan background section
     final titleColor = dark ? Colors.white : Colors.white;
     final subColor = dark ? Colors.white70 : _kTeal;
     final eyebrowColor = _kAmber;
@@ -922,7 +912,6 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
-// 4. FEATURE CARD (Dirapikan)
 class _FeatureCard extends StatelessWidget {
   const _FeatureCard({
     required this.icon,
@@ -985,7 +974,6 @@ class _FeatureCard extends StatelessWidget {
   }
 }
 
-// 5. STEP CARD (Dirapikan)
 class _StepCard extends StatelessWidget {
   const _StepCard({
     required this.number,
@@ -1052,7 +1040,6 @@ class _StepCard extends StatelessWidget {
   }
 }
 
-// 6. TESTIMONIAL CARD
 class _TestimonialCard extends StatelessWidget {
   const _TestimonialCard({
     required this.name,
@@ -1271,7 +1258,7 @@ class _SportTile extends StatelessWidget {
 
   final String title;
   final IconData icon;
-  final bool filled; // Tetap mempertahankan nama parameter filled
+  final bool filled; 
 
   @override
   Widget build(BuildContext context) {
@@ -1362,7 +1349,7 @@ class _NeoCard extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: shadowColor,
-            blurRadius: 0, // Hard shadow (Neo Brutalism)
+            blurRadius: 0, 
             offset: shadowOffset,
           ),
         ],
@@ -1398,7 +1385,6 @@ class _DarkBand extends StatelessWidget {
   }
 }
 
-// PAINTER TETAP SAMA
 class _SportBgPainter extends CustomPainter {
   _SportBgPainter({required this.t});
   final double t;

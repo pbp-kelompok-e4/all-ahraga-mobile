@@ -8,19 +8,16 @@ import 'package:intl/date_symbol_data_local.dart';
 
 import 'package:all_ahraga/constants/api.dart';
 import 'package:all_ahraga/models/coach_schedule_entry.dart';
-
-// --- PALETTE LIGHT MODE ---
-const Color _kBg = Colors.white; // Background Utama Putih
-const Color _kTeal = Color(0xFF0D9488); // Ijo Tosca (Primary Brand)
-const Color _kSlate = Color(0xFF0F172A); // Hitam/Biru Gelap
-const Color _kLightGrey = Color(0xFFF1F5F9); // Abu muda
-const Color _kMuted = Color(0xFF64748B); // Text abu-abu
+const Color _kBg = Colors.white; 
+const Color _kTeal = Color(0xFF0D9488); 
+const Color _kSlate = Color(0xFF0F172A);
+const Color _kLightGrey = Color(0xFFF1F5F9); 
+const Color _kMuted = Color(0xFF64748B); 
 const Color _kRedLight = Color(
   0xFFFEF2F2,
-); // Merah sangat muda (Background Delete)
-const Color _kRed = Color(0xFFDC2626); // Merah tegas
+); 
+const Color _kRed = Color(0xFFDC2626); 
 
-// Konstanta Desain
 const double _kRadius = 8.0;
 const double _kBorderWidth = 2.0;
 
@@ -32,7 +29,6 @@ class CoachSchedulePage extends StatefulWidget {
 }
 
 class _CoachSchedulePageState extends State<CoachSchedulePage> {
-  // --- LOGIC VARIABLES ---
   DateTime? _selectedDate;
   TimeOfDay? _startTime;
   TimeOfDay? _endTimeGlobal;
@@ -57,7 +53,6 @@ class _CoachSchedulePageState extends State<CoachSchedulePage> {
     _fetchSchedules();
   }
 
-  // --- 1. GET DATA ---
   Future<void> _fetchSchedules() async {
     final request = context.read<CookieRequest>();
     setState(() => _isLoading = true);
@@ -101,7 +96,6 @@ class _CoachSchedulePageState extends State<CoachSchedulePage> {
     }
   }
 
-  // --- 2. POST DATA ---
   Future<void> _addSchedule() async {
     if (_selectedDate == null || _startTime == null || _endTimeGlobal == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -158,7 +152,6 @@ class _CoachSchedulePageState extends State<CoachSchedulePage> {
     }
   }
 
-  // --- 3. DELETE DATA ---
   Future<void> _deleteSchedules(List<int> ids) async {
     if (ids.isEmpty) return;
     final request = context.read<CookieRequest>();
@@ -255,7 +248,6 @@ class _CoachSchedulePageState extends State<CoachSchedulePage> {
     });
   }
 
-  // --- PICKERS ---
   Future<void> _pickDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -366,7 +358,6 @@ class _CoachSchedulePageState extends State<CoachSchedulePage> {
     );
   }
 
-  // --- HELPERS ---
   String _getMonthKey(String dateIso) {
     if (dateIso.length >= 7) return dateIso.substring(0, 7);
     return dateIso;
@@ -421,8 +412,6 @@ class _CoachSchedulePageState extends State<CoachSchedulePage> {
       return "HARI INI";
     }
   }
-
-  // --- COMPONENTS ---
 
   Widget _buildBrutalBox({
     required Widget child,
@@ -562,7 +551,7 @@ class _CoachSchedulePageState extends State<CoachSchedulePage> {
     double shadow = 3.0;
 
     if (_isSelectionMode && isSelected) {
-      bg = const Color(0xFFFFE4E6); // Merah muda
+      bg = const Color(0xFFFFE4E6); 
       border = _kRed;
       text = _kRed;
     }
@@ -673,19 +662,15 @@ class _CoachSchedulePageState extends State<CoachSchedulePage> {
       backgroundColor: _kBg,
       body: Column(
         children: [
-          // 1. Header
           _buildHeader(),
 
-          // 2. Content
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // --- LOGIC SWITCH TAMPILAN ---
                   if (!_isSelectionMode) ...[
-                    // --- A. INPUT FORM (NORMAL MODE) ---
                     _buildBrutalBox(
                       shadowOffset: 6,
                       padding: const EdgeInsets.all(20),
@@ -786,7 +771,7 @@ class _CoachSchedulePageState extends State<CoachSchedulePage> {
                             ],
                           ),
                           const SizedBox(height: 20),
-                          // Button (TOSCA)
+                          // Button 
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
@@ -814,10 +799,8 @@ class _CoachSchedulePageState extends State<CoachSchedulePage> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 30), // Spacing Normal
+                    const SizedBox(height: 30), 
                   ] else ...[
-                    // --- A. INSTRUCTION BANNER (DELETE MODE) ---
-                    // Mengisi kekosongan saat input form hilang
                     _buildBrutalBox(
                       bgColor: _kRedLight,
                       borderColor: _kRed,
@@ -855,10 +838,9 @@ class _CoachSchedulePageState extends State<CoachSchedulePage> {
                     ),
                     const SizedBox(
                       height: 20,
-                    ), // Spacing lebih rapat di mode delete
+                    ), 
                   ],
 
-                  // --- B. Filter & Title ---
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -911,7 +893,6 @@ class _CoachSchedulePageState extends State<CoachSchedulePage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // --- C. List (Accordion Style) ---
                   _isLoading
                       ? const Center(
                           child: Padding(
@@ -1005,7 +986,7 @@ class _CoachSchedulePageState extends State<CoachSchedulePage> {
                                       width: double.infinity,
                                       padding: const EdgeInsets.all(16),
                                       decoration: const BoxDecoration(
-                                        color: _kLightGrey, // Isi abu muda
+                                        color: _kLightGrey,
                                         border: Border(
                                           top: BorderSide(
                                             color: _kSlate,
@@ -1081,7 +1062,7 @@ class _CoachSchedulePageState extends State<CoachSchedulePage> {
           : FloatingActionButton(
               heroTag: "btn_edit",
               onPressed: _toggleSelectionMode,
-              backgroundColor: _kTeal, // TOSCA
+              backgroundColor: _kTeal,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
                 side: const BorderSide(color: Colors.white, width: 2),

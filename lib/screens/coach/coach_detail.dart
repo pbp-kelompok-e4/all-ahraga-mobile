@@ -1,12 +1,9 @@
-// lib/screens/coach_detail.dart
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import '/models/coach_list_models.dart';
 import '/constants/api.dart';
 
-// Design System Constants
 class NeoBrutalism {
   static const Color primary = Color(0xFF0D9488);
   static const Color slate = Color(0xFF0F172A);
@@ -219,15 +216,13 @@ class _CoachDetailPageState extends State<CoachDetailPage> {
 
   Widget _buildCoachHeader() {
     return Align(
-      // Gunakan Align atau Center agar Box tidak memaksa lebar penuh
       alignment: Alignment.center,
       child: Container(
-        // Margin tetap ada untuk memberi jarak dengan elemen lain
         margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
         padding: const EdgeInsets.symmetric(
           horizontal: 24,
           vertical: 16,
-        ), // Padding horizontal ditambah agar lebih proporsional
+        ), 
         decoration: BoxDecoration(
           color: NeoBrutalism.white,
           borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
@@ -245,7 +240,7 @@ class _CoachDetailPageState extends State<CoachDetailPage> {
         ),
         child: Column(
           mainAxisSize: MainAxisSize
-              .min, // SANGAT PENTING: Agar box mengecil mengikuti isi
+              .min, 
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(
@@ -277,7 +272,7 @@ class _CoachDetailPageState extends State<CoachDetailPage> {
                 ),
                 child: Row(
                   mainAxisSize:
-                      MainAxisSize.min, // Agar badge olahraga tidak lebar penuh
+                      MainAxisSize.min, 
                   children: [
                     const Icon(
                       Icons.sports_basketball,

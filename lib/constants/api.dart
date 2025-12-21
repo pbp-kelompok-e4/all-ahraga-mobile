@@ -1,10 +1,11 @@
 class ApiConstants {
   static const String baseUrl =
       'https://muhammad-razka41-allahraga.pbp.cs.ui.ac.id/';
+
+  // Booking endpoint
   static const String myBookings = '$baseUrl/my-bookings/json/';
   static const String bookingHistory = '$baseUrl/booking-history/json/';
   static const String venues = '$baseUrl/api/venues/';
-
   static String bookingForm(int venueId) =>
       '$baseUrl/api/booking/$venueId/form/';
   static String createBooking(int venueId) =>
@@ -16,7 +17,6 @@ class ApiConstants {
     }
     return url;
   }
-
   static String cancelBooking(int bookingId) =>
       '$baseUrl/api/booking/$bookingId/cancel/';
   static String updateBooking(int bookingId) =>

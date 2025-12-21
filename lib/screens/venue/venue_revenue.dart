@@ -5,17 +5,14 @@ import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:all_ahraga/constants/api.dart';
 
-// --- DESIGN SYSTEM CONSTANTS & WIDGETS ---
-
 class NeoColors {
-  static const Color primary = Color(0xFF0D9488); // Tosca
-  static const Color text = Color(0xFF0F172A);    // Slate
-  static const Color muted = Color(0xFF64748B);   // Grey
-  static const Color danger = Color(0xFFDC2626);  // Red
+  static const Color primary = Color(0xFF0D9488); 
+  static const Color text = Color(0xFF0F172A);    
+  static const Color muted = Color(0xFF64748B);   
+  static const Color danger = Color(0xFFDC2626); 
   static const Color background = Colors.white;
 }
 
-// 1. Neo Container (Base Box)
 class NeoContainer extends StatelessWidget {
   final Widget child;
   final Color? color;
@@ -64,7 +61,6 @@ class NeoContainer extends StatelessWidget {
   }
 }
 
-// 2. Neo Button
 class NeoButton extends StatelessWidget {
   final String label;
   final VoidCallback onPressed;
@@ -108,8 +104,6 @@ class NeoButton extends StatelessWidget {
     );
   }
 }
-
-// --- MAIN PAGE LOGIC ---
 
 class VenueRevenuePage extends StatefulWidget {
   const VenueRevenuePage({super.key});
@@ -162,7 +156,6 @@ class _VenueRevenuePageState extends State<VenueRevenuePage> {
       body: SafeArea(
         child: Column(
           children: [
-            // --- CUSTOM HEADER ---
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               decoration: const BoxDecoration(
@@ -198,7 +191,6 @@ class _VenueRevenuePageState extends State<VenueRevenuePage> {
               ),
             ),
 
-            // --- CONTENT BODY ---
             Expanded(
               child: RefreshIndicator(
                 onRefresh: _refreshData,
@@ -252,7 +244,7 @@ class _VenueRevenuePageState extends State<VenueRevenuePage> {
                       return ListView(
                         padding: const EdgeInsets.all(20),
                         children: [
-                          // 1. TOTAL REVENUE CARD
+                          // TOTAL REVENUE CARD
                           NeoContainer(
                             color: NeoColors.primary,
                             padding: const EdgeInsets.all(24),
@@ -311,10 +303,10 @@ class _VenueRevenuePageState extends State<VenueRevenuePage> {
                               return Padding(
                                 padding: const EdgeInsets.only(bottom: 16),
                                 child: NeoContainer(
-                                  padding: EdgeInsets.zero, // Padding handled internally
+                                  padding: EdgeInsets.zero,
                                   child: Theme(
                                     data: Theme.of(context).copyWith(
-                                      dividerColor: Colors.transparent, // Hide default expansion divider
+                                      dividerColor: Colors.transparent, 
                                     ),
                                     child: ExpansionTile(
                                       tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -366,7 +358,7 @@ class _VenueRevenuePageState extends State<VenueRevenuePage> {
                                             border: Border(
                                               top: BorderSide(color: NeoColors.text, width: 2),
                                             ),
-                                            color: Color(0xFFF8FAFC), // Slight grey for inner area
+                                            color: Color(0xFFF8FAFC), 
                                           ),
                                           padding: const EdgeInsets.all(16),
                                           child: Column(
