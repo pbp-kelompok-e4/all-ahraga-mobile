@@ -6,14 +6,14 @@ import 'package:all_ahraga/widgets/left_drawer.dart';
 import 'package:all_ahraga/screens/booking/create_booking.dart';
 import 'package:all_ahraga/screens/coach_menu.dart';
 import 'package:all_ahraga/constants/api.dart';
+import 'package:all_ahraga/widgets/error_retry_widget.dart';
 
-// --- DESIGN CONSTANTS & PALETTE ---
 const Color _kBg = Colors.white;
-const Color _kTosca = Color(0xFF0D9488); // Primary Brand
-const Color _kYellow = Color(0xFFFBBF24); // Accent for Rating/Buttons
-const Color _kSlate = Color(0xFF0F172A); // Text & Borders
-const Color _kMuted = Color(0xFF64748B); // Secondary Text
-const Color _kRed = Color(0xFFDC2626); // Danger
+const Color _kTosca = Color(0xFF0D9488); 
+const Color _kYellow = Color(0xFFFBBF24);
+const Color _kSlate = Color(0xFF0F172A); 
+const Color _kMuted = Color(0xFF64748B);
+const Color _kRed = Color(0xFFDC2626); 
 
 const double _kBorderWidth = 2.0;
 const double _kRadius = 8.0;
@@ -28,7 +28,6 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  // --- LOGIC VARIABLES ---
   List<dynamic> _venues = [];
   bool _isLoading = true;
   String? _error;
@@ -38,6 +37,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   String? _selectedLocation;
   String? _selectedCategory;
+
+  int _currentPage = 1;
+  int _totalPages = 1;
 
   final List<String> _allLocations = [
     'Bekasi',
@@ -65,7 +67,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _checkUserRoleAndRoute() {
     final request = context.read<CookieRequest>();
-    String userRole = 'CUSTOMER'; // Default
+    String userRole = 'CUSTOMER'; 
     if (request.jsonData.isNotEmpty &&
         request.jsonData.containsKey('role_type')) {
       userRole = request.jsonData['role_type'];
@@ -99,17 +101,18 @@ class _MyHomePageState extends State<MyHomePage> {
     }).toList();
   }
 
-  Future<void> _fetchVenues() async {
+  Future<void> _fetchVenues({int page = 1}) async {
     setState(() {
       _isLoading = true;
       _error = null;
+      _currentPage = page;
     });
 
     final request = context.read<CookieRequest>();
 
     try {
       final response = await request.get(
-        '${ApiConstants.venues}?search=$_searchQuery',
+        '${ApiConstants.venues}?search=$_searchQuery&page=$_currentPage',
       );
 
       if (response['success'] == true) {
@@ -117,6 +120,7 @@ class _MyHomePageState extends State<MyHomePage> {
         if (mounted) {
           setState(() {
             _venues = fetchedVenues;
+            _totalPages = response['total_pages'] ?? 1;
             _isLoading = false;
           });
         }
@@ -138,8 +142,6 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  // --- UI BUILDER ---
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -149,21 +151,18 @@ class _MyHomePageState extends State<MyHomePage> {
       body: SafeArea(
         child: Column(
           children: [
-            // 1. APP BAR
             _buildDecoratedAppBar(),
 
-            // 2. SCROLLABLE CONTENT
             Expanded(
               child: RefreshIndicator(
                 color: _kTosca,
                 backgroundColor: _kBg,
-                onRefresh: _fetchVenues,
+                onRefresh: () => _fetchVenues(page: 1),
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // 3. HERO BANNER
                       _buildHeroBanner(),
 
                       Padding(
@@ -198,6 +197,10 @@ class _MyHomePageState extends State<MyHomePage> {
                             const SizedBox(height: 16),
 
                             _buildContentList(),
+                            
+                            if (!_isLoading && _venues.isNotEmpty)
+                              _buildPagination(),
+
                             const SizedBox(height: 40),
                           ],
                         ),
@@ -213,7 +216,61 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  // --- WIDGETS ---
+  Widget _buildPagination() {
+    return Container(
+      margin: const EdgeInsets.only(top: 30),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(_kRadius),
+        border: Border.all(color: _kSlate, width: _kBorderWidth),
+        boxShadow: const [
+          BoxShadow(color: _kSlate, offset: Offset(4, 4)),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Tombol Sebelumnya
+          _PaginationButton(
+            text: "Sebelumnya",
+            icon: Icons.chevron_left,
+            isDisabled: _currentPage <= 1,
+            onTap: () => _fetchVenues(page: _currentPage - 1),
+          ),
+
+          // Info Halaman
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF0FDFA),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: _kTosca.withOpacity(0.5)),
+            ),
+            child: Text(
+              "Halaman $_currentPage dari $_totalPages",
+              style: const TextStyle(
+                color: _kSlate,
+                fontWeight: FontWeight.w800,
+                fontSize: 12,
+              ),
+            ),
+          ),
+
+          // Tombol Berikutnya
+          _PaginationButton(
+            text: "Berikutnya",
+            icon: Icons.chevron_right,
+            isRightIcon: true,
+            isDisabled: _currentPage >= _totalPages,
+            onTap: () => _fetchVenues(page: _currentPage + 1),
+            color: _kTosca,
+            textColor: Colors.white,
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildDecoratedAppBar() {
     return Container(
@@ -227,14 +284,11 @@ class _MyHomePageState extends State<MyHomePage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Kiri: Menu Button
           _NeoIconButton(
             icon: Icons.menu,
             onTap: () => _scaffoldKey.currentState?.openDrawer(),
             bgColor: Colors.white,
           ),
-
-          // Tengah: Logo dengan Ornamen
           Row(
             children: const [
               Icon(Icons.sports_soccer, color: _kTosca, size: 24),
@@ -251,9 +305,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ],
           ),
-
-          // Kanan: Kosong (Sesuai Request)
-          const SizedBox(width: 40), // Placeholder agar Title tetap di tengah
+          const SizedBox(width: 40),
         ],
       ),
     );
@@ -270,7 +322,6 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       child: Stack(
         children: [
-          // ORNAMEN 1: Lingkaran Besar
           Positioned(
             right: -20,
             top: -20,
@@ -284,7 +335,6 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
           ),
-          // ORNAMEN 2: Lingkaran Kecil
           Positioned(
             right: 60,
             bottom: -10,
@@ -304,8 +354,6 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
           ),
-
-          // KONTEN
           Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -337,7 +385,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ),
                 const SizedBox(height: 20),
-
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -359,7 +406,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         _selectedLocation = null;
                         _selectedCategory = null;
                       });
-                      _fetchVenues();
+                      _fetchVenues(page: 1);
                     },
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
@@ -383,7 +430,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               onPressed: () {
                                 _searchController.clear();
                                 _searchQuery = '';
-                                _fetchVenues();
+                                _fetchVenues(page: 1);
                               },
                             )
                           : null,
@@ -413,7 +460,6 @@ class _MyHomePageState extends State<MyHomePage> {
             child: const Icon(Icons.filter_list, color: Colors.white, size: 20),
           ),
           const SizedBox(width: 12),
-
           _NeoDropdown(
             hint: "LOKASI",
             value: _selectedLocation,
@@ -427,7 +473,6 @@ class _MyHomePageState extends State<MyHomePage> {
             items: _allCategories,
             onChanged: (val) => setState(() => _selectedCategory = val),
           ),
-
           if (_selectedLocation != null || _selectedCategory != null) ...[
             const SizedBox(width: 12),
             GestureDetector(
@@ -467,24 +512,9 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     if (_error != null) {
-      return Center(
-        child: Column(
-          children: [
-            const Icon(Icons.error_outline, size: 48, color: _kRed),
-            const SizedBox(height: 12),
-            Text(
-              _error!,
-              style: const TextStyle(color: _kRed, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            _NeoButton(
-              text: "COBA LAGI",
-              onTap: _fetchVenues,
-              color: _kBg,
-              textColor: _kSlate,
-            ),
-          ],
-        ),
+      return ErrorRetryWidget(
+        message: _error!,
+        onRetry: () => _fetchVenues(page: 1),
       );
     }
 
@@ -531,7 +561,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     CreateBookingPage(venueId: _filteredVenues[index]['id']),
               ),
             ).then((result) {
-              if (result == true) _fetchVenues();
+              if (result == true) _fetchVenues(page: _currentPage);
             });
           },
         );
@@ -539,6 +569,70 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
+
+class _PaginationButton extends StatelessWidget {
+  final String text;
+  final IconData icon;
+  final VoidCallback onTap;
+  final bool isDisabled;
+  final bool isRightIcon;
+  final Color color;
+  final Color textColor;
+
+  const _PaginationButton({
+    required this.text,
+    required this.icon,
+    required this.onTap,
+    this.isDisabled = false,
+    this.isRightIcon = false,
+    this.color = const Color(0xFFE2E8F0),
+    this.textColor = _kSlate,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: isDisabled ? null : onTap,
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 200),
+        opacity: isDisabled ? 0.5 : 1.0,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: _kSlate, width: 1.5),
+            boxShadow: isDisabled 
+                ? null 
+                : [const BoxShadow(color: _kSlate, offset: Offset(2, 2))],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (!isRightIcon) ...[
+                Icon(icon, size: 16, color: textColor),
+                const SizedBox(width: 4),
+              ],
+              Text(
+                text,
+                style: TextStyle(
+                  color: textColor,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 12,
+                ),
+              ),
+              if (isRightIcon) ...[
+                const SizedBox(width: 4),
+                Icon(icon, size: 16, color: textColor),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 
 class _NeoIconButton extends StatelessWidget {
   final IconData icon;
@@ -680,20 +774,25 @@ class _VenueCard extends StatelessWidget {
         );
   }
 
+  String _getProxiedImageUrl(String originalUrl) {
+    return '${ApiConstants.imageProxy}?url=${Uri.encodeComponent(originalUrl)}';
+  }
+
   @override
   Widget build(BuildContext context) {
-    // --- [LOGIC FIX] Handle Image URL ---
     String? rawImage = venue['image'];
     String? imageUrl;
+    String? proxiedUrl;
+    
     if (rawImage != null && rawImage.toString().isNotEmpty) {
       if (rawImage.startsWith('http')) {
-        imageUrl = rawImage; // Pakai langsung kalau sudah URL lengkap
+        imageUrl = rawImage;
       } else {
         imageUrl =
-            '${ApiConstants.baseUrl}$rawImage'; // Tambah base kalau path relative
+            '${ApiConstants.baseUrl}$rawImage'; 
       }
+      proxiedUrl = _getProxiedImageUrl(imageUrl);
     }
-    // ------------------------------------
 
     return GestureDetector(
       onTap: onTap,
@@ -722,11 +821,14 @@ class _VenueCard extends StatelessWidget {
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(_kRadius - 2),
                 ),
-                child: imageUrl != null
+                child: proxiedUrl != null
                     ? Image.network(
-                        imageUrl,
+                        proxiedUrl,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => _PlaceholderImage(),
+                        errorBuilder: (context, error, stackTrace) {
+                          debugPrint('❌ Image proxy error: $error');
+                          return _PlaceholderImage();
+                        },
                       )
                     : _PlaceholderImage(),
               ),
@@ -745,7 +847,7 @@ class _VenueCard extends StatelessWidget {
                         color: _kTosca,
                       ),
                       const SizedBox(width: 8),
-                      // RATING BOX (YELLOW)
+                      // RATING BOX 
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,

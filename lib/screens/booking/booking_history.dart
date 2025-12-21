@@ -11,7 +11,6 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:all_ahraga/widgets/error_retry_widget.dart';
 
-// PALETTE LIGHT NEO-BRUTALISM
 const Color _kBg = Colors.white;
 const Color _kSlate = Color(0xFF0F172A);
 const Color _kMuted = Color(0xFF64748B);
