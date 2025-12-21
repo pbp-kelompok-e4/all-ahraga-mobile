@@ -81,7 +81,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
       }
     } catch (e) {
       setState(() {
-        _error = 'Error: $e';
+        _error = 'Koneksi terputus. Silakan periksa internet Anda.';
         _isLoading = false;
       });
     }
