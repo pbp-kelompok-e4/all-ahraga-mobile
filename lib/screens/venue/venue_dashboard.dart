@@ -9,8 +9,8 @@ import 'dart:convert';
 class NeoColors {
   static const Color primary = Color(0xFF0D9488);
   static const Color text = Color(0xFF0F172A);
-  static const Color muted = Color(0xFF64748B); 
-  static const Color danger = Color(0xFFDC2626); 
+  static const Color muted = Color(0xFF64748B);
+  static const Color danger = Color(0xFFDC2626);
   static const Color background = Colors.white;
 }
 
@@ -264,6 +264,92 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
     );
   }
 
+  // Header Widget (Updated to match Coach Revenue)
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      decoration: const BoxDecoration(
+        color: NeoColors.background,
+        border: Border(bottom: BorderSide(color: NeoColors.text, width: 2.0)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: NeoColors.text, width: 2),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: NeoColors.text,
+                        offset: Offset(2, 2),
+                        blurRadius: 0,
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.arrow_back,
+                    color: NeoColors.text,
+                    size: 20,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "VENUE AREA",
+                    style: TextStyle(
+                      color: NeoColors.primary,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  Text(
+                    "VENUE DASHBOARD",
+                    style: TextStyle(
+                      color: NeoColors.text,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          // Refresh Button
+          GestureDetector(
+            onTap: _refreshVenues,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: NeoColors.text, width: 2),
+                boxShadow: const [
+                  BoxShadow(
+                    color: NeoColors.text,
+                    offset: Offset(2, 2),
+                    blurRadius: 0,
+                  ),
+                ],
+              ),
+              child: const Icon(Icons.refresh, color: NeoColors.text, size: 20),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -271,49 +357,7 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
       body: SafeArea(
         child: Column(
           children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                border: Border(
-                  bottom: BorderSide(color: NeoColors.text, width: 2),
-                ),
-              ),
-              child: Row(
-                children: [
-                  // Back Button
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: NeoColors.text, width: 2),
-                      ),
-                      child: const Icon(
-                        Icons.arrow_back,
-                        color: NeoColors.text,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(width: 16),
-
-                  // Title
-                  const Text(
-                    "VENUE DASHBOARD",
-                    style: TextStyle(
-                      color: NeoColors.text,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-
-                ],
-              ),
-            ),
+            _buildHeader(), // Updated Header
 
             Expanded(
               child: RefreshIndicator(
@@ -474,11 +518,11 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
                           ...List.generate(snapshot.data!.length, (index) {
                             final venue = snapshot.data![index];
                             final String? imageUrl = venue['image_url'];
-                            
+
                             String _getProxiedImageUrl(String originalUrl) {
                               return '${ApiConstants.imageProxy}?url=${Uri.encodeComponent(originalUrl)}';
                             }
-                            
+
                             String? proxiedUrl;
                             if (imageUrl != null && imageUrl.isNotEmpty) {
                               String fullImageUrl = imageUrl.startsWith('http')
@@ -491,8 +535,7 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
                               padding: const EdgeInsets.only(bottom: 24.0),
                               child: NeoContainer(
                                 color: Colors.white,
-                                padding:
-                                    EdgeInsets.zero, 
+                                padding: EdgeInsets.zero,
                                 child: Column(
                                   crossAxisAlignment:
                                       CrossAxisAlignment.stretch,
@@ -502,9 +545,7 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
                                       decoration: BoxDecoration(
                                         color: Colors.grey[200],
                                         borderRadius: const BorderRadius.only(
-                                          topLeft: Radius.circular(
-                                            6,
-                                          ), 
+                                          topLeft: Radius.circular(6),
                                           topRight: Radius.circular(6),
                                         ),
                                         border: const Border(
@@ -514,26 +555,30 @@ class _VenueDashboardPageState extends State<VenueDashboardPage> {
                                           ),
                                         ),
                                       ),
-                                      child: (imageUrl != null &&
+                                      child:
+                                          (imageUrl != null &&
                                               imageUrl.isNotEmpty)
                                           ? Image.network(
                                               proxiedUrl!,
                                               fit: BoxFit.cover,
-                                              errorBuilder: (context, error,
-                                                  stackTrace) {
-                                                debugPrint(
-                                                    '❌ Venue image proxy error: $error');
-                                                return Container(
-                                                  color: Colors.grey[200],
-                                                  child: const Center(
-                                                    child: Icon(
-                                                      Icons.image_not_supported,
-                                                      size: 50,
-                                                      color: NeoColors.muted,
-                                                    ),
-                                                  ),
-                                                );
-                                              },
+                                              errorBuilder:
+                                                  (context, error, stackTrace) {
+                                                    debugPrint(
+                                                      '❌ Venue image proxy error: $error',
+                                                    );
+                                                    return Container(
+                                                      color: Colors.grey[200],
+                                                      child: const Center(
+                                                        child: Icon(
+                                                          Icons
+                                                              .image_not_supported,
+                                                          size: 50,
+                                                          color:
+                                                              NeoColors.muted,
+                                                        ),
+                                                      ),
+                                                    );
+                                                  },
                                             )
                                           : Container(
                                               color: Colors.grey[200],

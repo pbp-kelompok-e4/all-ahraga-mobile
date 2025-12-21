@@ -492,7 +492,7 @@ class _VenueManageSchedulePageState extends State<VenueManageSchedulePage> {
                   ),
                 ),
                 Text(
-                  _isSelectionMode ? "DELETE MODE" : "VENUE SCHEDULE",
+                  _isSelectionMode ? "HAPUS JADWAL" : "KELOLA JADWAL",
                   style: TextStyle(
                     color: _isSelectionMode ? _kRed : _kSlate,
                     fontSize: 20,

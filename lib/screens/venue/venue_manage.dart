@@ -484,6 +484,67 @@ class _VenueManagePageState extends State<VenueManagePage> {
     }
   }
 
+  // --- WIDGET HEADER YANG DIPERBARUI (Sesuai Venue Dashboard / Coach Revenue) ---
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      decoration: const BoxDecoration(
+        color: NeoColors.background,
+        border: Border(bottom: BorderSide(color: NeoColors.text, width: 2.0)),
+      ),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: NeoColors.text, width: 2),
+                boxShadow: const [
+                  BoxShadow(
+                    color: NeoColors.text,
+                    offset: Offset(2, 2),
+                    blurRadius: 0,
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.arrow_back,
+                color: NeoColors.text,
+                size: 20,
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "MANAGEMENT AREA",
+                style: TextStyle(
+                  color: NeoColors.primary,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              Text(
+                "EDIT VENUE",
+                style: TextStyle(
+                  color: NeoColors.text,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -491,42 +552,7 @@ class _VenueManagePageState extends State<VenueManagePage> {
       body: SafeArea(
         child: Column(
           children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                border: Border(
-                  bottom: BorderSide(color: NeoColors.text, width: 2),
-                ),
-              ),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: NeoColors.text, width: 2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.arrow_back,
-                        color: NeoColors.text,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  const Text(
-                    "EDIT VENUE",
-                    style: TextStyle(
-                      color: NeoColors.text,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            _buildHeader(), // HEADER BARU
 
             Expanded(
               child: _isLoading
@@ -721,7 +747,7 @@ class _VenueManagePageState extends State<VenueManagePage> {
                             const Divider(color: NeoColors.text, thickness: 2),
                             const SizedBox(height: 24),
 
-                            // EQUIPMENT SECTION 
+                            // EQUIPMENT SECTION
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [

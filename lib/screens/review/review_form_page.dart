@@ -7,6 +7,14 @@ import 'package:all_ahraga/constants/api.dart';
 import 'package:all_ahraga/models/booking_list_entry.dart';
 import 'package:intl/intl.dart';
 
+// --- Constants untuk Styling (Disamakan dengan Booking History) ---
+const Color _kBg = Colors.white;
+const Color _kSlate = Color(0xFF0F172A);
+const Color _kMuted = Color(0xFF64748B);
+const Color _kRed = Color(0xFFDC2626);
+const double _kRadius = 8.0;
+const double _kBorderWidth = 2.0;
+
 class ReviewFormPage extends StatefulWidget {
   final int bookingId;
   final String target;
@@ -50,6 +58,73 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
     super.dispose();
   }
 
+  // --- Header Widget (Style Booking History) ---
+  Widget _buildHeader(BuildContext context) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    final isEditing = widget.reviewId != null || widget.initialRating > 0;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      decoration: const BoxDecoration(
+        color: _kBg,
+        border: Border(bottom: BorderSide(color: _kSlate, width: 2)),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Row(
+          children: [
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(_kRadius),
+                  border: Border.all(color: _kSlate, width: _kBorderWidth),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: _kSlate,
+                      offset: Offset(2, 2),
+                      blurRadius: 0,
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.arrow_back, color: _kSlate, size: 20),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isEditing ? 'EDIT REVIEW' : 'BERI REVIEW',
+                    style: TextStyle(
+                      color: primaryColor,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  Text(
+                    widget.targetName.toUpperCase(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: _kSlate,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // SUBMIT REVIEW
   Future<void> _submitReview() async {
     if (_rating < 1 || _rating > 5) {
@@ -70,14 +145,17 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
     try {
       final request = context.read<CookieRequest>();
 
-      final isLoggedIn = request.loggedIn;
-
-      if (!isLoggedIn) {
-        setState(() => _error = 'Anda harus login dulu untuk memberikan review');
+      if (!request.loggedIn) {
+        setState(
+          () => _error = 'Anda harus login dulu untuk memberikan review',
+        );
         return;
       }
 
-      final url = ApiConstants.upsertReview(widget.bookingId, target: widget.target);
+      final url = ApiConstants.upsertReview(
+        widget.bookingId,
+        target: widget.target,
+      );
 
       final body = {
         'rating': _rating.toString(),
@@ -99,12 +177,16 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
             Navigator.pop(context, 'saved');
             return;
           } else {
-            setState(() => _error = message.isNotEmpty ? message : 'Gagal menyimpan review');
+            setState(
+              () => _error = message.isNotEmpty
+                  ? message
+                  : 'Gagal menyimpan review',
+            );
             return;
           }
         }
       } on FormatException {
-        // Fallback to raw HTTP
+        // Fallback
       }
 
       final httpResponse = await http.post(
@@ -118,7 +200,8 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
       );
 
       try {
-        final responseData = jsonDecode(httpResponse.body) as Map<String, dynamic>;
+        final responseData =
+            jsonDecode(httpResponse.body) as Map<String, dynamic>;
         final success = responseData['success'] ?? false;
         final message = responseData['message'] ?? '';
 
@@ -129,11 +212,18 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
           );
           Navigator.pop(context, 'saved');
         } else {
-          setState(() => _error = message.isNotEmpty ? message : 'Gagal menyimpan review');
+          setState(
+            () => _error = message.isNotEmpty
+                ? message
+                : 'Gagal menyimpan review',
+          );
         }
       } catch (e) {
         if (httpResponse.body.contains('<!DOCTYPE')) {
-          setState(() => _error = 'Django error ${httpResponse.statusCode}: Login ulang?');
+          setState(
+            () => _error =
+                'Django error ${httpResponse.statusCode}: Login ulang?',
+          );
         } else {
           setState(() => _error = 'Invalid response: $e');
         }
@@ -153,23 +243,42 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
     final id = widget.reviewId;
     if (id == null) return;
 
-    final confirm = await showDialog<bool>(
+    final confirm =
+        await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Hapus Feedback?'),
-            content: const Text('Feedback akan dihapus permanen.'),
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              side: const BorderSide(color: _kSlate, width: 2),
+              borderRadius: BorderRadius.circular(_kRadius),
+            ),
+            title: const Text(
+              'HAPUS FEEDBACK?',
+              style: TextStyle(color: _kSlate, fontWeight: FontWeight.w900),
+            ),
+            content: const Text(
+              'Feedback akan dihapus permanen.',
+              style: TextStyle(color: _kSlate),
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Batal'),
+                child: const Text(
+                  'BATAL',
+                  style: TextStyle(fontWeight: FontWeight.bold, color: _kMuted),
+                ),
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFDC2626),
+                  backgroundColor: _kRed,
                   foregroundColor: Colors.white,
+                  elevation: 0,
                 ),
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text('Hapus'),
+                child: const Text(
+                  'HAPUS',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
             ],
           ),
@@ -189,9 +298,7 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
       final request = context.read<CookieRequest>();
       final scaffoldMessenger = ScaffoldMessenger.of(context);
 
-      final isLoggedIn = request.loggedIn;
-
-      if (!isLoggedIn) {
+      if (!request.loggedIn) {
         setState(() => _error = 'Anda harus login dulu untuk menghapus review');
         return;
       }
@@ -200,26 +307,19 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
 
       try {
         final response = await request.post(url, {});
-
-        if (response is Map<String, dynamic>) {
-          final success = response['success'] ?? false;
-          final message = response['message'] ?? '';
-
-          if (success) {
-            if (!mounted) return;
-            scaffoldMessenger.showSnackBar(
-              SnackBar(content: Text(message), backgroundColor: Colors.green),
-            );
-            Navigator.pop(context, 'deleted');
-            return;
-          } else {
-            setState(() => _error = message.isNotEmpty ? message : 'Gagal menghapus feedback');
-            return;
-          }
+        if (response is Map<String, dynamic> &&
+            (response['success'] ?? false)) {
+          if (!mounted) return;
+          scaffoldMessenger.showSnackBar(
+            SnackBar(
+              content: Text(response['message'] ?? 'Dihapus'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pop(context, 'deleted');
+          return;
         }
-      } on FormatException {
-        // Fallback to raw HTTP
-      }
+      } on FormatException catch (_) {}
 
       final httpResponse = await http.post(
         Uri.parse(url),
@@ -230,26 +330,21 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
         },
       );
 
-      try {
-        final responseData = jsonDecode(httpResponse.body) as Map<String, dynamic>;
-        final success = responseData['success'] ?? false;
-        final message = responseData['message'] ?? '';
-
-        if (success) {
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(message), backgroundColor: Colors.green),
-          );
-          Navigator.pop(context, 'deleted');
-        } else {
-          setState(() => _error = message.isNotEmpty ? message : 'Gagal menghapus feedback');
-        }
-      } catch (e) {
-        if (httpResponse.body.contains('<!DOCTYPE')) {
-          setState(() => _error = 'Django error ${httpResponse.statusCode}: Login ulang?');
-        } else {
-          setState(() => _error = 'Invalid response: $e');
-        }
+      final responseData =
+          jsonDecode(httpResponse.body) as Map<String, dynamic>;
+      if (responseData['success'] ?? false) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(responseData['message'] ?? 'Dihapus'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context, 'deleted');
+      } else {
+        setState(
+          () => _error = responseData['message'] ?? 'Gagal menghapus feedback',
+        );
       }
     } catch (e) {
       if (!mounted) return;
@@ -263,138 +358,71 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isEditing = widget.reviewId != null || widget.initialRating > 0;
     final booking = widget.booking;
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              // Header
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF0D9488),
-                  border: const Border(
-                    bottom: BorderSide(color: Color(0xFF0F172A), width: 2),
-                  ),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0xFF0F172A),
-                      offset: Offset(0, 4),
-                      blurRadius: 0,
-                    )
-                  ],
-                ),
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    // Back Button
-                    GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: const Icon(
-                          Icons.arrow_back,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    // Title
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            isEditing ? 'EDIT REVIEW' : 'BERI REVIEW',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                              letterSpacing: 1.2,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            widget.targetName,
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                            ),
+      backgroundColor: _kBg,
+      // Menggunakan Column agar Header Sticky di atas
+      body: Column(
+        children: [
+          _buildHeader(context),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Booking Info Card
+                  _buildBookingInfoCard(booking),
+                  const SizedBox(height: 24),
+
+                  // Error Message
+                  if (_error != null) ...[
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(_kRadius),
+                        border: Border.all(color: _kRed, width: _kBorderWidth),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: _kSlate,
+                            offset: Offset(4, 4),
+                            blurRadius: 0,
                           ),
                         ],
                       ),
-                    ),
-                  ],
-                ),
-              ),
-
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Booking Info Card
-                    _buildBookingInfoCard(booking),
-                    const SizedBox(height: 24),
-
-                    // Error Message
-                    if (_error != null) ...[
-                      Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: const Color(0xFFDC2626),
-                            width: 2,
-                          ),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0xFF0F172A),
-                              offset: Offset(4, 4),
-                              blurRadius: 0,
-                            )
-                          ],
-                        ),
-                        padding: const EdgeInsets.all(12),
-                        child: Text(
-                          _error!,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFFDC2626),
-                            fontWeight: FontWeight.w600,
-                          ),
+                      padding: const EdgeInsets.all(12),
+                      child: Text(
+                        _error!,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: _kRed,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(height: 16),
-                    ],
-
-                    // Rating Section
-                    _buildRatingSection(),
-                    const SizedBox(height: 24),
-
-                    // Comment Section
-                    _buildCommentSection(),
-                    const SizedBox(height: 24),
-
-                    // Action Buttons
-                    _buildActionButtons(),
+                    ),
+                    const SizedBox(height: 16),
                   ],
-                ),
+
+                  // Rating Section
+                  _buildRatingSection(),
+                  const SizedBox(height: 24),
+
+                  // Comment Section
+                  _buildCommentSection(),
+                  const SizedBox(height: 24),
+
+                  // Action Buttons
+                  _buildActionButtons(),
+
+                  // Bottom Padding safe area
+                  const SizedBox(height: 40),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -404,17 +432,10 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
       width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: const Color(0xFF0F172A),
-          width: 2,
-        ),
+        borderRadius: BorderRadius.circular(_kRadius),
+        border: Border.all(color: _kSlate, width: _kBorderWidth),
         boxShadow: const [
-          BoxShadow(
-            color: Color(0xFF0F172A),
-            offset: Offset(4, 4),
-            blurRadius: 0,
-          )
+          BoxShadow(color: _kSlate, offset: Offset(4, 4), blurRadius: 0),
         ],
       ),
       child: Column(
@@ -422,14 +443,10 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
           // Header
           Container(
             width: double.infinity,
-            decoration: BoxDecoration(
-              color: const Color(0xFF0D9488),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(6),
-                topRight: Radius.circular(6),
-              ),
-              border: const Border(
-                bottom: BorderSide(color: Color(0xFF0F172A), width: 2),
+            decoration: const BoxDecoration(
+              color: Color(0xFF0D9488), // Teal tetap digunakan untuk aksen
+              border: Border(
+                bottom: BorderSide(color: _kSlate, width: _kBorderWidth),
               ),
             ),
             padding: const EdgeInsets.all(12),
@@ -454,24 +471,23 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w900,
-                    color: Color(0xFF0F172A),
+                    color: _kSlate,
                   ),
                 ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    const Icon(
-                      Icons.calendar_today,
-                      size: 14,
-                      color: Color(0xFF0F172A),
-                    ),
+                    const Icon(Icons.calendar_today, size: 14, color: _kSlate),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        DateFormat('d MMMM yyyy', 'id_ID').format(booking.fields.date),
+                        DateFormat(
+                          'd MMMM yyyy',
+                          'id_ID',
+                        ).format(booking.fields.date),
                         style: const TextStyle(
                           fontSize: 13,
-                          color: Color(0xFF0F172A),
+                          color: _kSlate,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -481,18 +497,14 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    const Icon(
-                      Icons.access_time,
-                      size: 14,
-                      color: Color(0xFF0F172A),
-                    ),
+                    const Icon(Icons.access_time, size: 14, color: _kSlate),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         '${booking.fields.startTime} - ${booking.fields.endTime}',
                         style: const TextStyle(
                           fontSize: 13,
-                          color: Color(0xFF0F172A),
+                          color: _kSlate,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -505,18 +517,14 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(
-                        Icons.person,
-                        size: 14,
-                        color: Color(0xFF0F172A),
-                      ),
+                      const Icon(Icons.person, size: 14, color: _kSlate),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           'Coach: ${booking.fields.coachName}',
                           style: const TextStyle(
                             fontSize: 13,
-                            color: Color(0xFF0F172A),
+                            color: _kSlate,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -537,32 +545,20 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
       width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: const Color(0xFF0F172A),
-          width: 2,
-        ),
+        borderRadius: BorderRadius.circular(_kRadius),
+        border: Border.all(color: _kSlate, width: _kBorderWidth),
         boxShadow: const [
-          BoxShadow(
-            color: Color(0xFF0F172A),
-            offset: Offset(4, 4),
-            blurRadius: 0,
-          )
+          BoxShadow(color: _kSlate, offset: Offset(4, 4), blurRadius: 0),
         ],
       ),
       child: Column(
         children: [
-          // Header
           Container(
             width: double.infinity,
-            decoration: BoxDecoration(
-              color: const Color(0xFFFB923C),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(6),
-                topRight: Radius.circular(6),
-              ),
-              border: const Border(
-                bottom: BorderSide(color: Color(0xFF0F172A), width: 2),
+            decoration: const BoxDecoration(
+              color: Color(0xFFFB923C),
+              border: Border(
+                bottom: BorderSide(color: _kSlate, width: _kBorderWidth),
               ),
             ),
             padding: const EdgeInsets.all(12),
@@ -576,26 +572,22 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
               ),
             ),
           ),
-          // Content
           Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: List.generate(
-                5,
-                (index) {
-                  final star = index + 1;
-                  final isFilled = _rating >= star;
-                  return GestureDetector(
-                    onTap: _loading ? null : () => setState(() => _rating = star),
-                    child: Icon(
-                      isFilled ? Icons.star_rounded : Icons.star_outline_rounded,
-                      size: 36,
-                      color: const Color(0xFFFB923C),
-                    ),
-                  );
-                },
-              ),
+              children: List.generate(5, (index) {
+                final star = index + 1;
+                final isFilled = _rating >= star;
+                return GestureDetector(
+                  onTap: _loading ? null : () => setState(() => _rating = star),
+                  child: Icon(
+                    isFilled ? Icons.star_rounded : Icons.star_outline_rounded,
+                    size: 36,
+                    color: const Color(0xFFFB923C),
+                  ),
+                );
+              }),
             ),
           ),
         ],
@@ -608,32 +600,20 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
       width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: const Color(0xFF0F172A),
-          width: 2,
-        ),
+        borderRadius: BorderRadius.circular(_kRadius),
+        border: Border.all(color: _kSlate, width: _kBorderWidth),
         boxShadow: const [
-          BoxShadow(
-            color: Color(0xFF0F172A),
-            offset: Offset(4, 4),
-            blurRadius: 0,
-          )
+          BoxShadow(color: _kSlate, offset: Offset(4, 4), blurRadius: 0),
         ],
       ),
       child: Column(
         children: [
-          // Header
           Container(
             width: double.infinity,
-            decoration: BoxDecoration(
-              color: const Color(0xFF2563EB),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(6),
-                topRight: Radius.circular(6),
-              ),
-              border: const Border(
-                bottom: BorderSide(color: Color(0xFF0F172A), width: 2),
+            decoration: const BoxDecoration(
+              color: Color(0xFF2563EB),
+              border: Border(
+                bottom: BorderSide(color: _kSlate, width: _kBorderWidth),
               ),
             ),
             padding: const EdgeInsets.all(12),
@@ -647,7 +627,6 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
               ),
             ),
           ),
-          // Content
           Padding(
             padding: const EdgeInsets.all(12),
             child: TextField(
@@ -658,15 +637,12 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
               decoration: const InputDecoration(
                 border: InputBorder.none,
                 hintText: 'Bagikan pengalaman Anda...',
-                hintStyle: TextStyle(
-                  color: Color(0xFF64748B),
-                  fontSize: 13,
-                ),
+                hintStyle: TextStyle(color: _kMuted, fontSize: 13),
                 contentPadding: EdgeInsets.all(8),
               ),
               style: const TextStyle(
                 fontSize: 13,
-                color: Color(0xFF0F172A),
+                color: _kSlate,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -679,7 +655,6 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
   Widget _buildActionButtons() {
     return Column(
       children: [
-        // Delete button (kalau edit)
         if (widget.reviewId != null) ...[
           SizedBox(
             width: double.infinity,
@@ -688,17 +663,14 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: const Color(0xFFDC2626),
-                    width: 2,
-                  ),
+                  borderRadius: BorderRadius.circular(_kRadius),
+                  border: Border.all(color: _kRed, width: _kBorderWidth),
                   boxShadow: const [
                     BoxShadow(
-                      color: Color(0xFF0F172A),
+                      color: _kSlate,
                       offset: Offset(3, 3),
                       blurRadius: 0,
-                    )
+                    ),
                   ],
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 13),
@@ -708,7 +680,7 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w900,
-                      color: Color(0xFFDC2626),
+                      color: _kRed,
                       letterSpacing: 0.6,
                     ),
                   ),
@@ -719,7 +691,6 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
           const SizedBox(height: 12),
         ],
 
-        // Submit button
         SizedBox(
           width: double.infinity,
           child: GestureDetector(
@@ -727,17 +698,14 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
             child: Container(
               decoration: BoxDecoration(
                 color: const Color(0xFF0D9488),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: const Color(0xFF0F172A),
-                  width: 2,
-                ),
+                borderRadius: BorderRadius.circular(_kRadius),
+                border: Border.all(color: _kSlate, width: _kBorderWidth),
                 boxShadow: const [
                   BoxShadow(
-                    color: Color(0xFF0F172A),
+                    color: _kSlate,
                     offset: Offset(4, 4),
                     blurRadius: 0,
-                  )
+                  ),
                 ],
               ),
               padding: const EdgeInsets.symmetric(vertical: 13),
@@ -748,7 +716,9 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
                         ),
                       )
                     : Text(

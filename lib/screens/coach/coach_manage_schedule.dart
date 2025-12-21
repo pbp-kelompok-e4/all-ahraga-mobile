@@ -483,7 +483,7 @@ class _CoachSchedulePageState extends State<CoachSchedulePage> {
                   ),
                 ),
                 Text(
-                  _isSelectionMode ? "DELETE MODE" : "COACH SCHEDULE",
+                  _isSelectionMode ? "HAPUS JADWAL" : "KELOLA JADWAL",
                   style: TextStyle(
                     color: _isSelectionMode ? _kRed : _kSlate,
                     fontSize: 20,
