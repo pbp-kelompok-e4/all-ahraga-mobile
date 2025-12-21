@@ -6,14 +6,14 @@ import 'package:all_ahraga/widgets/left_drawer.dart';
 import 'package:all_ahraga/screens/booking/create_booking.dart';
 import 'package:all_ahraga/screens/coach_menu.dart';
 import 'package:all_ahraga/constants/api.dart';
+import 'package:all_ahraga/widgets/error_retry_widget.dart';
 
-// --- DESIGN CONSTANTS & PALETTE ---
 const Color _kBg = Colors.white;
-const Color _kTosca = Color(0xFF0D9488); // Primary Brand
-const Color _kYellow = Color(0xFFFBBF24); // Accent for Rating/Buttons
-const Color _kSlate = Color(0xFF0F172A); // Text & Borders
-const Color _kMuted = Color(0xFF64748B); // Secondary Text
-const Color _kRed = Color(0xFFDC2626); // Danger
+const Color _kTosca = Color(0xFF0D9488); 
+const Color _kYellow = Color(0xFFFBBF24);
+const Color _kSlate = Color(0xFF0F172A); 
+const Color _kMuted = Color(0xFF64748B);
+const Color _kRed = Color(0xFFDC2626); 
 
 const double _kBorderWidth = 2.0;
 const double _kRadius = 8.0;
@@ -28,7 +28,6 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  // --- LOGIC VARIABLES ---
   List<dynamic> _venues = [];
   bool _isLoading = true;
   String? _error;
@@ -39,7 +38,6 @@ class _MyHomePageState extends State<MyHomePage> {
   String? _selectedLocation;
   String? _selectedCategory;
 
-  // --- PAGINATION VARIABLES ---
   int _currentPage = 1;
   int _totalPages = 1;
 
@@ -69,7 +67,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _checkUserRoleAndRoute() {
     final request = context.read<CookieRequest>();
-    String userRole = 'CUSTOMER'; // Default
+    String userRole = 'CUSTOMER'; 
     if (request.jsonData.isNotEmpty &&
         request.jsonData.containsKey('role_type')) {
       userRole = request.jsonData['role_type'];
@@ -113,7 +111,6 @@ class _MyHomePageState extends State<MyHomePage> {
     final request = context.read<CookieRequest>();
 
     try {
-      // Mengirimkan parameter page ke backend
       final response = await request.get(
         '${ApiConstants.venues}?search=$_searchQuery&page=$_currentPage',
       );
@@ -123,7 +120,6 @@ class _MyHomePageState extends State<MyHomePage> {
         if (mounted) {
           setState(() {
             _venues = fetchedVenues;
-            // Mengambil total_pages dari response backend (jika ada)
             _totalPages = response['total_pages'] ?? 1;
             _isLoading = false;
           });
@@ -146,8 +142,6 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  // --- UI BUILDER ---
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -157,10 +151,8 @@ class _MyHomePageState extends State<MyHomePage> {
       body: SafeArea(
         child: Column(
           children: [
-            // 1. APP BAR
             _buildDecoratedAppBar(),
 
-            // 2. SCROLLABLE CONTENT
             Expanded(
               child: RefreshIndicator(
                 color: _kTosca,
@@ -171,7 +163,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // 3. HERO BANNER
                       _buildHeroBanner(),
 
                       Padding(
@@ -207,7 +198,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
                             _buildContentList(),
                             
-                            // 4. PAGINATION CONTROLS
                             if (!_isLoading && _venues.isNotEmpty)
                               _buildPagination(),
 
@@ -225,8 +215,6 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
-
-  // --- WIDGETS ---
 
   Widget _buildPagination() {
     return Container(
@@ -524,24 +512,9 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     if (_error != null) {
-      return Center(
-        child: Column(
-          children: [
-            const Icon(Icons.error_outline, size: 48, color: _kRed),
-            const SizedBox(height: 12),
-            Text(
-              _error!,
-              style: const TextStyle(color: _kRed, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            _NeoButton(
-              text: "COBA LAGI",
-              onTap: () => _fetchVenues(page: 1),
-              color: _kBg,
-              textColor: _kSlate,
-            ),
-          ],
-        ),
+      return ErrorRetryWidget(
+        message: _error!,
+        onRetry: () => _fetchVenues(page: 1),
       );
     }
 
@@ -801,29 +774,25 @@ class _VenueCard extends StatelessWidget {
         );
   }
 
-  // Helper function untuk proxy image
   String _getProxiedImageUrl(String originalUrl) {
     return '${ApiConstants.imageProxy}?url=${Uri.encodeComponent(originalUrl)}';
   }
 
   @override
   Widget build(BuildContext context) {
-    // --- [LOGIC FIX] Handle Image URL ---
     String? rawImage = venue['image'];
     String? imageUrl;
     String? proxiedUrl;
     
     if (rawImage != null && rawImage.toString().isNotEmpty) {
       if (rawImage.startsWith('http')) {
-        imageUrl = rawImage; // Pakai langsung kalau sudah URL lengkap
+        imageUrl = rawImage;
       } else {
         imageUrl =
-            '${ApiConstants.baseUrl}$rawImage'; // Tambah base kalau path relative
+            '${ApiConstants.baseUrl}$rawImage'; 
       }
-      // Gunakan proxy untuk mengatasi CORS
       proxiedUrl = _getProxiedImageUrl(imageUrl);
     }
-    // ------------------------------------
 
     return GestureDetector(
       onTap: onTap,
@@ -878,7 +847,7 @@ class _VenueCard extends StatelessWidget {
                         color: _kTosca,
                       ),
                       const SizedBox(width: 8),
-                      // RATING BOX (YELLOW)
+                      // RATING BOX 
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,

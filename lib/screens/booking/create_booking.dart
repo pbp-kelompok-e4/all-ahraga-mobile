@@ -6,7 +6,6 @@ import 'package:all_ahraga/screens/booking/my_bookings.dart';
 import 'package:all_ahraga/constants/api.dart';
 import 'package:all_ahraga/widgets/error_retry_widget.dart';
 
-// PALETTE LIGHT NEO-BRUTALISM
 const Color _kBg = Colors.white;
 const Color _kSlate = Color(0xFF0F172A);
 const Color _kMuted = Color(0xFF64748B);
@@ -504,18 +503,16 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
   }
 
   Widget _buildVenueInfoCard(Color primaryColor) {
-    // --- [LOGIC FIX] Handle Image URL ---
     String? rawImage = _venue?['image'];
     String? imageUrl;
     if (rawImage != null && rawImage.isNotEmpty) {
       if (rawImage.startsWith('http')) {
-        imageUrl = rawImage; // Pakai langsung kalau URL lengkap
+        imageUrl = rawImage; 
       } else {
         imageUrl =
-            '${ApiConstants.baseUrl}$rawImage'; // Tambah base kalau path relative
+            '${ApiConstants.baseUrl}$rawImage'; 
       }
     }
-    // ------------------------------------
 
     return _buildBrutalBox(
       shadowOffset: 4,
@@ -535,7 +532,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(_kRadius - 2),
                     child: Image.network(
-                      imageUrl, // Gunakan URL yang sudah diperbaiki
+                      imageUrl, 
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) =>
                           Icon(Icons.stadium, size: 40, color: primaryColor),
