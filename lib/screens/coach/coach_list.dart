@@ -63,9 +63,7 @@ class _CoachListPageState extends State<CoachListPage> {
   Future<void> _fetchSportCategories() async {
     try {
       final request = context.read<CookieRequest>();
-      final response = await request.get(
-        ApiConstants.sportCategories,
-      );
+      final response = await request.get(ApiConstants.sportCategories);
 
       if (response['success'] == true) {
         final categoriesResponse = SportCategoriesResponse.fromJson(response);
@@ -81,9 +79,7 @@ class _CoachListPageState extends State<CoachListPage> {
   Future<void> _fetchLocationAreas() async {
     try {
       final request = context.read<CookieRequest>();
-      final response = await request.get(
-        ApiConstants.locationAreas,
-      );
+      final response = await request.get(ApiConstants.locationAreas);
 
       if (response['success'] == true) {
         final areasResponse = LocationAreasResponse.fromJson(response);
@@ -209,25 +205,35 @@ class _CoachListPageState extends State<CoachListPage> {
         child: Column(
           children: [
             _buildCustomHeader(),
+            
             Expanded(
-              child: RefreshIndicator(
-                onRefresh: () async {
-                  setState(() => _currentPage = 1);
-                  await _fetchCoaches();
-                },
-                color: NeoBrutalism.primary,
-                child: _isLoading
-                    ? const Center(
-                        child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            NeoBrutalism.primary,
+              child: _isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          NeoBrutalism.primary,
+                        ),
+                      ),
+                    )
+                  : _errorMessage != null
+                      ? _buildErrorView()
+                      : RefreshIndicator(
+                          onRefresh: () async {
+                            setState(() => _currentPage = 1);
+                            await _fetchCoaches();
+                          },
+                          color: NeoBrutalism.primary,
+                          child: ListView(
+                            children: [
+                              _buildFilterSection(),
+                              _buildContent(),
+                              if (_coachData != null && 
+                                  _coachData!.pagination.totalPages > 1)
+                                _buildPagination(),
+                              const SizedBox(height: 16),
+                            ],
                           ),
                         ),
-                      )
-                    : _errorMessage != null
-                    ? _buildErrorView()
-                    : _buildContent(),
-              ),
             ),
           ],
         ),
@@ -237,7 +243,7 @@ class _CoachListPageState extends State<CoachListPage> {
 
   Widget _buildCustomHeader() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: const BoxDecoration(
         color: NeoBrutalism.white,
         border: Border(
@@ -249,7 +255,6 @@ class _CoachListPageState extends State<CoachListPage> {
       ),
       child: Row(
         children: [
-          // TOMBOL BACK
           GestureDetector(
             onTap: () => Navigator.pop(context),
             child: Container(
@@ -276,89 +281,40 @@ class _CoachListPageState extends State<CoachListPage> {
               ),
             ),
           ),
-          const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "COACH LIST",
-                style: TextStyle(
-                  color: NeoBrutalism.primary,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.5,
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "COACH LIST",
+                  style: TextStyle(
+                    color: NeoBrutalism.primary,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.5,
+                  ),
                 ),
-              ),
-              const Text(
-                "DAFTAR PELATIH",
-                style: TextStyle(
-                  color: NeoBrutalism.slate,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
+                Text(
+                  "DAFTAR PELATIH",
+                  style: TextStyle(
+                    color: NeoBrutalism.slate,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildErrorView() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: NeoBrutalism.danger,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              _errorMessage!,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: NeoBrutalism.slate,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 24),
-            _buildNeoButton(
-              onPressed: () {
-                setState(() => _currentPage = 1);
-                _fetchCoaches();
-              },
-              label: 'COBA LAGI',
-              icon: Icons.refresh,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildContent() {
-    return Column(
-      children: [
-        _buildFilterSection(),
-        Expanded(
-          child: _coachData == null || _coachData!.coaches.isEmpty
-              ? _buildEmptyState()
-              : _buildCoachList(),
-        ),
-        if (_coachData != null && _coachData!.pagination.totalPages > 1)
-          _buildPagination(),
-      ],
-    );
-  }
-
   Widget _buildFilterSection() {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: NeoBrutalism.white,
@@ -375,7 +331,6 @@ class _CoachListPageState extends State<CoachListPage> {
           ),
         ],
       ),
-      clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
           TextField(
@@ -384,6 +339,7 @@ class _CoachListPageState extends State<CoachListPage> {
             style: const TextStyle(
               color: NeoBrutalism.slate,
               fontWeight: FontWeight.w600,
+              fontSize: 14,
             ),
             decoration: InputDecoration(
               hintText: 'Cari nama pelatih...',
@@ -391,7 +347,11 @@ class _CoachListPageState extends State<CoachListPage> {
                 color: NeoBrutalism.grey,
                 fontWeight: FontWeight.w500,
               ),
-              prefixIcon: const Icon(Icons.search, color: NeoBrutalism.slate),
+              prefixIcon: const Icon(
+                Icons.search,
+                color: NeoBrutalism.slate,
+                size: 20,
+              ),
               filled: true,
               fillColor: NeoBrutalism.white,
               contentPadding: const EdgeInsets.symmetric(
@@ -404,19 +364,40 @@ class _CoachListPageState extends State<CoachListPage> {
             ),
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(child: _buildSportDropdown()),
-              const SizedBox(width: 12),
-              Expanded(child: _buildAreaDropdown()),
-            ],
-          ),
-          const SizedBox(height: 12),
-          _buildNeoButton(
-            onPressed: _resetFilters,
-            label: 'RESET FILTER',
-            icon: Icons.refresh,
-            isPrimary: false,
+          
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isSmallScreen = constraints.maxWidth < 400;
+              
+              if (isSmallScreen) {
+                return Column(
+                  children: [
+                    _buildSportDropdown(),
+                    const SizedBox(height: 12),
+                    _buildAreaDropdown(),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: _buildResetButton(),
+                    ),
+                  ],
+                );
+              } else {
+                return Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(child: _buildSportDropdown()),
+                        const SizedBox(width: 12),
+                        Expanded(child: _buildAreaDropdown()),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    _buildResetButton(),
+                  ],
+                );
+              }
+            },
           ),
         ],
       ),
@@ -445,42 +426,35 @@ class _CoachListPageState extends State<CoachListPage> {
       ),
       child: DropdownButtonFormField<int>(
         value: _selectedSportId,
-        decoration: InputDecoration(
+        decoration: const InputDecoration(
           labelText: 'OLAHRAGA',
-          labelStyle: const TextStyle(
+          labelStyle: TextStyle(
             color: NeoBrutalism.grey,
             fontWeight: FontWeight.w700,
             fontSize: 11,
           ),
-          prefixIcon: const Icon(
+          prefixIcon: Icon(
             Icons.sports_basketball,
             color: NeoBrutalism.slate,
             size: 20,
           ),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 10,
-          ),
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        ),
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: NeoBrutalism.slate,
         ),
         items: [
           const DropdownMenuItem(
             value: null,
-            child: Text(
-              'Semua',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-            ),
+            child: Text('Semua'),
           ),
           ..._sportCategories.map((sport) {
             return DropdownMenuItem(
               value: sport.id,
-              child: Text(
-                sport.name,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              child: Text(sport.name),
             );
           }).toList(),
         ],
@@ -506,42 +480,35 @@ class _CoachListPageState extends State<CoachListPage> {
       ),
       child: DropdownButtonFormField<int>(
         value: _selectedAreaId,
-        decoration: InputDecoration(
+        decoration: const InputDecoration(
           labelText: 'AREA',
-          labelStyle: const TextStyle(
+          labelStyle: TextStyle(
             color: NeoBrutalism.grey,
             fontWeight: FontWeight.w700,
             fontSize: 11,
           ),
-          prefixIcon: const Icon(
+          prefixIcon: Icon(
             Icons.location_on,
             color: NeoBrutalism.slate,
             size: 20,
           ),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 10,
-          ),
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        ),
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: NeoBrutalism.slate,
         ),
         items: [
           const DropdownMenuItem(
             value: null,
-            child: Text(
-              'Semua',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-            ),
+            child: Text('Semua'),
           ),
           ..._locationAreas.map((area) {
             return DropdownMenuItem(
               value: area.id,
-              child: Text(
-                area.name,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              child: Text(area.name),
             );
           }).toList(),
         ],
@@ -555,53 +522,42 @@ class _CoachListPageState extends State<CoachListPage> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildResetButton() {
+    return _buildNeoButton(
+      onPressed: _resetFilters,
+      label: 'RESET FILTER',
+      icon: Icons.refresh,
+      isPrimary: false,
+    );
+  }
+
+  Widget _buildErrorView() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: NeoBrutalism.white,
-                borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
-                border: Border.all(
-                  color: NeoBrutalism.slate,
-                  width: NeoBrutalism.borderWidth,
-                ),
-                boxShadow: const [
-                  BoxShadow(
-                    color: NeoBrutalism.slate,
-                    offset: NeoBrutalism.shadowOffset,
-                    blurRadius: 0,
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.group_off,
-                size: 64,
-                color: NeoBrutalism.grey,
+            const Icon(
+              Icons.error_outline,
+              size: 64,
+              color: NeoBrutalism.danger,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              _errorMessage!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: NeoBrutalism.slate,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
-              'BELUM ADA PELATIH',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
-                color: NeoBrutalism.slate,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Coba ubah filter pencarian',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: NeoBrutalism.grey,
-              ),
+            _buildNeoButton(
+              onPressed: _fetchCoaches,
+              label: 'COBA LAGI',
+              icon: Icons.refresh,
             ),
           ],
         ),
@@ -609,9 +565,15 @@ class _CoachListPageState extends State<CoachListPage> {
     );
   }
 
-  Widget _buildCoachList() {
+  Widget _buildContent() {
+    if (_coachData == null || _coachData!.coaches.isEmpty) {
+      return _buildEmptyState();
+    }
+
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       itemCount: _coachData!.coaches.length,
       itemBuilder: (context, index) {
         final coach = _coachData!.coaches[index];
@@ -620,13 +582,64 @@ class _CoachListPageState extends State<CoachListPage> {
     );
   }
 
+  Widget _buildEmptyState() {
+    return Padding(
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: NeoBrutalism.white,
+              borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+              border: Border.all(
+                color: NeoBrutalism.slate,
+                width: NeoBrutalism.borderWidth,
+              ),
+              boxShadow: const [
+                BoxShadow(
+                  color: NeoBrutalism.slate,
+                  offset: NeoBrutalism.shadowOffset,
+                  blurRadius: 0,
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.group_off,
+              size: 64,
+              color: NeoBrutalism.grey,
+            ),
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            'BELUM ADA PELATIH',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              color: NeoBrutalism.slate,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Coba ubah filter pencarian',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: NeoBrutalism.grey,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   String _getProxiedImageUrl(String imageUrl) {
     if (imageUrl.isEmpty) return '';
-    
+
     String fullUrl = imageUrl.startsWith('http')
         ? imageUrl
         : "${ApiConstants.baseUrl}$imageUrl";
-    
+
     return '${ApiConstants.imageProxy}?url=${Uri.encodeComponent(fullUrl)}';
   }
 
@@ -650,6 +663,7 @@ class _CoachListPageState extends State<CoachListPage> {
       ),
       child: InkWell(
         onTap: () => _viewCoachDetail(coach),
+        borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -657,14 +671,14 @@ class _CoachListPageState extends State<CoachListPage> {
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(NeoBrutalism.borderRadius - 2),
               ),
-              child: coach.profilePicture != null && coach.profilePicture!.isNotEmpty
+              child: coach.profilePicture != null &&
+                      coach.profilePicture!.isNotEmpty
                   ? Image.network(
                       _getProxiedImageUrl(coach.profilePicture!),
                       height: 200,
                       width: double.infinity,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
-                        debugPrint('❌ Coach image proxy error: $error');
                         return _buildPlaceholderImage();
                       },
                     )
@@ -717,10 +731,13 @@ class _CoachListPageState extends State<CoachListPage> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 16),
-                  _buildNeoButton(
-                    onPressed: () => _viewCoachDetail(coach),
-                    label: 'LIHAT DETAIL',
-                    icon: Icons.arrow_forward,
+                  SizedBox(
+                    width: double.infinity,
+                    child: _buildNeoButton(
+                      onPressed: () => _viewCoachDetail(coach),
+                      label: 'LIHAT DETAIL',
+                      icon: Icons.arrow_forward,
+                    ),
                   ),
                 ],
               ),
@@ -771,20 +788,25 @@ class _CoachListPageState extends State<CoachListPage> {
     final totalCoaches = pagination.totalCount;
 
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
         color: NeoBrutalism.white,
-        border: Border(
-          top: BorderSide(
-            color: NeoBrutalism.slate,
-            width: NeoBrutalism.borderWidth,
-          ),
+        borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+        border: Border.all(
+          color: NeoBrutalism.slate,
+          width: NeoBrutalism.borderWidth,
         ),
+        boxShadow: const [
+          BoxShadow(
+            color: NeoBrutalism.slate,
+            offset: NeoBrutalism.shadowOffset,
+            blurRadius: 0,
+          ),
+        ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Info text
           Text(
             'Menampilkan $startItem - $endItem dari $totalCoaches pelatih',
             style: const TextStyle(
@@ -794,62 +816,113 @@ class _CoachListPageState extends State<CoachListPage> {
               letterSpacing: 0.3,
             ),
           ),
-          const SizedBox(height: 12),
-          // Pagination controls
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildNeoButton(
-                onPressed: pagination.hasPrevious && !_isLoadingMore
-                    ? () => _goToPage(pagination.previousPage!)
-                    : null,
-                label: 'SEBELUMNYA',
-                icon: Icons.chevron_left,
-                isSmall: true,
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: NeoBrutalism.primary,
-                    borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
-                    border: Border.all(
-                      color: NeoBrutalism.slate,
-                      width: NeoBrutalism.borderWidth,
+          const SizedBox(height: 16),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isSmallScreen = constraints.maxWidth < 400;
+              
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Flexible(
+                    child: _buildPaginationButton(
+                      onPressed: pagination.hasPrevious && !_isLoadingMore
+                          ? () => _goToPage(pagination.previousPage!)
+                          : null,
+                      label: isSmallScreen ? 'Prev' : 'Sebelumnya',
+                      icon: Icons.chevron_left,
                     ),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: NeoBrutalism.slate,
-                        offset: Offset(2, 2),
-                        blurRadius: 0,
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: NeoBrutalism.primary,
+                      borderRadius: BorderRadius.circular(
+                        NeoBrutalism.borderRadius,
                       ),
-                    ],
-                  ),
-                  child: Text(
-                    'Halaman ${pagination.currentPage}/${pagination.totalPages}',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w900,
-                      color: NeoBrutalism.white,
-                      letterSpacing: 0.3,
+                      border: Border.all(
+                        color: NeoBrutalism.slate,
+                        width: NeoBrutalism.borderWidth,
+                      ),
+                    ),
+                    child: Text(
+                      '${pagination.currentPage}/${pagination.totalPages}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
+                        color: NeoBrutalism.white,
+                      ),
                     ),
                   ),
-                ),
-              ),
-              _buildNeoButton(
-                onPressed: pagination.hasNext && !_isLoadingMore
-                    ? () => _goToPage(pagination.nextPage!)
-                    : null,
-                label: 'SELANJUTNYA',
-                icon: Icons.chevron_right,
-                isSmall: true,
-              ),
-            ],
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: _buildPaginationButton(
+                      onPressed: pagination.hasNext && !_isLoadingMore
+                          ? () => _goToPage(pagination.nextPage!)
+                          : null,
+                      label: isSmallScreen ? 'Next' : 'Berikutnya',
+                      icon: Icons.chevron_right,
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
-          const SizedBox(height: 12),
-          _buildPageDots(pagination),
+          if (_coachData!.pagination.totalPages <= 10) ...[
+            const SizedBox(height: 16),
+            _buildPageDots(pagination),
+          ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildPaginationButton({
+    required VoidCallback? onPressed,
+    required String label,
+    required IconData icon,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+        boxShadow: onPressed != null
+            ? const [
+                BoxShadow(
+                  color: NeoBrutalism.slate,
+                  offset: Offset(3, 3),
+                  blurRadius: 0,
+                ),
+              ]
+            : null,
+      ),
+      child: ElevatedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, size: 16),
+        label: Text(label),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: NeoBrutalism.white,
+          foregroundColor: NeoBrutalism.slate,
+          disabledBackgroundColor: NeoBrutalism.grey,
+          disabledForegroundColor: NeoBrutalism.white,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+            side: BorderSide(
+              color: onPressed != null ? NeoBrutalism.slate : NeoBrutalism.grey,
+              width: NeoBrutalism.borderWidth,
+            ),
+          ),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 13,
+            letterSpacing: 0.5,
+          ),
+        ),
       ),
     );
   }
@@ -857,10 +930,10 @@ class _CoachListPageState extends State<CoachListPage> {
   Widget _buildPageDots(PaginationInfo pagination) {
     final totalPages = pagination.totalPages;
     final currentPage = pagination.currentPage;
-    
+
     int startPage = 1;
     int endPage = totalPages;
-    
+
     if (totalPages > 7) {
       startPage = (currentPage - 3).clamp(1, totalPages - 6);
       endPage = (startPage + 6).clamp(7, totalPages);
@@ -935,7 +1008,6 @@ class _CoachListPageState extends State<CoachListPage> {
     required String label,
     required IconData icon,
     bool isPrimary = true,
-    bool isSmall = false,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -952,7 +1024,7 @@ class _CoachListPageState extends State<CoachListPage> {
       ),
       child: ElevatedButton.icon(
         onPressed: onPressed,
-        icon: Icon(icon, size: isSmall ? 16 : 18),
+        icon: Icon(icon, size: 18),
         label: Text(label),
         style: ElevatedButton.styleFrom(
           backgroundColor: isPrimary
@@ -962,10 +1034,7 @@ class _CoachListPageState extends State<CoachListPage> {
           disabledBackgroundColor: NeoBrutalism.grey,
           disabledForegroundColor: NeoBrutalism.white,
           elevation: 0,
-          padding: EdgeInsets.symmetric(
-            vertical: isSmall ? 10 : 12,
-            horizontal: isSmall ? 16 : 20,
-          ),
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
             side: BorderSide(
@@ -973,9 +1042,9 @@ class _CoachListPageState extends State<CoachListPage> {
               width: NeoBrutalism.borderWidth,
             ),
           ),
-          textStyle: TextStyle(
+          textStyle: const TextStyle(
             fontWeight: FontWeight.w800,
-            fontSize: isSmall ? 12 : 14,
+            fontSize: 14,
             letterSpacing: 0.5,
           ),
         ),

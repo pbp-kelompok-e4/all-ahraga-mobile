@@ -14,7 +14,7 @@ class NeoBrutalism {
   static const Color white = Colors.white;
   static const Color success = Color(0xFF16a34a);
   static const Color warning = Color(0xFFf59e0b);
-  
+
   static const double borderWidth = 2.0;
   static const double borderRadius = 8.0;
   static const Offset shadowOffset = Offset(4, 4);
@@ -96,7 +96,10 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
       decoration: BoxDecoration(
         color: NeoBrutalism.white,
         borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
-        border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+        border: Border.all(
+          color: NeoBrutalism.slate,
+          width: NeoBrutalism.borderWidth,
+        ),
       ),
       child: Icon(icon, color: color, size: 16),
     );
@@ -133,7 +136,10 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
-        border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+        border: Border.all(
+          color: NeoBrutalism.slate,
+          width: NeoBrutalism.borderWidth,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -162,7 +168,10 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
         decoration: BoxDecoration(
           color: NeoBrutalism.white,
           borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
-          border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+          border: Border.all(
+            color: NeoBrutalism.slate,
+            width: NeoBrutalism.borderWidth,
+          ),
           boxShadow: const [
             BoxShadow(
               color: NeoBrutalism.slate,
@@ -179,7 +188,10 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
               decoration: BoxDecoration(
                 color: NeoBrutalism.white,
                 shape: BoxShape.circle,
-                border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+                border: Border.all(
+                  color: NeoBrutalism.slate,
+                  width: NeoBrutalism.borderWidth,
+                ),
               ),
               child: const Icon(
                 Icons.assignment_late_outlined,
@@ -213,7 +225,9 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
               onPressed: () {
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => const CoachProfilePage()),
+                  MaterialPageRoute(
+                    builder: (context) => const CoachProfilePage(),
+                  ),
                 );
               },
               label: 'KELOLA PROFIL',
@@ -225,12 +239,19 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
               decoration: BoxDecoration(
                 color: NeoBrutalism.white,
                 borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
-                border: Border.all(color: NeoBrutalism.warning, width: NeoBrutalism.borderWidth),
+                border: Border.all(
+                  color: NeoBrutalism.warning,
+                  width: NeoBrutalism.borderWidth,
+                ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.lightbulb, size: 18, color: NeoBrutalism.warning),
+                  const Icon(
+                    Icons.lightbulb,
+                    size: 18,
+                    color: NeoBrutalism.warning,
+                  ),
                   const SizedBox(width: 8),
                   Flexible(
                     child: Text(
@@ -258,7 +279,10 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
       decoration: BoxDecoration(
         color: NeoBrutalism.primary,
         borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
-        border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+        border: Border.all(
+          color: NeoBrutalism.slate,
+          width: NeoBrutalism.borderWidth,
+        ),
         boxShadow: const [
           BoxShadow(
             color: NeoBrutalism.slate,
@@ -309,7 +333,10 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
             decoration: BoxDecoration(
               color: NeoBrutalism.white,
               borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
-              border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+              border: Border.all(
+                color: NeoBrutalism.slate,
+                width: NeoBrutalism.borderWidth,
+              ),
             ),
             child: const Icon(
               Icons.account_balance_wallet,
@@ -329,7 +356,10 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
       decoration: BoxDecoration(
         color: NeoBrutalism.white,
         borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
-        border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+        border: Border.all(
+          color: NeoBrutalism.slate,
+          width: NeoBrutalism.borderWidth,
+        ),
         boxShadow: const [
           BoxShadow(
             color: NeoBrutalism.slate,
@@ -396,7 +426,10 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
             decoration: BoxDecoration(
               color: NeoBrutalism.white,
               borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
-              border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+              border: Border.all(
+                color: NeoBrutalism.slate,
+                width: NeoBrutalism.borderWidth,
+              ),
             ),
             child: Icon(icon, color: iconColor, size: 20),
           ),
@@ -439,7 +472,10 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
         decoration: BoxDecoration(
           color: NeoBrutalism.white,
           borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
-          border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+          border: Border.all(
+            color: NeoBrutalism.slate,
+            width: NeoBrutalism.borderWidth,
+          ),
           boxShadow: const [
             BoxShadow(
               color: NeoBrutalism.slate,
@@ -455,7 +491,10 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
               decoration: BoxDecoration(
                 color: NeoBrutalism.white,
                 shape: BoxShape.circle,
-                border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+                border: Border.all(
+                  color: NeoBrutalism.slate,
+                  width: NeoBrutalism.borderWidth,
+                ),
               ),
               child: const Icon(
                 Icons.receipt_long_outlined,
@@ -487,12 +526,17 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
       );
     }
 
+    final sortedTransactions = transactions.reversed.toList();
+
     return Container(
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: NeoBrutalism.white,
         borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
-        border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+        border: Border.all(
+          color: NeoBrutalism.slate,
+          width: NeoBrutalism.borderWidth,
+        ),
         boxShadow: const [
           BoxShadow(
             color: NeoBrutalism.slate,
@@ -512,10 +556,19 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: NeoBrutalism.white,
-                    borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
-                    border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+                    borderRadius: BorderRadius.circular(
+                      NeoBrutalism.borderRadius,
+                    ),
+                    border: Border.all(
+                      color: NeoBrutalism.slate,
+                      width: NeoBrutalism.borderWidth,
+                    ),
                   ),
-                  child: const Icon(Icons.receipt, color: NeoBrutalism.primary, size: 18),
+                  child: const Icon(
+                    Icons.receipt,
+                    color: NeoBrutalism.primary,
+                    size: 18,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 const Text(
@@ -537,13 +590,13 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: transactions.length,
+            itemCount: sortedTransactions.length,
             separatorBuilder: (context, index) => Container(
               height: NeoBrutalism.borderWidth,
               color: NeoBrutalism.slate,
             ),
             itemBuilder: (context, index) {
-              final transaction = transactions[index];
+              final transaction = sortedTransactions[index];
               return _buildTransactionItem(transaction);
             },
           ),
@@ -676,28 +729,30 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
               child: _isLoading
                   ? const Center(
                       child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(NeoBrutalism.primary),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          NeoBrutalism.primary,
+                        ),
                       ),
                     )
                   : _errorMessage != null
-                      ? _buildErrorView()
-                      : _revenueData == null
-                          ? const Center(child: Text('Tidak ada data'))
-                          : !_revenueData!.hasProfile
-                              ? _buildNoProfileView()
-                              : RefreshIndicator(
-                                  onRefresh: _fetchRevenueData,
-                                  color: NeoBrutalism.primary,
-                                  child: ListView(
-                                    children: [
-                                      _buildRevenueHeader(_revenueData!),
-                                      _buildTransactionsList(_revenueData!.transactions),
-                                      if (_revenueData!.transactions.isNotEmpty)
-                                        _buildSummaryCards(_revenueData!),
-                                      const SizedBox(height: 24),
-                                    ],
-                                  ),
-                                ),
+                  ? _buildErrorView()
+                  : _revenueData == null
+                  ? const Center(child: Text('Tidak ada data'))
+                  : !_revenueData!.hasProfile
+                  ? _buildNoProfileView()
+                  : RefreshIndicator(
+                      onRefresh: _fetchRevenueData,
+                      color: NeoBrutalism.primary,
+                      child: ListView(
+                        children: [
+                          _buildRevenueHeader(_revenueData!),
+                          _buildTransactionsList(_revenueData!.transactions),
+                          if (_revenueData!.transactions.isNotEmpty)
+                            _buildSummaryCards(_revenueData!),
+                          const SizedBox(height: 24),
+                        ],
+                      ),
+                    ),
             ),
           ],
         ),
@@ -728,8 +783,13 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: NeoBrutalism.white,
-                    borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
-                    border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+                    borderRadius: BorderRadius.circular(
+                      NeoBrutalism.borderRadius,
+                    ),
+                    border: Border.all(
+                      color: NeoBrutalism.slate,
+                      width: NeoBrutalism.borderWidth,
+                    ),
                     boxShadow: const [
                       BoxShadow(
                         color: NeoBrutalism.slate,
@@ -738,7 +798,11 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
                       ),
                     ],
                   ),
-                  child: const Icon(Icons.arrow_back, color: NeoBrutalism.slate, size: 20),
+                  child: const Icon(
+                    Icons.arrow_back,
+                    color: NeoBrutalism.slate,
+                    size: 20,
+                  ),
                 ),
               ),
               const SizedBox(width: 16),
@@ -773,7 +837,10 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
               decoration: BoxDecoration(
                 color: NeoBrutalism.white,
                 borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
-                border: Border.all(color: NeoBrutalism.slate, width: NeoBrutalism.borderWidth),
+                border: Border.all(
+                  color: NeoBrutalism.slate,
+                  width: NeoBrutalism.borderWidth,
+                ),
                 boxShadow: const [
                   BoxShadow(
                     color: NeoBrutalism.slate,
@@ -782,7 +849,11 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
                   ),
                 ],
               ),
-              child: const Icon(Icons.refresh, color: NeoBrutalism.slate, size: 20),
+              child: const Icon(
+                Icons.refresh,
+                color: NeoBrutalism.slate,
+                size: 20,
+              ),
             ),
           ),
         ],
@@ -797,7 +868,11 @@ class _CoachRevenuePageState extends State<CoachRevenuePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 64, color: NeoBrutalism.danger),
+            const Icon(
+              Icons.error_outline,
+              size: 64,
+              color: NeoBrutalism.danger,
+            ),
             const SizedBox(height: 16),
             Text(
               _errorMessage!,

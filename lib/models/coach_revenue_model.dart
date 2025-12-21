@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 class CoachRevenueResponse {
   final bool success;
   final bool hasProfile;
@@ -22,8 +24,8 @@ class CoachRevenueResponse {
       totalRevenue: (json['total_revenue'] ?? 0).toDouble(),
       transactions: json['transactions'] != null
           ? (json['transactions'] as List)
-              .map((item) => TransactionItem.fromJson(item))
-              .toList()
+                .map((item) => TransactionItem.fromJson(item))
+                .toList()
           : [],
       transactionsCount: json['transactions_count'] ?? 0,
       message: json['message'],
@@ -47,30 +49,32 @@ class TransactionItem {
   });
 
   factory TransactionItem.fromJson(Map<String, dynamic> json) {
+    String datetimeStr = json['transaction_time'];
+
+    String isoFormat = datetimeStr.replaceFirst(' ', 'T');
+
+    DateTime utcTime = DateTime.parse(isoFormat + 'Z');
+
+    // Konversi ke WIB (UTC + 7 jam)
+    DateTime wibTime = utcTime.add(const Duration(hours: 7));
+
     return TransactionItem(
       id: json['id'] ?? 0,
       paymentMethod: json['payment_method'] ?? '',
       status: json['status'] ?? '',
       revenueCoach: (json['revenue_coach'] ?? 0).toDouble(),
-      transactionTime: DateTime.parse(json['transaction_time']),
+      transactionTime: wibTime,
     );
   }
 
   // Helper method untuk format rupiah
   String get formattedRevenue {
-    return 'Rp ${revenueCoach.toStringAsFixed(0).replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]}.',
-    )}';
+    return 'Rp ${revenueCoach.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}';
   }
 
   // Helper method untuk format tanggal
   String get formattedDate {
-    final months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
-    ];
-    return '${transactionTime.day} ${months[transactionTime.month - 1]} ${transactionTime.year}, ${transactionTime.hour.toString().padLeft(2, '0')}:${transactionTime.minute.toString().padLeft(2, '0')}';
+    return DateFormat('dd MMM yyyy, HH:mm', 'id_ID').format(transactionTime);
   }
 
   // Helper method untuk status display

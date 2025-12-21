@@ -9,11 +9,11 @@ import 'package:all_ahraga/constants/api.dart';
 import 'package:all_ahraga/widgets/error_retry_widget.dart';
 
 const Color _kBg = Colors.white;
-const Color _kTosca = Color(0xFF0D9488); 
+const Color _kTosca = Color(0xFF0D9488);
 const Color _kYellow = Color(0xFFFBBF24);
-const Color _kSlate = Color(0xFF0F172A); 
+const Color _kSlate = Color(0xFF0F172A);
 const Color _kMuted = Color(0xFF64748B);
-const Color _kRed = Color(0xFFDC2626); 
+const Color _kRed = Color(0xFFDC2626);
 
 const double _kBorderWidth = 2.0;
 const double _kRadius = 8.0;
@@ -67,7 +67,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _checkUserRoleAndRoute() {
     final request = context.read<CookieRequest>();
-    String userRole = 'CUSTOMER'; 
+    String userRole = 'CUSTOMER';
     if (request.jsonData.isNotEmpty &&
         request.jsonData.containsKey('role_type')) {
       userRole = request.jsonData['role_type'];
@@ -111,7 +111,8 @@ class _MyHomePageState extends State<MyHomePage> {
     final request = context.read<CookieRequest>();
 
     try {
-      String url = '${ApiConstants.venues}?search=$_searchQuery&page=$_currentPage';
+      String url =
+          '${ApiConstants.venues}?search=$_searchQuery&page=$_currentPage';
       if (_selectedLocation != null) {
         url += '&location=${Uri.encodeComponent(_selectedLocation!)}';
       }
@@ -130,13 +131,13 @@ class _MyHomePageState extends State<MyHomePage> {
           });
         }
       } else {
-          if (mounted) {
-            setState(() {
-              _error = response['message'] ?? 'Gagal memuat venue';
-              _isLoading = false;
-            });
-          }
+        if (mounted) {
+          setState(() {
+            _error = response['message'] ?? 'Gagal memuat venue';
+            _isLoading = false;
+          });
         }
+      }
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -202,7 +203,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             const SizedBox(height: 16),
 
                             _buildContentList(),
-                            
+
                             if (!_isLoading && _venues.isNotEmpty)
                               _buildPagination(),
 
@@ -223,56 +224,203 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget _buildPagination() {
     return Container(
-      margin: const EdgeInsets.only(top: 30),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(top: 24),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(_kRadius),
         border: Border.all(color: _kSlate, width: _kBorderWidth),
         boxShadow: const [
-          BoxShadow(color: _kSlate, offset: Offset(4, 4)),
+          BoxShadow(color: _kSlate, offset: Offset(4, 4), blurRadius: 0),
         ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
         children: [
-          // Tombol Sebelumnya
-          _PaginationButton(
-            text: "Sebelumnya",
-            icon: Icons.chevron_left,
-            isDisabled: _currentPage <= 1,
-            onTap: () => _fetchVenues(page: _currentPage - 1),
-          ),
-
-          // Info Halaman
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF0FDFA),
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: _kTosca.withOpacity(0.5)),
-            ),
-            child: Text(
-              "Halaman $_currentPage dari $_totalPages",
-              style: const TextStyle(
-                color: _kSlate,
-                fontWeight: FontWeight.w800,
-                fontSize: 12,
-              ),
+          // Info text
+          Text(
+            'Halaman $_currentPage dari $_totalPages',
+            style: const TextStyle(
+              fontSize: 12,
+              color: _kMuted,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.3,
             ),
           ),
+          const SizedBox(height: 16),
 
-          // Tombol Berikutnya
-          _PaginationButton(
-            text: "Berikutnya",
-            icon: Icons.chevron_right,
-            isRightIcon: true,
-            isDisabled: _currentPage >= _totalPages,
-            onTap: () => _fetchVenues(page: _currentPage + 1),
-            color: _kTosca,
-            textColor: Colors.white,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isSmallScreen = constraints.maxWidth < 400;
+
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Previous button
+                  Flexible(
+                    child: _buildPaginationButton(
+                      onPressed: _currentPage > 1
+                          ? () => _fetchVenues(page: _currentPage - 1)
+                          : null,
+                      label: isSmallScreen ? 'Prev' : 'Sebelumnya',
+                      icon: Icons.chevron_left,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+
+                  // Page indicator
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _kTosca,
+                      borderRadius: BorderRadius.circular(_kRadius),
+                      border: Border.all(color: _kSlate, width: _kBorderWidth),
+                    ),
+                    child: Text(
+                      '$_currentPage/$_totalPages',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+
+                  // Next button
+                  Flexible(
+                    child: _buildPaginationButton(
+                      onPressed: _currentPage < _totalPages
+                          ? () => _fetchVenues(page: _currentPage + 1)
+                          : null,
+                      label: isSmallScreen ? 'Next' : 'Berikutnya',
+                      icon: Icons.chevron_right,
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
+
+          if (_totalPages <= 10) ...[
+            const SizedBox(height: 16),
+            _buildPageDots(),
+          ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildPaginationButton({
+    required VoidCallback? onPressed,
+    required String label,
+    required IconData icon,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(_kRadius),
+        boxShadow: onPressed != null
+            ? const [
+                BoxShadow(color: _kSlate, offset: Offset(3, 3), blurRadius: 0),
+              ]
+            : null,
+      ),
+      child: ElevatedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, size: 16),
+        label: Text(label),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.white,
+          foregroundColor: _kSlate,
+          disabledBackgroundColor: _kMuted,
+          disabledForegroundColor: Colors.white,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(_kRadius),
+            side: BorderSide(
+              color: onPressed != null ? _kSlate : _kMuted,
+              width: _kBorderWidth,
+            ),
+          ),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 13,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPageDots() {
+    int startPage = 1;
+    int endPage = _totalPages;
+
+    if (_totalPages > 7) {
+      startPage = (_currentPage - 3).clamp(1, _totalPages - 6);
+      endPage = (startPage + 6).clamp(7, _totalPages);
+    }
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (startPage > 1) ...[
+            _buildPageDot(1, _currentPage == 1),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 4),
+              child: Text('...', style: TextStyle(fontWeight: FontWeight.w900)),
+            ),
+          ],
+          for (int page = startPage; page <= endPage; page++)
+            _buildPageDot(page, _currentPage == page),
+          if (endPage < _totalPages) ...[
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 4),
+              child: Text('...', style: TextStyle(fontWeight: FontWeight.w900)),
+            ),
+            _buildPageDot(_totalPages, _currentPage == _totalPages),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPageDot(int pageNumber, bool isActive) {
+    return GestureDetector(
+      onTap: _isLoading ? null : () => _fetchVenues(page: pageNumber),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        width: isActive ? 32 : 24,
+        height: 24,
+        decoration: BoxDecoration(
+          color: isActive ? _kTosca : Colors.white,
+          borderRadius: BorderRadius.circular(_kRadius),
+          border: Border.all(color: _kSlate, width: _kBorderWidth),
+          boxShadow: isActive
+              ? const [
+                  BoxShadow(
+                    color: _kSlate,
+                    offset: Offset(2, 2),
+                    blurRadius: 0,
+                  ),
+                ]
+              : null,
+        ),
+        child: Center(
+          child: Text(
+            '$pageNumber',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              color: isActive ? Colors.white : _kSlate,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -471,7 +619,7 @@ class _MyHomePageState extends State<MyHomePage> {
             items: _allLocations,
             onChanged: (val) {
               setState(() => _selectedLocation = val);
-              _fetchVenues(page: 1); 
+              _fetchVenues(page: 1);
             },
           ),
           const SizedBox(width: 12),
@@ -481,7 +629,7 @@ class _MyHomePageState extends State<MyHomePage> {
             items: _allCategories,
             onChanged: (val) {
               setState(() => _selectedCategory = val);
-              _fetchVenues(page: 1); 
+              _fetchVenues(page: 1);
             },
           ),
           if (_selectedLocation != null || _selectedCategory != null) ...[
@@ -614,8 +762,8 @@ class _PaginationButton extends StatelessWidget {
             color: color,
             borderRadius: BorderRadius.circular(6),
             border: Border.all(color: _kSlate, width: 1.5),
-            boxShadow: isDisabled 
-                ? null 
+            boxShadow: isDisabled
+                ? null
                 : [const BoxShadow(color: _kSlate, offset: Offset(2, 2))],
           ),
           child: Row(
@@ -644,7 +792,6 @@ class _PaginationButton extends StatelessWidget {
     );
   }
 }
-
 
 class _NeoIconButton extends StatelessWidget {
   final IconData icon;
@@ -795,13 +942,12 @@ class _VenueCard extends StatelessWidget {
     String? rawImage = venue['image'];
     String? imageUrl;
     String? proxiedUrl;
-    
+
     if (rawImage != null && rawImage.toString().isNotEmpty) {
       if (rawImage.startsWith('http')) {
         imageUrl = rawImage;
       } else {
-        imageUrl =
-            '${ApiConstants.baseUrl}$rawImage'; 
+        imageUrl = '${ApiConstants.baseUrl}$rawImage';
       }
       proxiedUrl = _getProxiedImageUrl(imageUrl);
     }
@@ -859,7 +1005,7 @@ class _VenueCard extends StatelessWidget {
                         color: _kTosca,
                       ),
                       const SizedBox(width: 8),
-                      // RATING BOX 
+                      // RATING BOX
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
