@@ -56,6 +56,9 @@ class ApiConstants {
   static const String authRegister = '$baseUrl/auth/register/';
   static const String authLogout = '$baseUrl/auth/logout/';
 
+  // Image proxy endpoint
+  static const String imageProxy = '$baseUrl/proxy-image/';
+
   // Review endpoints
   static String upsertReview(int bookingId, {required String target}) =>
       '$baseUrl/review/$bookingId/new/?target=$target';

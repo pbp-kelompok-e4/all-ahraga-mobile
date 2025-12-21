@@ -207,6 +207,14 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
     super.dispose();
   }
 
+  String _getProxiedImageUrl(String imageUrl) {
+    if (imageUrl.isEmpty) return '';
+    String fullUrl = imageUrl.startsWith('http')
+        ? imageUrl
+        : "${ApiConstants.baseUrl}$imageUrl";
+    return '${ApiConstants.imageProxy}?url=${Uri.encodeComponent(fullUrl)}';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -352,9 +360,10 @@ class _CoachProfileFormPageState extends State<CoachProfileFormPage> {
                     child: ClipOval(
                       child: _profilePictureUrlController.text.isNotEmpty
                           ? Image.network(
-                              _profilePictureUrlController.text,
+                              _getProxiedImageUrl(_profilePictureUrlController.text),
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) {
+                                debugPrint('❌ Coach image proxy error: $error');
                                 return const Icon(
                                   Icons.person,
                                   size: 60,

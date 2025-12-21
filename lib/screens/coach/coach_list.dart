@@ -627,6 +627,17 @@ class _CoachListPageState extends State<CoachListPage> {
     );
   }
 
+  String _getProxiedImageUrl(String imageUrl) {
+    if (imageUrl.isEmpty) return '';
+    
+    // Handle full URL vs relative
+    String fullUrl = imageUrl.startsWith('http')
+        ? imageUrl
+        : "${ApiConstants.baseUrl}$imageUrl";
+    
+    return '${ApiConstants.imageProxy}?url=${Uri.encodeComponent(fullUrl)}';
+  }
+
   Widget _buildCoachCard(CoachProfile coach) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -654,14 +665,16 @@ class _CoachListPageState extends State<CoachListPage> {
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(NeoBrutalism.borderRadius - 2),
               ),
-              child: coach.profilePicture != null
+              child: coach.profilePicture != null && coach.profilePicture!.isNotEmpty
                   ? Image.network(
-                      coach.profilePicture!,
+                      _getProxiedImageUrl(coach.profilePicture!),
                       height: 200,
                       width: double.infinity,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          _buildPlaceholderImage(),
+                      errorBuilder: (context, error, stackTrace) {
+                        debugPrint('❌ Coach image proxy error: $error');
+                        return _buildPlaceholderImage();
+                      },
                     )
                   : _buildPlaceholderImage(),
             ),
@@ -760,6 +773,10 @@ class _CoachListPageState extends State<CoachListPage> {
 
   Widget _buildPagination() {
     final pagination = _coachData!.pagination;
+    final itemsPerPage = _coachData!.coaches.length;
+    final startItem = (pagination.currentPage - 1) * itemsPerPage + 1;
+    final endItem = startItem + _coachData!.coaches.length - 1;
+    final totalCoaches = pagination.totalCount;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -772,51 +789,153 @@ class _CoachListPageState extends State<CoachListPage> {
           ),
         ),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Expanded(
-            child: _buildNeoButton(
-              onPressed: pagination.hasPrevious && !_isLoadingMore
-                  ? () => _goToPage(pagination.previousPage!)
-                  : null,
-              label: 'PREV',
-              icon: Icons.chevron_left,
-              isSmall: true,
+          // Info text
+          Text(
+            'Menampilkan $startItem - $endItem dari $totalCoaches pelatih',
+            style: const TextStyle(
+              fontSize: 12,
+              color: NeoBrutalism.grey,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.3,
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: NeoBrutalism.white,
-                borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
-                border: Border.all(
-                  color: NeoBrutalism.slate,
-                  width: NeoBrutalism.borderWidth,
+          const SizedBox(height: 12),
+          // Pagination controls
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildNeoButton(
+                onPressed: pagination.hasPrevious && !_isLoadingMore
+                    ? () => _goToPage(pagination.previousPage!)
+                    : null,
+                label: 'SEBELUMNYA',
+                icon: Icons.chevron_left,
+                isSmall: true,
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: NeoBrutalism.primary,
+                    borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+                    border: Border.all(
+                      color: NeoBrutalism.slate,
+                      width: NeoBrutalism.borderWidth,
+                    ),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: NeoBrutalism.slate,
+                        offset: Offset(2, 2),
+                        blurRadius: 0,
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    'Halaman ${pagination.currentPage}/${pagination.totalPages}',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w900,
+                      color: NeoBrutalism.white,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
                 ),
               ),
-              child: Text(
-                '${pagination.currentPage}/${pagination.totalPages}',
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w900,
-                  color: NeoBrutalism.slate,
-                ),
+              _buildNeoButton(
+                onPressed: pagination.hasNext && !_isLoadingMore
+                    ? () => _goToPage(pagination.nextPage!)
+                    : null,
+                label: 'SELANJUTNYA',
+                icon: Icons.chevron_right,
+                isSmall: true,
               ),
-            ),
+            ],
           ),
-          Expanded(
-            child: _buildNeoButton(
-              onPressed: pagination.hasNext && !_isLoadingMore
-                  ? () => _goToPage(pagination.nextPage!)
-                  : null,
-              label: 'NEXT',
-              icon: Icons.chevron_right,
-              isSmall: true,
-            ),
-          ),
+          const SizedBox(height: 12),
+          // Page dots
+          _buildPageDots(pagination),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPageDots(PaginationInfo pagination) {
+    final totalPages = pagination.totalPages;
+    final currentPage = pagination.currentPage;
+    
+    // Tampilkan max 7 dots, dengan current page di tengah jika mungkin
+    int startPage = 1;
+    int endPage = totalPages;
+    
+    if (totalPages > 7) {
+      startPage = (currentPage - 3).clamp(1, totalPages - 6);
+      endPage = (startPage + 6).clamp(7, totalPages);
+    }
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (startPage > 1) ...[
+            _buildPageDot(1, currentPage == 1),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 4),
+              child: Text('...', style: TextStyle(fontWeight: FontWeight.w900)),
+            ),
+          ],
+          for (int page = startPage; page <= endPage; page++)
+            _buildPageDot(page, currentPage == page),
+          if (endPage < totalPages) ...[
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 4),
+              child: Text('...', style: TextStyle(fontWeight: FontWeight.w900)),
+            ),
+            _buildPageDot(totalPages, currentPage == totalPages),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPageDot(int pageNumber, bool isActive) {
+    return GestureDetector(
+      onTap: _isLoadingMore ? null : () => _goToPage(pageNumber),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        width: isActive ? 32 : 24,
+        height: 24,
+        decoration: BoxDecoration(
+          color: isActive ? NeoBrutalism.primary : NeoBrutalism.white,
+          borderRadius: BorderRadius.circular(NeoBrutalism.borderRadius),
+          border: Border.all(
+            color: NeoBrutalism.slate,
+            width: NeoBrutalism.borderWidth,
+          ),
+          boxShadow: isActive
+              ? const [
+                  BoxShadow(
+                    color: NeoBrutalism.slate,
+                    offset: Offset(2, 2),
+                    blurRadius: 0,
+                  ),
+                ]
+              : null,
+        ),
+        child: Center(
+          child: Text(
+            '$pageNumber',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              color: isActive ? NeoBrutalism.white : NeoBrutalism.slate,
+            ),
+          ),
+        ),
       ),
     );
   }
